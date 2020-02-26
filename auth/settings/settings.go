@@ -3,6 +3,7 @@ package settings
 import (
 	"crypto/rand"
 	"strings"
+	"bigbucks/solution/auth/models"
 )
 
 // AuthMethod describes an authentication method.
@@ -26,18 +27,23 @@ import (
 // 	return s.Rules
 // }
 
+// Context :: Http Context Object
+type Context struct{
+	User models.User `json:"user"`
+	Settings Settings `json:"settings"`
+}
+
 // Server specific settings.
-type Server struct {
-	BaseURL string `json:"baseURL"`
-	TLSKey  string `json:"tlsKey"`
-	TLSCert string `json:"tlsCert"`
-	Port    string `json:"port"`
-	Address string `json:"address"`
-	Log     string `json:"log"`
+type Settings struct {
+	SecretKey string `json:"key" mapstructure:"key"`
+	BaseURL   string `json:"baseURL"`
+	Port      string `json:"port"`
+	Address   string `json:"address"`
+	Log       string `json:"log"`
 }
 
 // Clean cleans any variables that might need cleaning.
-func (s *Server) Clean() {
+func (s *Settings) Clean() {
 	s.BaseURL = strings.TrimSuffix(s.BaseURL, "/")
 }
 

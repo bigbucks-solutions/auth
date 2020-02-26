@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "github.com/bigbucks/solution/auth/cmd"
+import "bigbucks/solution/auth/cmd"
 
 func main() {
   cmd.Execute()
