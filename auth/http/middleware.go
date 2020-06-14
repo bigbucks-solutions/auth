@@ -3,6 +3,7 @@ package http
 import (
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/settings"
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -12,7 +13,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 func Authenticate(w http.ResponseWriter, r *http.Request, settings *settings.Settings) (bool, models.User, error) {
@@ -38,15 +39,22 @@ func Authenticate(w http.ResponseWriter, r *http.Request, settings *settings.Set
 	}
 
 	var user models.User
-	if err := models.Dbcon.Where("username = ?", tk.User.Username).First(&user).Error; gorm.IsRecordNotFoundError(err) {
+	if err := models.Dbcon.Where("username = ?", tk.User.Username).First(&user).Error; gorm.ErrRecordNotFound == err {
 		log.Println("failed", err)
 		return false, models.User{}, nil
-		
+
 	}
 	// if err != nil {
 	// 	return false, http.StatusInternalServerError, err
 	// }
 	return true, user, nil
+}
+
+func JSONError(w http.ResponseWriter, err interface{}, code int) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(err)
 }
 
 func handle(fn handleFunc, prefix string, auth bool, setting *settings.Settings) http.Handler {
@@ -65,12 +73,9 @@ func handle(fn handleFunc, prefix string, auth bool, setting *settings.Settings)
 		status, err := fn(w, r, ctx)
 
 		if status != 0 {
-			txt := http.StatusText(status)
-			http.Error(w, strconv.Itoa(status)+" "+txt, status)
-		}
-
-		if status >= 400 || err != nil {
-			log.Printf("%s: %v %s %v", r.URL.Path, status, r.RemoteAddr, err)
+			// txt := http.StatusText(status)
+			JSONError(w, err, status)
+			return
 		}
 	})
 

@@ -1,8 +1,9 @@
 package models
 
 import (
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	// _ "github.com/go-gorm/gorm/dialects/sqlite"
+	// _ "gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 var (
@@ -18,9 +19,12 @@ func Migrate() {
 	// defer db.Close()
 
 	// Migrate the schema
-	Dbcon.AutoMigrate(&User{}, &Profile{}, &Organization{}, &OrganizationBranch{},
+	Dbcon.AutoMigrate(&UserOrgRole{}, &User{}, &Profile{}, &Organization{}, &OrganizationBranch{},
 		&Role{}, &Permission{})
 
 	// Create
 	Dbcon.Create(&User{Username: "L1212", Password: "jamsheed"})
+	Dbcon.Create(&Role{Name: "SuperUser",
+		Description: "Super User Role for Organizations",
+		Permissions: []*Permission{{Code: "ACCNT_ALL"}}})
 }

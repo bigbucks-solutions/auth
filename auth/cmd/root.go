@@ -19,16 +19,18 @@ import (
 	router "bigbucks/solution/auth/http"
 	models "bigbucks/solution/auth/models"
 	settings "bigbucks/solution/auth/settings"
+	valids "bigbucks/solution/auth/validations"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
 
-	"github.com/jinzhu/gorm"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 var (
@@ -43,11 +45,11 @@ var rootCmd = &cobra.Command{
 
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
-		models.Dbcon, err = gorm.Open("sqlite3", "test.db")
+		models.Dbcon, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
 		if err != nil {
 			panic("failed to connect database")
 		}
-		defer models.Dbcon.Close()
+		// defer models.Dbcon.Close()
 		server := &settings.Settings{}
 
 		err = viper.Unmarshal(&server)
@@ -59,6 +61,7 @@ var rootCmd = &cobra.Command{
 		}
 		handler, err := router.NewHandler(server)
 		models.Migrate() // Automigrate GORM models
+		valids.InitializeValidations()
 		log.Println("Listening on", listener.Addr().String())
 		if err := http.Serve(listener, handler); err != nil {
 			log.Fatal(err)
