@@ -1,24 +1,50 @@
 package models
 
 import (
+	"encoding/json"
+
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-// User credential model
+// User : User credential model
 type User struct {
-	gorm.Model
+	gorm.Model    `json:"-"`
 	Username      string          `gorm:"unique;not null" validate:"required,email"`
 	Password      string          `gorm:"column:hashed_password" validate:"required,min=8"`
-	Organizations []*Organization `gorm:"many2many:org_users;"`
-	Roles         []*Role         `gorm:"many2many:user_org_roles;association_jointable_foreignkey:user_id;jointable_foreignkey:role_id;"`
+	Organizations []*Organization `gorm:"many2many:UserOrgRole;JoinForeignKey:UserID;JoinReferences:OrgID;"`
+	Roles         []*Role         `gorm:"many2many:UserOrgRole;JoinForeignKey:UserID;JoinReferences:RoleID;"`
 	Profile       Profile
 }
 
-// BeforeSave hash password
-func (user *User) BeforeSave(scope *gorm.DB) (err error) {
-	if pw, err := bcrypt.GenerateFromPassword([]byte(user.Password), 0); err == nil {
-		user.Password = string(pw)
+// Profile : GORM model User profile
+type Profile struct {
+	gorm.Model    `json:"-"`
+	UserID        int
+	FirstName     string
+	LastName      string
+	ContactNumber string
+	Email         string
+}
+
+// MarshalJSON Json Dump override method
+func (usr User) MarshalJSON() ([]byte, error) {
+	var tmp struct {
+		Username string `json:"username"`
+		Roles    []*Role
+		Profile  Profile `json:"omitempty"`
+	}
+	tmp.Username = usr.Username
+	tmp.Roles = usr.Roles
+	tmp.Profile = usr.Profile
+	return json.Marshal(&tmp)
+}
+
+// BeforeSave GORM hook hash the password
+func (usr *User) BeforeSave(tx *gorm.DB) (err error) {
+	if pw, err := bcrypt.GenerateFromPassword([]byte(usr.Password), 0); err == nil {
+		// tx.Statement.Set("hashed_password", string(pw))
+		usr.Password = string(pw)
 	}
 	return
 }
@@ -32,14 +58,4 @@ func Authenticate(username, password string) (success bool, user User) {
 		success = true
 	}
 	return
-}
-
-// Profile => User profile detailing model
-type Profile struct {
-	gorm.Model
-	UserID        int
-	FirstName     string
-	LastName      string
-	ContactNumber string
-	Email         string
 }

@@ -5,6 +5,9 @@ import (
 	"bigbucks/solution/auth/settings"
 	"encoding/json"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 type Post struct {
@@ -15,10 +18,13 @@ type Post struct {
 
 var posts []Post
 
-func GetPosts(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
-	posts = append(posts, Post{ID: "1", Title: "My first post", Body: "This is the content of my first post"})
+func GetOrg(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+	// posts = append(posts, Post{ID: "1", Title: "My first post", Body: "This is the content of my first post"})
+	vars := mux.Vars(r)
+	id, _ := strconv.Atoi(vars["id"])
+	org, _, _ := models.GetOrganization(id)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(posts)
+	json.NewEncoder(w).Encode(org)
 	return 0, nil
 }
 

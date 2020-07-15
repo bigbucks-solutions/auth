@@ -10,7 +10,7 @@ type Role struct {
 	Name        string `gorm:"not null"`
 	Description string
 	Permissions []*Permission `gorm:"many2many:role_permissions;"`
-	Users       []*User       `gorm:"many2many:user_org_roles;association_jointable_foreignkey:user_id;jointable_foreignkey:role_id;"`
+	Users       []*User       `gorm:"many2many:UserOrgRole;JoinForeignKey:RoleID;JoinReferences:UserID;"`
 }
 
 // Permission model
@@ -28,4 +28,12 @@ type UserOrgRole struct {
 	OrgID  int `gorm:"not null"`
 	UserID int `gorm:"not null"`
 	RoleID int `gorm:"not null"`
+	// CreatedAt time.Time
+	// DeletedAt gorm.DeletedAt
 }
+
+// func (usr *UserOrgRole) BeforeCreate(db *gorm.DB) error {
+// 	// ...
+// 	fmt.Prinln(usr)
+// 	return ""
+// }

@@ -29,7 +29,7 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -45,13 +45,23 @@ var rootCmd = &cobra.Command{
 
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
-		models.Dbcon, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+		// models.Dbcon, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+		dsn := "user=bigbucks password=bigbucks DB.name=bigbucks port=5432 sslmode=disable"
+		models.Dbcon, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		// Automigrate GORM models
+		// models.Dbcon.Config.Logger = models.Dbcon.Config.Logger.LogMode(logger.Error)
+
+		err = models.Dbcon.SetupJoinTable(&models.Organization{}, "Users", &models.UserOrgRole{})
+		err = models.Dbcon.SetupJoinTable(&models.User{}, "Roles", &models.UserOrgRole{})
+		fmt.Println(err)
+		// models.Dbcon.Config.
+		// models.Dbcon.Logger.LogMode(logger.Error)
 		if err != nil {
 			panic("failed to connect database")
 		}
 		// defer models.Dbcon.Close()
 		server := &settings.Settings{}
-
+		models.Migrate()
 		err = viper.Unmarshal(&server)
 		var listener net.Listener
 		adr := "127.0.0.1:" + server.Port
@@ -60,7 +70,7 @@ var rootCmd = &cobra.Command{
 			log.Fatal("error")
 		}
 		handler, err := router.NewHandler(server)
-		models.Migrate() // Automigrate GORM models
+
 		valids.InitializeValidations()
 		log.Println("Listening on", listener.Addr().String())
 		if err := http.Serve(listener, handler); err != nil {
