@@ -18,7 +18,7 @@ func Migrate() {
 
 	// Migrate the schema
 	Dbcon.AutoMigrate(&User{}, &Profile{}, &Organization{},
-		&Role{}, &Permission{}, &UserOrgRole{})
+		&Role{}, &Permission{}, &UserOrgRole{}, &ForgotPassword{})
 
 	// Create
 	// results := Dbcon.Create(&User{Username: "L1212", Password: "jamsheed"})

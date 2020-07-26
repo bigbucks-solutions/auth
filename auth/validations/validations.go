@@ -1,6 +1,7 @@
 package validations
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/go-playground/locales/en"
@@ -28,7 +29,8 @@ func NewErrorDict() *ValidationErrors {
 }
 
 func (val *ValidationErrors) Error() string {
-	return "Error"
+	jsonString, _ := json.Marshal(val.Errors)
+	return string(jsonString)
 }
 
 func (wraperr *ValidationErrors) GetErrorTranslations(origerr error) {

@@ -53,6 +53,11 @@ func CreateOrganization(org *Organization) (int, error) {
 			fmt.Println(err)
 			return err
 		}
+		for _, usr := range org.Users {
+			usr.Profile = Profile{
+				Email: usr.Username,
+			}
+		}
 		if err := tx.Create(org.Users).Error; err != nil {
 			if nerr := ParseError(err); errors.Is(nerr, ErrDuplicateKey) {
 				customerr.Errors["username"] = "Username already exists"

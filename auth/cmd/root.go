@@ -46,19 +46,7 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
 		// models.Dbcon, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
-		dsn := "user=bigbucks password=bigbucks DB.name=bigbucks port=5432 sslmode=disable"
-		models.Dbcon, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-		// Automigrate GORM models
-		// models.Dbcon.Config.Logger = models.Dbcon.Config.Logger.LogMode(logger.Error)
 
-		err = models.Dbcon.SetupJoinTable(&models.Organization{}, "Users", &models.UserOrgRole{})
-		err = models.Dbcon.SetupJoinTable(&models.User{}, "Roles", &models.UserOrgRole{})
-		fmt.Println(err)
-		// models.Dbcon.Config.
-		// models.Dbcon.Logger.LogMode(logger.Error)
-		if err != nil {
-			panic("failed to connect database")
-		}
 		// defer models.Dbcon.Close()
 		server := &settings.Settings{}
 		models.Migrate()
@@ -71,7 +59,6 @@ var rootCmd = &cobra.Command{
 		}
 		handler, err := router.NewHandler(server)
 
-		valids.InitializeValidations()
 		log.Println("Listening on", listener.Addr().String())
 		if err := http.Serve(listener, handler); err != nil {
 			log.Fatal(err)
@@ -82,6 +69,21 @@ var rootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	dsn := "user=bigbucks password=bigbucks DB.name=bigbucks port=5432 sslmode=disable"
+	var err error
+	models.Dbcon, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	// Automigrate GORM models
+	// models.Dbcon.Config.Logger = models.Dbcon.Config.Logger.LogMode(logger.Error)
+
+	err = models.Dbcon.SetupJoinTable(&models.Organization{}, "Users", &models.UserOrgRole{})
+	err = models.Dbcon.SetupJoinTable(&models.User{}, "Roles", &models.UserOrgRole{})
+	fmt.Println(err)
+	// models.Dbcon.Config.
+	// models.Dbcon.Logger.LogMode(logger.Error)
+	if err != nil {
+		panic("failed to connect database")
+	}
+	valids.InitializeValidations()
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

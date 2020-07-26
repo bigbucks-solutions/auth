@@ -24,6 +24,8 @@ func NewHandler(settings *settings.Settings) (http.Handler, error) {
 	api.Handle("/renew", patch(ctr.RenewToken, "", true)).Methods("POST")
 	api.Handle("/get-org/{id:[0-9]+}", patch(ctr.GetOrg, "", false)).Methods("GET")
 	api.Handle("/create-org", patch(ctr.CreateOrg, "", false)).Methods("POST")
+	api.Handle("/user/reset", patch(ctr.SentResetToken, "", false)).Methods("POST")
+	api.Handle("/user/changepassword/{token:[a-z0-9]+}", patch(ctr.ChangePassword, "", false)).Methods("POST")
 
 	return http.StripPrefix(settings.BaseURL, r), nil
 }
