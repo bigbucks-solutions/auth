@@ -83,16 +83,36 @@ func (usr User) ChangePassword(token, password string) (int, error) {
 		customerr.Errors["Token"] = "Invalid or expired token provided"
 		return http.StatusForbidden, customerr
 	}
-	usr.Password = password
-	Dbcon.Save(&usr)
+
+	err := Dbcon.Transaction(func(tx *gorm.DB) error {
+		// usr.Password = password
+		// usr.ForgotPassword.Expiry = time.Now()
+		tx.Model(&usr).Update("Password", password)
+		tx.Model(&usr.ForgotPassword).Update("Expiry", time.Now())
+		return nil
+	})
+	if err != nil {
+		return http.StatusForbidden, err
+	}
+	// Dbcon.Update(&usr)
 	return 0, nil
 }
 
-// BeforeSave GORM hook hash the password
-func (usr *User) BeforeSave(tx *gorm.DB) (err error) {
+// BeforeCreate GORM hook hash the password
+func (usr *User) BeforeCreate(tx *gorm.DB) (err error) {
 	if pw, err := bcrypt.GenerateFromPassword([]byte(usr.Password), 0); err == nil {
-		// tx.Statement.Set("hashed_password", string(pw))
 		usr.Password = string(pw)
+	}
+	return
+}
+
+// BeforeUpdate GORM hook hash the password
+func (usr *User) BeforeUpdate(tx *gorm.DB) (err error) {
+	if tx.Statement.Changed("Password") {
+		// fmt.Println("changed password")
+		if pw, err := bcrypt.GenerateFromPassword([]byte(usr.Password), 0); err == nil {
+			tx.Statement.SetColumn("Password", string(pw))
+		}
 	}
 	return
 }
