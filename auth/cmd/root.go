@@ -17,7 +17,8 @@ package cmd
 
 import (
 	router "bigbucks/solution/auth/http"
-	models "bigbucks/solution/auth/models"
+	"bigbucks/solution/auth/models"
+
 	settings "bigbucks/solution/auth/settings"
 	valids "bigbucks/solution/auth/validations"
 	"fmt"
@@ -49,13 +50,13 @@ var rootCmd = &cobra.Command{
 
 		// defer models.Dbcon.Close()
 		server := &settings.Settings{}
-		models.Migrate()
+
 		err = viper.Unmarshal(&server)
 		var listener net.Listener
 		adr := "0.0.0.0:" + server.Port
 		listener, err = net.Listen("tcp", adr)
 		if err != nil {
-			log.Fatal("error")
+			log.Fatal(err)
 		}
 		handler, err := router.NewHandler(server)
 

@@ -5,6 +5,7 @@ import (
 	"bigbucks/solution/auth/settings"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -37,6 +38,7 @@ func SentResetToken(w http.ResponseWriter, r *http.Request, ctx *settings.Contex
 }
 
 func ChangePassword(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+	fmt.Println("testes")
 	var body ResetPasswordBody
 	err := json.NewDecoder(r.Body).Decode(&body)
 	vars := mux.Vars(r)
