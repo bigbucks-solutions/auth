@@ -52,7 +52,7 @@ var rootCmd = &cobra.Command{
 		models.Migrate()
 		err = viper.Unmarshal(&server)
 		var listener net.Listener
-		adr := "127.0.0.1:" + server.Port
+		adr := "0.0.0.0:" + server.Port
 		listener, err = net.Listen("tcp", adr)
 		if err != nil {
 			log.Fatal("error")

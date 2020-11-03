@@ -85,9 +85,10 @@ func (usr User) ChangePassword(token, password string) (int, error) {
 	}
 
 	err := Dbcon.Transaction(func(tx *gorm.DB) error {
-		// usr.Password = password
+
 		// usr.ForgotPassword.Expiry = time.Now()
 		tx.Model(&usr).Update("Password", password)
+		usr.Password = password
 		tx.Model(&usr.ForgotPassword).Update("Expiry", time.Now())
 		return nil
 	})
@@ -109,8 +110,10 @@ func (usr *User) BeforeCreate(tx *gorm.DB) (err error) {
 // BeforeUpdate GORM hook hash the password
 func (usr *User) BeforeUpdate(tx *gorm.DB) (err error) {
 	if tx.Statement.Changed("Password") {
+		x := tx.Statement.Dest.(map[string]interface{})["Password"]
+		// fmt.Println(x)
 		// fmt.Println("changed password")
-		if pw, err := bcrypt.GenerateFromPassword([]byte(usr.Password), 0); err == nil {
+		if pw, err := bcrypt.GenerateFromPassword([]byte(x.(string)), 0); err == nil {
 			tx.Statement.SetColumn("Password", string(pw))
 		}
 	}
@@ -124,6 +127,9 @@ func Authenticate(username, password string) (success bool, user User) {
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err == nil {
 		success = true
+		// fmt.Println(err)
+
 	}
+
 	return
 }

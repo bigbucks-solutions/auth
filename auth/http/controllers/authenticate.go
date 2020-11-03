@@ -4,6 +4,7 @@ import (
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/settings"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -44,6 +45,7 @@ func (e Extractor) ExtractToken(r *http.Request) (string, error) {
 }
 
 func Signin(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+	fmt.Println("Logged in..")
 	var cred jsonCred
 	err := json.NewDecoder(r.Body).Decode(&cred)
 	if err != nil {
