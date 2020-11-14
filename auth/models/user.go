@@ -5,11 +5,15 @@ import (
 	valids "bigbucks/solution/auth/validations"
 	"crypto/rand"
 	"encoding/json"
+
+	// "errors"
 	"fmt"
+	// "log"
 	"net/http"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -22,6 +26,7 @@ type User struct {
 	Roles          []*Role         `gorm:"many2many:UserOrgRole;JoinForeignKey:UserID;JoinReferences:RoleID;"`
 	Profile        Profile         `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	ForgotPassword ForgotPassword  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	OAuthClient    OAuthClient     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
 
 // Profile : GORM model User profile
@@ -40,6 +45,14 @@ type ForgotPassword struct {
 	UserID     int
 	ResetToken string
 	Expiry     time.Time
+}
+
+// ForgotPassword : GORM model to track password reset token
+type OAuthClient struct {
+	gorm.Model `json:"-"`
+	UserID     int
+	Source     string `gorm:"not null" validate:"required,oneof=google facebook"`
+	Details    datatypes.JSON
 }
 
 // MarshalJSON Json Dump override method
@@ -70,7 +83,7 @@ func (usr User) GenerateResetToken() (string, error) {
 		Dbcon.Model(&fg).Save(&fg)
 	}
 	// TODO: make this async
-	passwordreset.SendResetEmail(fg.ResetToken, usr.Profile.Email)
+	passwordreset.SendResetEmail(fg.ResetToken, usr.Profile.Email, usr.Username)
 	return fmt.Sprintf("%x", b), nil
 }
 

@@ -17,7 +17,7 @@ func Migrate() {
 	// defer db.Close()
 
 	// Migrate the schema
-	Dbcon.AutoMigrate(&User{}, &Profile{}, &Organization{},
+	Dbcon.AutoMigrate(&User{}, &Profile{}, &OAuthClient{}, &Organization{},
 		&Role{}, &Permission{}, &UserOrgRole{}, &ForgotPassword{})
 
 	// Create

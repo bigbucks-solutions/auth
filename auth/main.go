@@ -18,5 +18,5 @@ package main
 import "bigbucks/solution/auth/cmd"
 
 func main() {
-  cmd.Execute()
+	cmd.Execute()
 }

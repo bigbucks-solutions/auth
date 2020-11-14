@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	cnst "bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/models"
+	oauth "bigbucks/solution/auth/oauthutils"
 	"bigbucks/solution/auth/settings"
 	"encoding/json"
 	"fmt"
@@ -11,6 +13,7 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
+	googleAuthIDTokenVerifier "github.com/futurenda/google-auth-id-token-verifier"
 )
 
 type userInfo struct {
@@ -30,7 +33,19 @@ type jsonCred struct {
 	ReCaptcha string `json:"recaptcha"`
 }
 
+// Struct for parsing Google oauth login credentials
+type GoogleSigninCred struct {
+	IdToken     string `json:"idToken"`
+	AccessToken string `json:"accessToken"`
+}
+
 type Extractor []string
+
+var googleIdTokenver googleAuthIDTokenVerifier.Verifier = googleAuthIDTokenVerifier.Verifier{}
+
+func init() {
+	// googleIdTokenver := googleAuthIDTokenVerifier.Verifier{}
+}
 
 func (e Extractor) ExtractToken(r *http.Request) (string, error) {
 	token, _ := request.HeaderExtractor{"X-Auth"}.ExtractToken(r)
@@ -56,6 +71,36 @@ func Signin(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int,
 		return http.StatusUnauthorized, nil
 	}
 	return printToken(w, r, &user, &ctx.Settings)
+}
+
+func GoogleSignin(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+	fmt.Println("Logged in..")
+	var googCred GoogleSigninCred
+	err := json.NewDecoder(r.Body).Decode(&googCred)
+	err = googleIdTokenver.VerifyIDToken(googCred.IdToken, []string{
+		cnst.GoogleClientID,
+	})
+	if err == nil {
+		success, user, _ := oauth.GoogleAuthenticate(googCred.IdToken, googCred.AccessToken)
+		if !success {
+			return http.StatusUnauthorized, nil
+		}
+		return printToken(w, r, &user, &ctx.Settings)
+	}
+	return http.StatusBadRequest, err
+	// return printToken(w, r, &user, &ctx.Settings)
+}
+
+func FbSignin(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+	fmt.Println("Fb Logged in..")
+	var googCred GoogleSigninCred
+	json.NewDecoder(r.Body).Decode(&googCred)
+	success, user, _ := oauth.FBAuthenticate(googCred.AccessToken)
+	if !success {
+		return http.StatusUnauthorized, nil
+	}
+	return printToken(w, r, &user, &ctx.Settings)
+	// return printToken(w, r, &user, &ctx.Settings)
 }
 
 func RenewToken(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {

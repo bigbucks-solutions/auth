@@ -6,10 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
+	
 )
 
 type SentTokenBody struct {
@@ -33,6 +35,7 @@ func SentResetToken(w http.ResponseWriter, r *http.Request, ctx *settings.Contex
 	// id, _ := strconv.Atoi(vars["id"])
 	// org, _, _ := models.GetOrganization(id)
 	// w.Header().Set("Content-Type", "application/json")
+	log.Println("Sending Reset Token...")
 	json.NewEncoder(w).Encode(map[string]string{"msg": "Password reset token sent to registered email"})
 	return 0, nil
 }

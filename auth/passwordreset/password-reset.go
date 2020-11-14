@@ -85,6 +85,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"log"
 	"net/smtp"
 	"strings"
 	"text/template"
@@ -194,8 +195,8 @@ func VerifyToken(token string, pwdvalFn func(string) ([]byte, error), secret []b
 }
 
 // SendResetEmail Send Password Reset Email
-func SendResetEmail(token string, to string) {
-	auth := smtp.PlainAuth("", "npmedco@gmail.com", "npmedcopass", "smtp.gmail.com")
+func SendResetEmail(token string, to string, username string) {
+	auth := smtp.PlainAuth("", "npmedco@gmail.com", "npmedcopass681", "smtp.gmail.com")
 	toEmail := []string{to}
 	templateFileName := "./passwordreset/template.html"
 	t, err := template.ParseFiles(templateFileName)
@@ -204,11 +205,13 @@ func SendResetEmail(token string, to string) {
 	}
 	buf := new(bytes.Buffer)
 	data := struct {
-		Company string
-		Token   string
+		Company  string
+		Token    string
+		Username string
 	}{
-		Company: "BigBucks",
-		Token:   token,
+		Company:  "BigBucks",
+		Token:    token,
+		Username: username,
 	}
 	if err = t.Execute(buf, data); err != nil {
 		fmt.Println(err)
@@ -223,4 +226,5 @@ func SendResetEmail(token string, to string) {
 	// 	"\r\n" +
 	// 	"Here’s the space for our great sales pitch\r\n")
 	err = smtp.SendMail("smtp.gmail.com:587", auth, "jamshi.onnet@gmail.com", toEmail, []byte(body))
+	log.Println(err)
 }
