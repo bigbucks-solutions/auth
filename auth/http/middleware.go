@@ -24,6 +24,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request, settings *settings.Set
 
 	var tk ctr.AuthToken
 	token, err := request.ParseFromRequestWithClaims(r, &ctr.Extractor{}, &tk, keyFunc)
+	log.Printf(token.Raw)
 
 	if err != nil || !token.Valid {
 		log.Println("failed", err)

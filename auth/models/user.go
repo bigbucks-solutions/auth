@@ -5,13 +5,18 @@ import (
 	valids "bigbucks/solution/auth/validations"
 	"crypto/rand"
 	"encoding/json"
+	"io"
+	"os"
+	"strings"
 
 	// "errors"
 	"fmt"
 	// "log"
+	"mime/multipart"
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -32,11 +37,12 @@ type User struct {
 // Profile : GORM model User profile
 type Profile struct {
 	gorm.Model    `json:"-"`
-	UserID        int
+	UserID        int `json:"-"`
 	FirstName     string
 	LastName      string
-	ContactNumber string
+	ContactNumber string `json:"phone"`
 	Email         string
+	Picture       string
 }
 
 // ForgotPassword : GORM model to track password reset token
@@ -47,7 +53,7 @@ type ForgotPassword struct {
 	Expiry     time.Time
 }
 
-// ForgotPassword : GORM model to track password reset token
+// ForgotPassword : GORM model for social oauth data
 type OAuthClient struct {
 	gorm.Model `json:"-"`
 	UserID     int
@@ -58,13 +64,34 @@ type OAuthClient struct {
 // MarshalJSON Json Dump override method
 func (usr User) MarshalJSON() ([]byte, error) {
 	var tmp struct {
-		Username string `json:"username"`
-		Roles    []*Role
-		Profile  Profile `json:"omitempty"`
+		Username string  `json:"username"`
+		Roles    []*Role `json:",omitempty"`
+		Profile  Profile `json:",omitempty"`
+		IsSocial bool    `json:"isSocial"`
 	}
 	tmp.Username = usr.Username
 	tmp.Roles = usr.Roles
+	Dbcon.Model(&usr).Association("Profile").Find(&usr.Profile)
 	tmp.Profile = usr.Profile
+
+	tmp.IsSocial = Dbcon.Model(&usr).Association("OAuthClient").Count() > 0
+	return json.Marshal(&tmp)
+}
+
+// MarshalJSON Json Dump override method for Profile struct
+func (prf Profile) MarshalJSON() ([]byte, error) {
+	var tmp struct {
+		Firstname string `json:"firstName"`
+		Lastname  string `json:"lastName"`
+		Phone     string `json:"phone"`
+		Email     string `json:"email"`
+		Picture   string `json:"avatar"`
+	}
+	tmp.Email = prf.Email
+	tmp.Firstname = prf.FirstName
+	tmp.Lastname = prf.LastName
+	tmp.Phone = prf.ContactNumber
+	tmp.Picture = fmt.Sprintf("/avatar/%s", prf.Picture)
 	return json.Marshal(&tmp)
 }
 
@@ -145,4 +172,32 @@ func Authenticate(username, password string) (success bool, user User) {
 	}
 
 	return
+}
+
+// UpdateUserProfile Update user profile data from map<string, dynamic> datastructure
+func (usr User) UpdateUserProfile(data map[string][]string, picture []*multipart.FileHeader) (int, error) {
+	var filename string = ""
+	if len(picture) > 0 {
+		uuidWithHyphen := uuid.New()
+		fmt.Println(uuidWithHyphen)
+		uuid := strings.Replace(uuidWithHyphen.String(), "-", "", -1)
+		file, _ := picture[0].Open()
+		filename = fmt.Sprintf("%s.jpg", uuid)
+		tmpfile, _ := os.Create(fmt.Sprintf("./profile_pics/%s", filename))
+		io.Copy(tmpfile, file)
+		tmpfile.Close()
+	}
+	var profile Profile
+	Dbcon.Model(&usr).Association("Profile").Find(&profile)
+	if len(profile.Picture) > 0 {
+		os.Remove(fmt.Sprintf("./profile_pics/%s", profile.Picture))
+	}
+	profile.Email = data["useremail"][0]
+	profile.FirstName = data["firstname"][0]
+	profile.LastName = data["lastname"][0]
+	profile.ContactNumber = data["userphone"][0]
+	profile.Picture = filename
+	// }
+	Dbcon.Save(&profile)
+	return 0, nil
 }

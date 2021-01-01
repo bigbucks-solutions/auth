@@ -74,7 +74,7 @@ func Signin(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int,
 }
 
 func GoogleSignin(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
-	fmt.Println("Logged in..")
+	fmt.Println("Google Logged in..")
 	var googCred GoogleSigninCred
 	err := json.NewDecoder(r.Body).Decode(&googCred)
 	err = googleIdTokenver.VerifyIDToken(googCred.IdToken, []string{

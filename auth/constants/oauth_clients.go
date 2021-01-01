@@ -1,3 +1,3 @@
 package constants
 
-const GoogleClientID string = "621950620285-dk4krkovs37fb5r1r5uasqesnsmi11ks.apps.googleusercontent.com"
+const GoogleClientID string = "861393961889-8q3a55ad1arfnbp99og8f0fdv06ojku6.apps.googleusercontent.com"

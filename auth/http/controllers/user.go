@@ -11,7 +11,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
-	
 )
 
 type SentTokenBody struct {
@@ -60,5 +59,28 @@ func ChangePassword(w http.ResponseWriter, r *http.Request, ctx *settings.Contex
 	// posts = append(posts, Post{ID: "1", Title: "My first post", Body: "This is the content of my first post"})
 	// w.Header().Set("Content-Type", "application/json")
 	// json.NewEncoder(w).Encode(err)
+	return 0, nil
+}
+
+func UpdateProfile(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+	parseErr := r.ParseMultipartForm(32 << 20) // maxMemory 32MB
+	if parseErr != nil {
+		// http.Error(w, "failed to parse multipart message", http.StatusBadRequest)
+		return http.StatusBadRequest, parseErr
+	}
+	num, err := ctx.User.UpdateUserProfile(r.Form, r.MultipartForm.File["file"])
+
+	// r.MultipartForm.Value[]
+
+	// code, err := models.CreateOrganization(&org)
+	// posts = append(posts, Post{ID: "1", Title: "My first post", Body: "This is the content of my first post"})
+	// w.Header().Set("Content-Type", "application/json")
+	// json.NewEncoder(w).Encode(err)
+	return num, err
+}
+
+func GetMeDetails(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(ctx.User)
 	return 0, nil
 }
