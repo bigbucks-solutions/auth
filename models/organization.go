@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 
 	valids "bigbucks/solution/auth/validations"
@@ -41,6 +42,7 @@ func GetOrganization(OrgID int) (Organization, int, error) {
 // CreateOrganization : Create new Organization with a super user attached
 func CreateOrganization(org *Organization) (int, error) {
 	err := valids.Validate.Struct(org)
+	log.Println(err)
 	customerr := valids.NewErrorDict()
 	if err != nil {
 		customerr.GetErrorTranslations(err)

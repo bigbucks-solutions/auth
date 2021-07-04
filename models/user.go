@@ -31,7 +31,7 @@ type User struct {
 	Roles          []*Role         `gorm:"many2many:UserOrgRole;JoinForeignKey:UserID;JoinReferences:RoleID;"`
 	Profile        Profile         `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	ForgotPassword ForgotPassword  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	OAuthClient    OAuthClient     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	OAuthClient    OAuthClient     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" validate:"structonly,omitempty"`
 }
 
 // Profile : GORM model User profile
@@ -81,17 +81,20 @@ func (usr User) MarshalJSON() ([]byte, error) {
 // MarshalJSON Json Dump override method for Profile struct
 func (prf Profile) MarshalJSON() ([]byte, error) {
 	var tmp struct {
-		Firstname string `json:"firstName"`
-		Lastname  string `json:"lastName"`
-		Phone     string `json:"phone"`
-		Email     string `json:"email"`
-		Picture   string `json:"avatar"`
+		Firstname string  `json:"firstName"`
+		Lastname  string  `json:"lastName"`
+		Phone     string  `json:"phone"`
+		Email     string  `json:"email"`
+		Picture   *string `json:"avatar"`
 	}
 	tmp.Email = prf.Email
 	tmp.Firstname = prf.FirstName
 	tmp.Lastname = prf.LastName
 	tmp.Phone = prf.ContactNumber
-	tmp.Picture = fmt.Sprintf("/avatar/%s", prf.Picture)
+	if prf.Picture != "" {
+		var s = fmt.Sprintf("/avatar/%s", prf.Picture)
+		tmp.Picture = &s
+	}
 	return json.Marshal(&tmp)
 }
 

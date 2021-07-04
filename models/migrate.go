@@ -17,6 +17,10 @@ func Migrate() {
 	// defer db.Close()
 
 	// Migrate the schema
+	// err := Dbcon.SetupJoinTable(&Organization{}, "Users", &UserOrgRole{})
+	// err = Dbcon.SetupJoinTable(&User{}, "Roles", &UserOrgRole{})
+	// fmt.Println(err)
+	// Dbcon.AutoMigrate(&UserOrgRole{})
 	Dbcon.AutoMigrate(&User{}, &Profile{}, &OAuthClient{}, &Organization{},
 		&Role{}, &Permission{}, &UserOrgRole{}, &ForgotPassword{})
 
