@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"bigbucks/solution/auth/models"
-	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -35,7 +34,6 @@ var createCmd = &cobra.Command{
 auth role create accounts`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("test")
 		_, err := models.CreateRole(&models.Role{Name: args[0]})
 		return err
 	},
