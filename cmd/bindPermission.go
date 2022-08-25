@@ -33,11 +33,6 @@ var bindPermissionCmd = &cobra.Command{
 For example:
 	auth role bind-permission ROLE_NAME PERM_NAME`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// var usr models.User
-		// models.Dbcon.Preload("Profile").Find(&usr, &models.User{Username: "jamsheed.on@gmail.com"})
-		// fmt.Println(usr.Profile.Email)
-		// tok, _ := usr.GenerateResetToken()
-		// fmt.Println(tok)
 		_, err := models.BindPermission(perm_key, role_key)
 		return err
 	},
@@ -45,16 +40,6 @@ For example:
 
 func init() {
 	roleCmd.AddCommand(bindPermissionCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// bindPermissionCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-
 	bindPermissionCmd.Flags().StringVarP(&role_key, "rolename", "r", "", "Role name to select")
 	bindPermissionCmd.Flags().StringVarP(&perm_key, "perm", "p", "", "Permission code to bind")
 	bindPermissionCmd.MarkFlagRequired("rolename")
