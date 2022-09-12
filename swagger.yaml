@@ -1,0 +1,60 @@
+basePath: /api/v1
+definitions:
+  controllers.SendResetToken.PasswordResetBody:
+    properties:
+      email:
+        example: example@example.com
+        type: string
+    type: object
+  types.SimpleResponse:
+    properties:
+      message:
+        example: message
+        type: string
+    type: object
+host: localhost:8000
+info:
+  contact:
+    email: jamsheed@nsmail.dev
+    name: Jamsheed
+    url: http://www.swagger.io/support
+  description: This is REST api definitions.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: BigBucks Solutions Auth Engine
+  version: 0.0.1
+paths:
+  /user/reset:
+    post:
+      consumes:
+      - application/json
+      description: Get password reset token to email
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.SendResetToken.PasswordResetBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: return
+          schema:
+            $ref: '#/definitions/types.SimpleResponse'
+        "400":
+          description: ""
+        "404":
+          description: ""
+        "500":
+          description: ""
+      summary: Send the password reset token
+      tags:
+      - auth
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"
