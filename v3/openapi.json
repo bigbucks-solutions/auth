@@ -1,0 +1,256 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "contact": {
+      "email": "jamsheed@nsmail.dev",
+      "name": "Jamsheed",
+      "url": "http://www.swagger.io/support"
+    },
+    "description": "This is REST api definitions.",
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "termsOfService": "http://swagger.io/terms/",
+    "title": "BigBucks Solutions Auth Engine",
+    "version": "0.0.1"
+  },
+  "servers": [
+    {
+      "url": "//localhost:8000/api/v1"
+    }
+  ],
+  "paths": {
+    "/me": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {},
+            "description": ""
+          },
+          "500": {
+            "content": {},
+            "description": ""
+          }
+        },
+        "summary": "Get logged in user profile information",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/user/changepassword/{token}": {
+      "post": {
+        "description": "Reset the password with the password reset token sent to email",
+        "parameters": [
+          {
+            "description": "token",
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/controllers.ResetPasswordBody"
+              }
+            }
+          },
+          "description": "request body",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {},
+            "description": "return"
+          },
+          "400": {
+            "content": {},
+            "description": ""
+          },
+          "404": {
+            "content": {},
+            "description": ""
+          },
+          "500": {
+            "content": {},
+            "description": ""
+          }
+        },
+        "summary": "Reset the password with the password reset token sent",
+        "tags": [
+          "auth"
+        ],
+        "x-codegen-request-body-name": "request"
+      }
+    },
+    "/user/reset": {
+      "post": {
+        "description": "Get password reset token to email",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/controllers.PasswordResetBody"
+              }
+            }
+          },
+          "description": "request body",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/types.SimpleResponse"
+                }
+              }
+            },
+            "description": "return"
+          },
+          "400": {
+            "content": {},
+            "description": ""
+          },
+          "404": {
+            "content": {},
+            "description": ""
+          },
+          "500": {
+            "content": {},
+            "description": ""
+          }
+        },
+        "summary": "Send the password reset token",
+        "tags": [
+          "auth"
+        ],
+        "x-codegen-request-body-name": "request"
+      }
+    },
+    "/user/updateprofile": {
+      "post": {
+        "description": "Update user profile details",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/userUpdateProfileBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {},
+            "description": ""
+          },
+          "400": {
+            "content": {},
+            "description": ""
+          },
+          "404": {
+            "content": {},
+            "description": ""
+          },
+          "500": {
+            "content": {},
+            "description": ""
+          }
+        },
+        "summary": "Update User profile details",
+        "tags": [
+          "auth"
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "controllers.PasswordResetBody": {
+        "properties": {
+          "email": {
+            "example": "example@example.com",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "controllers.ResetPasswordBody": {
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "types.SimpleResponse": {
+        "properties": {
+          "message": {
+            "example": "message",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "userUpdateProfileBody": {
+        "properties": {
+          "file": {
+            "type": "binary",
+            "example": [
+              {
+                "externalValue": "http://www.africau.edu/images/default/sample.pdf"
+              }
+            ]
+          },
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "phone": {
+            "type": "string",
+            "example": "0000000"
+          }
+        },
+        "example": {
+          "firstName": "John",
+          "lastName": "Doe",
+          "file": {
+            "externalValue": "http://www.africau.edu/images/default/sample.pdf"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "BasicAuth": {
+        "scheme": "basic",
+        "type": "http"
+      }
+    }
+  },
+  "x-original-swagger-version": "2.0"
+}

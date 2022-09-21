@@ -212,6 +212,22 @@
   </li>
 
       
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../v3/" class="md-tabs__link">
+        V3
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -324,6 +340,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#servers" class="md-nav__link">
+    Servers
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#auth" class="md-nav__link">
     auth
   </a>
@@ -332,8 +355,29 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#get-me" class="md-nav__link">
+    GET /me
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#post-userchangepasswordtoken" class="md-nav__link">
+    POST /user/changepassword/{token}
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#post-userreset" class="md-nav__link">
     POST /user/reset
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#post-userupdateprofile" class="md-nav__link">
+    POST /user/updateprofile
   </a>
   
 </li>
@@ -343,10 +387,106 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#schemas" class="md-nav__link">
+    Schemas
+  </a>
+  
+    <nav class="md-nav" aria-label="Schemas">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#controllerspasswordresetbody" class="md-nav__link">
+    controllers.PasswordResetBody
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#controllersresetpasswordbody" class="md-nav__link">
+    controllers.ResetPasswordBody
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typessimpleresponse" class="md-nav__link">
+    types.SimpleResponse
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#userupdateprofilebody" class="md-nav__link">
+    userUpdateProfileBody
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-schemes" class="md-nav__link">
+    Security schemes
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4">
+          V3
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="V3" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          V3
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../v3/" class="md-nav__link">
+        OpenAPI YAML
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -387,14 +527,61 @@ Most likely, it is not desirable to edit this file by hand!
     <strong>License:</strong> <a href="http://www.apache.org/licenses/LICENSE-2.0.html" target="_blank" rel="noopener noreferrer">Apache 2.0</a>
 </div>
 
+<h2 id="servers">Servers</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Description</th>
+            <th>URL</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>//localhost:8000/api/v1</td>
+            <td>
+                <a href="//localhost:8000/api/v1" target="_blank" rel="noopener noreferrer">//localhost:8000/api/v1</a>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
 <h2 id="auth"><span class="api-tag">auth</span></h2>
 <hr class="operation-separator" />
 
-<h3 id="post-userreset"><span class="http-post">POST</span> /user/reset</h3>
-<p>Send the password reset token</p>
+<h3 id="get-me"><span class="http-get">GET</span> /me</h3>
+<p>Get logged in user profile information</p>
+<p class="response-title">
+    <strong>Response <span class="response-code code-200">200</span>&nbsp;<span class="status-phrase">OK</span></strong>
+</p>
+
+<div class="tabbed-set tabbed-alternate" data-tabs="1:1"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">application/json</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<details class="hint">
+<summary>Schema of the response body</summary>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+</details>
+</div>
+</div>
+</div>
+<p class="response-title">
+    <strong>Response <span class="response-code code-400">400</span>&nbsp;<span class="status-phrase">Bad Request</span></strong>
+</p>
+
+<p class="response-title">
+    <strong>Response <span class="response-code code-500">500</span>&nbsp;<span class="status-phrase">Internal Server Error</span></strong>
+</p>
+
+<hr class="operation-separator" />
+
+<h3 id="post-userchangepasswordtoken"><span class="http-post">POST</span> /user/changepassword/<span class="route-param">{token}</span></h3>
+<p>Reset the password with the password reset token sent</p>
 <details class="note">
 <summary>Description</summary>
-<p>Get password reset token to email</p>
+<p>Reset the password with the password reset token sent to email</p>
 </details>
 <p><strong>Input parameters</strong></p>
 <table>
@@ -410,16 +597,194 @@ Most likely, it is not desirable to edit this file by hand!
     </thead>
     <tbody>
         <tr>
-            <td class="parameter-name"><code>request</code></td>
-            <td>body</td>
-            <td>None</td>
+            <td class="parameter-name"><code>token</code></td>
+            <td>path</td>
+            <td>string</td>
             <td></td>
             <td>No</td>
-            <td>request body</td>
+            <td>token</td>
         </tr>
     </tbody>
 </table>
+<p class="request-body-title"><strong>Request body</strong></p>
 
+<div class="tabbed-set tabbed-alternate" data-tabs="2:1"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">application/json</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p><div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;password&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+<span class="small-note">⚠️</span>&nbsp;<em class="small-note warning">This example has been generated automatically from the schema and it is not accurate. Refer to the schema for more information.</em></p>
+<details class="hint">
+<summary>Schema of the request body</summary>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
+<span class="w">        </span><span class="p">},</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;password&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+</details>
+</div>
+</div>
+</div>
+<p class="response-title">
+    <strong>Response <span class="response-code code-200">200</span>&nbsp;<span class="status-phrase">OK</span></strong>
+</p>
+
+<p class="response-title">
+    <strong>Response <span class="response-code code-400">400</span>&nbsp;<span class="status-phrase">Bad Request</span></strong>
+</p>
+
+<p class="response-title">
+    <strong>Response <span class="response-code code-404">404</span>&nbsp;<span class="status-phrase">Not Found</span></strong>
+</p>
+
+<p class="response-title">
+    <strong>Response <span class="response-code code-500">500</span>&nbsp;<span class="status-phrase">Internal Server Error</span></strong>
+</p>
+
+<hr class="operation-separator" />
+
+<h3 id="post-userreset"><span class="http-post">POST</span> /user/reset</h3>
+<p>Send the password reset token</p>
+<details class="note">
+<summary>Description</summary>
+<p>Get password reset token to email</p>
+</details>
+<p class="request-body-title"><strong>Request body</strong></p>
+
+<div class="tabbed-set tabbed-alternate" data-tabs="3:1"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">application/json</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p><div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;example@example.com&quot;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+<span class="small-note">⚠️</span>&nbsp;<em class="small-note warning">This example has been generated automatically from the schema and it is not accurate. Refer to the schema for more information.</em></p>
+<details class="hint">
+<summary>Schema of the request body</summary>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;example&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;example@example.com&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+</details>
+</div>
+</div>
+</div>
+<p class="response-title">
+    <strong>Response <span class="response-code code-200">200</span>&nbsp;<span class="status-phrase">OK</span></strong>
+</p>
+
+<div class="tabbed-set tabbed-alternate" data-tabs="4:1"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">application/json</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p><div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;message&quot;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+<span class="small-note">⚠️</span>&nbsp;<em class="small-note warning">This example has been generated automatically from the schema and it is not accurate. Refer to the schema for more information.</em></p>
+<details class="hint">
+<summary>Schema of the response body</summary>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;example&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;message&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+</details>
+</div>
+</div>
+</div>
+<p class="response-title">
+    <strong>Response <span class="response-code code-400">400</span>&nbsp;<span class="status-phrase">Bad Request</span></strong>
+</p>
+
+<p class="response-title">
+    <strong>Response <span class="response-code code-404">404</span>&nbsp;<span class="status-phrase">Not Found</span></strong>
+</p>
+
+<p class="response-title">
+    <strong>Response <span class="response-code code-500">500</span>&nbsp;<span class="status-phrase">Internal Server Error</span></strong>
+</p>
+
+<hr class="operation-separator" />
+
+<h3 id="post-userupdateprofile"><span class="http-post">POST</span> /user/updateprofile</h3>
+<p>Update User profile details</p>
+<details class="note">
+<summary>Description</summary>
+<p>Update user profile details</p>
+</details>
+<p class="request-body-title"><strong>Request body</strong></p>
+
+<div class="tabbed-set tabbed-alternate" data-tabs="5:1"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">multipart/form-data</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p><div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;firstName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;John&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;lastName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Doe&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;file&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;externalValue&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://www.africau.edu/images/default/sample.pdf&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+<span class="small-note">⚠️</span>&nbsp;<em class="small-note warning">This example has been generated automatically from the schema and it is not accurate. Refer to the schema for more information.</em></p>
+<details class="hint">
+<summary>Schema of the request body</summary>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;file&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;binary&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;example&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">                </span><span class="p">{</span><span class="w"></span>
+<span class="w">                    </span><span class="nt">&quot;externalValue&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://www.africau.edu/images/default/sample.pdf&quot;</span><span class="w"></span>
+<span class="w">                </span><span class="p">}</span><span class="w"></span>
+<span class="w">            </span><span class="p">]</span><span class="w"></span>
+<span class="w">        </span><span class="p">},</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;firstName&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;example&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;John&quot;</span><span class="w"></span>
+<span class="w">        </span><span class="p">},</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;lastName&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;example&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Doe&quot;</span><span class="w"></span>
+<span class="w">        </span><span class="p">},</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;phone&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;example&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0000000&quot;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;example&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;firstName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;John&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;lastName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Doe&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;file&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="nt">&quot;externalValue&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://www.africau.edu/images/default/sample.pdf&quot;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+</details>
+</div>
+</div>
+</div>
 <p class="response-title">
     <strong>Response <span class="response-code code-200">200</span>&nbsp;<span class="status-phrase">OK</span></strong>
 </p>
@@ -437,6 +802,82 @@ Most likely, it is not desirable to edit this file by hand!
 </p>
 
 <hr />
+<h2 id="schemas">Schemas</h2>
+<h3 id="controllerspasswordresetbody">controllers.PasswordResetBody</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>email</code></td>
+            <td><span class="string-type">string</span></td>
+        </tr>
+    </tbody>
+</table>
+
+<h3 id="controllersresetpasswordbody">controllers.ResetPasswordBody</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>email</code></td>
+            <td><span class="string-type">string</span></td>
+        </tr>
+        <tr>
+            <td><code>password</code></td>
+            <td><span class="string-type">string</span></td>
+        </tr>
+    </tbody>
+</table>
+
+<h3 id="typessimpleresponse">types.SimpleResponse</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>message</code></td>
+            <td><span class="string-type">string</span></td>
+        </tr>
+    </tbody>
+</table>
+
+<h3 id="userupdateprofilebody">userUpdateProfileBody</h3>
+<p><span>Type: </span></p>
+<h2 id="security-schemes">Security schemes</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Scheme</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+
+        <tr>
+            <td>BasicAuth</td>
+            <td>http</td>
+            <td>basic</td>
+            <td></td>
+        </tr>
+
+    </tbody>
+</table>
 
 
 
@@ -475,6 +916,21 @@ Most likely, it is not desirable to edit this file by hand!
           </div>
         </a>
       
+      
+        
+        <a href="../v3/" class="md-footer__link md-footer__link--next" aria-label="Next: OpenAPI YAML" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              OpenAPI YAML
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
       
     </nav>
   

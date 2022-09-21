@@ -1,0 +1,31 @@
+{
+    "properties": {
+        "file": {
+            "type": "binary",
+            "example": [
+                {
+                    "externalValue": "http://www.africau.edu/images/default/sample.pdf"
+                }
+            ]
+        },
+        "firstName": {
+            "type": "string",
+            "example": "John"
+        },
+        "lastName": {
+            "type": "string",
+            "example": "Doe"
+        },
+        "phone": {
+            "type": "string",
+            "example": "0000000"
+        }
+    },
+    "example": {
+        "firstName": "John",
+        "lastName": "Doe",
+        "file": {
+            "externalValue": "http://www.africau.edu/images/default/sample.pdf"
+        }
+    }
+}

@@ -25,6 +25,81 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/me": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get logged in user profile information",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/user/changepassword/{token}": {
+            "post": {
+                "description": "Reset the password with the password reset token sent to email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Reset the password with the password reset token sent",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ResetPasswordBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "return"
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "404": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/user/reset": {
             "post": {
                 "description": "Get password reset token to email",
@@ -45,7 +120,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controllers.SendResetToken.PasswordResetBody"
+                            "$ref": "#/definitions/controllers.PasswordResetBody"
                         }
                     }
                 ],
@@ -67,15 +142,64 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/user/updateprofile": {
+            "post": {
+                "description": "Update user profile details",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Update User profile details",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "formData",
+                        "name": "request",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "404": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "controllers.SendResetToken.PasswordResetBody": {
+        "controllers.PasswordResetBody": {
             "type": "object",
             "properties": {
                 "email": {
                     "type": "string",
                     "example": "example@example.com"
+                }
+            }
+        },
+        "controllers.ResetPasswordBody": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
                 }
             }
         },

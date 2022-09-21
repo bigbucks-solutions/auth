@@ -1,9 +1,16 @@
 basePath: /api/v1
 definitions:
-  controllers.SendResetToken.PasswordResetBody:
+  controllers.PasswordResetBody:
     properties:
       email:
         example: example@example.com
+        type: string
+    type: object
+  controllers.ResetPasswordBody:
+    properties:
+      email:
+        type: string
+      password:
         type: string
     type: object
   types.SimpleResponse:
@@ -26,6 +33,55 @@ info:
   title: BigBucks Solutions Auth Engine
   version: 0.0.1
 paths:
+  /me:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: ""
+        "500":
+          description: ""
+      summary: Get logged in user profile information
+      tags:
+      - auth
+  /user/changepassword/{token}:
+    post:
+      consumes:
+      - application/json
+      description: Reset the password with the password reset token sent to email
+      parameters:
+      - description: token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.ResetPasswordBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: return
+        "400":
+          description: ""
+        "404":
+          description: ""
+        "500":
+          description: ""
+      summary: Reset the password with the password reset token sent
+      tags:
+      - auth
   /user/reset:
     post:
       consumes:
@@ -37,7 +93,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/controllers.SendResetToken.PasswordResetBody'
+          $ref: '#/definitions/controllers.PasswordResetBody'
       produces:
       - application/json
       responses:
@@ -52,6 +108,31 @@ paths:
         "500":
           description: ""
       summary: Send the password reset token
+      tags:
+      - auth
+  /user/updateprofile:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Update user profile details
+      parameters:
+      - description: formData
+        in: formData
+        name: request
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+        "400":
+          description: ""
+        "404":
+          description: ""
+        "500":
+          description: ""
+      summary: Update User profile details
       tags:
       - auth
 securityDefinitions:
