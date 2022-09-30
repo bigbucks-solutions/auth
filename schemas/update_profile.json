@@ -1,12 +1,7 @@
 {
     "properties": {
         "file": {
-            "type": "binary",
-            "example": [
-                {
-                    "externalValue": "http://www.africau.edu/images/default/sample.pdf"
-                }
-            ]
+            "type": "binary"
         },
         "firstName": {
             "type": "string",
@@ -24,8 +19,7 @@
     "example": {
         "firstName": "John",
         "lastName": "Doe",
-        "file": {
-            "externalValue": "http://www.africau.edu/images/default/sample.pdf"
-        }
-    }
+        "file": ""
+    },
+    "type": "object"
 }
