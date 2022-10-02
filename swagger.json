@@ -73,7 +73,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controllers.ResetPasswordBody"
+                            "$ref": "#/definitions/controllers.ResetPassword"
                         }
                     }
                 ],
@@ -113,7 +113,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controllers.PasswordResetBody"
+                            "$ref": "#/definitions/controllers.RequestPasswordResetToken"
                         }
                     }
                 ],
@@ -176,7 +176,7 @@
         }
     },
     "definitions": {
-        "controllers.PasswordResetBody": {
+        "controllers.RequestPasswordResetToken": {
             "type": "object",
             "properties": {
                 "email": {
@@ -185,7 +185,7 @@
                 }
             }
         },
-        "controllers.ResetPasswordBody": {
+        "controllers.ResetPassword": {
             "type": "object",
             "properties": {
                 "email": {

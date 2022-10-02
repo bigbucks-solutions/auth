@@ -1,12 +1,12 @@
 basePath: /api/v1
 definitions:
-  controllers.PasswordResetBody:
+  controllers.RequestPasswordResetToken:
     properties:
       email:
         example: example@example.com
         type: string
     type: object
-  controllers.ResetPasswordBody:
+  controllers.ResetPassword:
     properties:
       email:
         type: string
@@ -67,7 +67,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/controllers.ResetPasswordBody'
+          $ref: '#/definitions/controllers.ResetPassword'
       produces:
       - application/json
       responses:
@@ -93,7 +93,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/controllers.PasswordResetBody'
+          $ref: '#/definitions/controllers.RequestPasswordResetToken'
       produces:
       - application/json
       responses:

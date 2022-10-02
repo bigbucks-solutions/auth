@@ -80,7 +80,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controllers.ResetPasswordBody"
+                            "$ref": "#/definitions/controllers.ResetPassword"
                         }
                     }
                 ],
@@ -120,7 +120,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controllers.PasswordResetBody"
+                            "$ref": "#/definitions/controllers.RequestPasswordResetToken"
                         }
                     }
                 ],
@@ -183,7 +183,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "controllers.PasswordResetBody": {
+        "controllers.RequestPasswordResetToken": {
             "type": "object",
             "properties": {
                 "email": {
@@ -192,7 +192,7 @@ const docTemplate = `{
                 }
             }
         },
-        "controllers.ResetPasswordBody": {
+        "controllers.ResetPassword": {
             "type": "object",
             "properties": {
                 "email": {
