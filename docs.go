@@ -143,6 +143,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/signin": {
+            "post": {
+                "description": "Authenticate user with password and issue jwt token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Authenticate with username and pssword",
+                "parameters": [
+                    {
+                        "description": "request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.JsonCred"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "404": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/user/updateprofile": {
             "post": {
                 "description": "Update user profile details",
@@ -183,6 +226,20 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "controllers.JsonCred": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "recaptcha": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "controllers.RequestPasswordResetToken": {
             "type": "object",
             "properties": {
