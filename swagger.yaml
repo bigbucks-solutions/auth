@@ -58,7 +58,7 @@ paths:
         "500":
           description: ""
       security:
-      - ApiKeyAuth: []
+      - JWTAuth: []
       summary: Get logged in user profile information
       tags:
       - auth

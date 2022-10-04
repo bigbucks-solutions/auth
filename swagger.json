@@ -22,7 +22,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "JWTAuth": []
                     }
                 ],
                 "consumes": [
