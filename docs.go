@@ -53,6 +53,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/signin": {
+            "post": {
+                "description": "Authenticate user with password and issue jwt token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Authenticate with username and pssword",
+                "parameters": [
+                    {
+                        "description": "request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.JsonCred"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "404": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/user/changepassword/{token}": {
             "post": {
                 "description": "Reset the password with the password reset token sent to email",
@@ -129,49 +172,6 @@ const docTemplate = `{
                         "description": "return",
                         "schema": {
                             "$ref": "#/definitions/types.SimpleResponse"
-                        }
-                    },
-                    "400": {
-                        "description": ""
-                    },
-                    "404": {
-                        "description": ""
-                    },
-                    "500": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/user/signin": {
-            "post": {
-                "description": "Authenticate user with password and issue jwt token",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Authenticate with username and pssword",
-                "parameters": [
-                    {
-                        "description": "request body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/controllers.JsonCred"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
                         }
                     },
                     "400": {

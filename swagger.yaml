@@ -60,6 +60,34 @@ paths:
       summary: Get logged in user profile information
       tags:
       - auth
+  /signin:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with password and issue jwt token
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.JsonCred'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: ""
+        "404":
+          description: ""
+        "500":
+          description: ""
+      summary: Authenticate with username and pssword
+      tags:
+      - auth
   /user/changepassword/{token}:
     post:
       consumes:
@@ -117,34 +145,6 @@ paths:
         "500":
           description: ""
       summary: Send the password reset token
-      tags:
-      - auth
-  /user/signin:
-    post:
-      consumes:
-      - application/json
-      description: Authenticate user with password and issue jwt token
-      parameters:
-      - description: request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/controllers.JsonCred'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: ""
-        "404":
-          description: ""
-        "500":
-          description: ""
-      summary: Authenticate with username and pssword
       tags:
       - auth
   /user/updateprofile:
