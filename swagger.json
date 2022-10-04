@@ -20,6 +20,11 @@
     "paths": {
         "/me": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -264,8 +269,10 @@
         }
     },
     "securityDefinitions": {
-        "BasicAuth": {
-            "type": "basic"
+        "JWTAuth": {
+            "type": "apiKey",
+            "name": "X-Auth",
+            "in": "header"
         }
     }
 }

@@ -57,6 +57,8 @@ paths:
           description: ""
         "500":
           description: ""
+      security:
+      - ApiKeyAuth: []
       summary: Get logged in user profile information
       tags:
       - auth
@@ -173,6 +175,8 @@ paths:
       tags:
       - auth
 securityDefinitions:
-  BasicAuth:
-    type: basic
+  JWTAuth:
+    in: header
+    name: X-Auth
+    type: apiKey
 swagger: "2.0"

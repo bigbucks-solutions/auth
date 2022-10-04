@@ -27,6 +27,11 @@ const docTemplate = `{
     "paths": {
         "/me": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -271,8 +276,10 @@ const docTemplate = `{
         }
     },
     "securityDefinitions": {
-        "BasicAuth": {
-            "type": "basic"
+        "JWTAuth": {
+            "type": "apiKey",
+            "name": "X-Auth",
+            "in": "header"
         }
     }
 }`
