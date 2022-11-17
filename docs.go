@@ -42,11 +42,20 @@ const docTemplate = `{
                     "auth"
                 ],
                 "summary": "Get logged in user profile information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/types.UserInfo"
                         }
                     },
                     "400": {
@@ -93,6 +102,57 @@ const docTemplate = `{
                         "description": ""
                     },
                     "404": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/user/authorize": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Check user have permission",
+                "parameters": [
+                    {
+                        "description": "request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.CheckPermissionBody"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.AuthorizeResponse"
+                        }
+                    },
+                    "400": {
                         "description": ""
                     },
                     "500": {
@@ -193,6 +253,11 @@ const docTemplate = `{
         },
         "/user/updateprofile": {
             "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "description": "Update user profile details",
                 "consumes": [
                     "multipart/form-data"
@@ -205,6 +270,13 @@ const docTemplate = `{
                 ],
                 "summary": "Update User profile details",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "file",
                         "description": "formData",
@@ -265,12 +337,82 @@ const docTemplate = `{
                 }
             }
         },
+        "types.AuthorizeResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "types.CheckPermissionBody": {
+            "type": "object",
+            "properties": {
+                "orgID": {
+                    "type": "integer"
+                },
+                "permission": {
+                    "type": "string"
+                },
+                "resource": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.Profile": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.Role": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "types.SimpleResponse": {
             "type": "object",
             "properties": {
                 "message": {
                     "type": "string",
                     "example": "message"
+                }
+            }
+        },
+        "types.UserInfo": {
+            "type": "object",
+            "properties": {
+                "isSocialAccount": {
+                    "type": "boolean"
+                },
+                "profile": {
+                    "$ref": "#/definitions/types.Profile"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.Role"
+                    }
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         }

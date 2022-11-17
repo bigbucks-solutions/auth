@@ -22,10 +22,55 @@ definitions:
       password:
         type: string
     type: object
+  types.AuthorizeResponse:
+    properties:
+      status:
+        type: boolean
+    type: object
+  types.CheckPermissionBody:
+    properties:
+      orgID:
+        type: integer
+      permission:
+        type: string
+      resource:
+        type: string
+    type: object
+  types.Profile:
+    properties:
+      avatar:
+        type: string
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+    type: object
+  types.Role:
+    properties:
+      name:
+        type: string
+    type: object
   types.SimpleResponse:
     properties:
       message:
         example: message
+        type: string
+    type: object
+  types.UserInfo:
+    properties:
+      isSocialAccount:
+        type: boolean
+      profile:
+        $ref: '#/definitions/types.Profile'
+      roles:
+        items:
+          $ref: '#/definitions/types.Role'
+        type: array
+      username:
         type: string
     type: object
 host: localhost:8000
@@ -46,13 +91,19 @@ paths:
     get:
       consumes:
       - application/json
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: object
+            $ref: '#/definitions/types.UserInfo'
         "400":
           description: ""
         "500":
@@ -88,6 +139,38 @@ paths:
         "500":
           description: ""
       summary: Authenticate with username and pssword
+      tags:
+      - auth
+  /user/authorize:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/types.CheckPermissionBody'
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.AuthorizeResponse'
+        "400":
+          description: ""
+        "500":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Check user have permission
       tags:
       - auth
   /user/changepassword/{token}:
@@ -155,6 +238,11 @@ paths:
       - multipart/form-data
       description: Update user profile details
       parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
       - description: formData
         in: formData
         name: request
@@ -171,6 +259,8 @@ paths:
           description: ""
         "500":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Update User profile details
       tags:
       - auth
