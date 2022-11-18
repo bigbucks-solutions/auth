@@ -1,0 +1,49 @@
+site_name: Auth Docs
+
+plugins:
+  - search
+  - neoteroi.mkdocsoad:
+      use_pymdownx: true
+  - exclude:
+      glob:
+        - v3/*
+
+
+markdown_extensions:
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+# theme:
+  
+
+theme:
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - toc.integrate
+    - navigation.top
+  name: material
+  palette: 
+    
+
+    # Palette toggle for light mode
+    - scheme: default
+      primary: 673AB7
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: 673AB7
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+extra_css:
+  - css/neoteroi-mkdocs.css
+  - css/extras.css

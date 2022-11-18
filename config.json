@@ -1,0 +1,7 @@
+{
+    "key": "qiyeiuyeiqeoiqeuq",
+    "port": "8000",
+    "alg": "ES256",
+    "privateKey": "ec_private.pem",
+    "publicKey": "ec_public.pem"
+}

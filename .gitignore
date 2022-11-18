@@ -1,0 +1,7 @@
+main
+profile_pics/*
+.gitconfig
+vendor/
+site/
+docs/v3/
+*.pem

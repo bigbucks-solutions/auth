@@ -1,0 +1,272 @@
+basePath: /api/v1
+definitions:
+  controllers.JsonCred:
+    properties:
+      password:
+        type: string
+      recaptcha:
+        type: string
+      username:
+        type: string
+    type: object
+  controllers.RequestPasswordResetToken:
+    properties:
+      email:
+        example: example@example.com
+        type: string
+    type: object
+  controllers.ResetPassword:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  types.AuthorizeResponse:
+    properties:
+      status:
+        type: boolean
+    type: object
+  types.CheckPermissionBody:
+    properties:
+      orgID:
+        type: integer
+      permission:
+        type: string
+      resource:
+        type: string
+    type: object
+  types.Profile:
+    properties:
+      avatar:
+        type: string
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+    type: object
+  types.Role:
+    properties:
+      name:
+        type: string
+    type: object
+  types.SimpleResponse:
+    properties:
+      message:
+        example: message
+        type: string
+    type: object
+  types.UserInfo:
+    properties:
+      isSocialAccount:
+        type: boolean
+      profile:
+        $ref: '#/definitions/types.Profile'
+      roles:
+        items:
+          $ref: '#/definitions/types.Role'
+        type: array
+      username:
+        type: string
+    type: object
+host: localhost:8000
+info:
+  contact:
+    email: jamsheed@nsmail.dev
+    name: Jamsheed
+    url: http://www.swagger.io/support
+  description: This is REST api definitions.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: BigBucks Solutions Auth Engine
+  version: 0.0.1
+paths:
+  /me:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.UserInfo'
+        "400":
+          description: ""
+        "500":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get logged in user profile information
+      tags:
+      - auth
+  /signin:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with password and issue jwt token
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.JsonCred'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: ""
+        "404":
+          description: ""
+        "500":
+          description: ""
+      summary: Authenticate with username and pssword
+      tags:
+      - auth
+  /user/authorize:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/types.CheckPermissionBody'
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.AuthorizeResponse'
+        "400":
+          description: ""
+        "500":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Check user have permission
+      tags:
+      - auth
+  /user/changepassword/{token}:
+    post:
+      consumes:
+      - application/json
+      description: Reset the password with the password reset token sent to email
+      parameters:
+      - description: token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.ResetPassword'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: return
+        "400":
+          description: ""
+        "404":
+          description: ""
+        "500":
+          description: ""
+      summary: Reset the password with the password reset token sent
+      tags:
+      - auth
+  /user/reset:
+    post:
+      consumes:
+      - application/json
+      description: Get password reset token to email
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.RequestPasswordResetToken'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: return
+          schema:
+            $ref: '#/definitions/types.SimpleResponse'
+        "400":
+          description: ""
+        "404":
+          description: ""
+        "500":
+          description: ""
+      summary: Send the password reset token
+      tags:
+      - auth
+  /user/updateprofile:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Update user profile details
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: formData
+        in: formData
+        name: request
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+        "400":
+          description: ""
+        "404":
+          description: ""
+        "500":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Update User profile details
+      tags:
+      - auth
+securityDefinitions:
+  JWTAuth:
+    in: header
+    name: X-Auth
+    type: apiKey
+swagger: "2.0"

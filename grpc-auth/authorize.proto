@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option go_package = "grpc-auth/";
+
+message AuthorizeResponse {
+  bool result = 1;
+}
+
+message AuthorizeRequest {}
+
+message AuthenticateRequest {
+  string username = 1;
+  string password = 2;
+
+}
+
+message AuthenticateResponse {
+  string token = 1;
+}
+
+service Auth {
+  rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse) {}
+  rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse) {}
+}
