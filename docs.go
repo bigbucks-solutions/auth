@@ -303,6 +303,34 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "bigbucks_solution_auth_rest-api_controllers_types.Profile": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "bigbucks_solution_auth_rest-api_controllers_types.Role": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "controllers.JsonCred": {
             "type": "object",
             "properties": {
@@ -359,34 +387,6 @@ const docTemplate = `{
                 }
             }
         },
-        "types.Profile": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "firstName": {
-                    "type": "string"
-                },
-                "lastName": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                }
-            }
-        },
-        "types.Role": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "types.SimpleResponse": {
             "type": "object",
             "properties": {
@@ -403,12 +403,12 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "profile": {
-                    "$ref": "#/definitions/types.Profile"
+                    "$ref": "#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Profile"
                 },
                 "roles": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/types.Role"
+                        "$ref": "#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Role"
                     }
                 },
                 "username": {

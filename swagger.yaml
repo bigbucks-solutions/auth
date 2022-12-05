@@ -1,5 +1,23 @@
 basePath: /api/v1
 definitions:
+  bigbucks_solution_auth_rest-api_controllers_types.Profile:
+    properties:
+      avatar:
+        type: string
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+    type: object
+  bigbucks_solution_auth_rest-api_controllers_types.Role:
+    properties:
+      name:
+        type: string
+    type: object
   controllers.JsonCred:
     properties:
       password:
@@ -36,24 +54,6 @@ definitions:
       resource:
         type: string
     type: object
-  types.Profile:
-    properties:
-      avatar:
-        type: string
-      email:
-        type: string
-      firstName:
-        type: string
-      lastName:
-        type: string
-      phone:
-        type: string
-    type: object
-  types.Role:
-    properties:
-      name:
-        type: string
-    type: object
   types.SimpleResponse:
     properties:
       message:
@@ -65,10 +65,10 @@ definitions:
       isSocialAccount:
         type: boolean
       profile:
-        $ref: '#/definitions/types.Profile'
+        $ref: '#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Profile'
       roles:
         items:
-          $ref: '#/definitions/types.Role'
+          $ref: '#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Role'
         type: array
       username:
         type: string
