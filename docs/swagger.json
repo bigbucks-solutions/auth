@@ -60,6 +60,205 @@
                 }
             }
         },
+        "/permissions": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Create a new permission in the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "permissions"
+                ],
+                "summary": "Create new permission",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Permission object",
+                        "name": "permission",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.CreatePermissionBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
+        "/roles": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    },
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Get paginated list of roles with user count",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "List roles",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by role name",
+                        "name": "role_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by organization ID",
+                        "name": "org_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Role"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Create a new role in the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Create new role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Role object",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Role"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
+        "/roles/bind-permission": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Associates a permission with a role",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Bind permission to role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Binding details",
+                        "name": "rolepermission",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.RolePermissionBindingBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Permission bound successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/signin": {
             "post": {
                 "description": "Authenticate user with password and issue jwt token",
@@ -101,6 +300,33 @@
                         "description": ""
                     }
                 }
+            }
+        },
+        "/signup": {
+            "post": {
+                "description": "Create a new user account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Register a new user",
+                "parameters": [
+                    {
+                        "description": "User signup details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.SignupRequestBody"
+                        }
+                    }
+                ],
+                "responses": {}
             }
         },
         "/user/authorize": {
@@ -296,6 +522,40 @@
         }
     },
     "definitions": {
+        "bigbucks_solution_auth_rest-api_controllers_types.Profile": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "bigbucks_solution_auth_rest-api_controllers_types.Role": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "controllers.JsonCred": {
             "type": "object",
             "properties": {
@@ -330,6 +590,211 @@
                 }
             }
         },
+        "models.ForgotPassword": {
+            "type": "object",
+            "properties": {
+                "expiry": {
+                    "type": "string"
+                },
+                "resetToken": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.OAuthClient": {
+            "type": "object",
+            "required": [
+                "source"
+            ],
+            "properties": {
+                "source": {
+                    "type": "string",
+                    "enum": [
+                        "google",
+                        "facebook"
+                    ]
+                },
+                "userID": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Organization": {
+            "type": "object",
+            "required": [
+                "contactEmail",
+                "name",
+                "users"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "contactEmail": {
+                    "type": "string"
+                },
+                "contactNumber": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 4
+                },
+                "users": {
+                    "description": "Branches      []OrganizationBranch `gorm:\"foreignkey:ParentOrg;\"`",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                }
+            }
+        },
+        "models.Permission": {
+            "type": "object",
+            "required": [
+                "action",
+                "scope"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": [
+                        "read",
+                        "write",
+                        "delete",
+                        "update"
+                    ]
+                },
+                "description": {
+                    "type": "string"
+                },
+                "resource": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Role"
+                    }
+                },
+                "scope": {
+                    "enum": [
+                        "own",
+                        "org",
+                        "all"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Scope"
+                        }
+                    ]
+                }
+            }
+        },
+        "models.Profile": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "file": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Role": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 4
+                },
+                "orgID": {
+                    "type": "integer"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Permission"
+                    }
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                }
+            }
+        },
+        "models.Scope": {
+            "type": "string",
+            "enum": [
+                "own",
+                "org",
+                "all"
+            ],
+            "x-enum-varnames": [
+                "Own",
+                "Org",
+                "All"
+            ]
+        },
+        "models.User": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "forgotPassword": {
+                    "$ref": "#/definitions/models.ForgotPassword"
+                },
+                "oauthClient": {
+                    "$ref": "#/definitions/models.OAuthClient"
+                },
+                "organizations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Organization"
+                    }
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "profile": {
+                    "$ref": "#/definitions/models.Profile"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Role"
+                    }
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "types.AuthorizeResponse": {
             "type": "object",
             "properties": {
@@ -352,12 +817,62 @@
                 }
             }
         },
-        "types.Profile": {
+        "types.CreatePermissionBody": {
             "type": "object",
+            "required": [
+                "action",
+                "resource",
+                "scope"
+            ],
             "properties": {
-                "avatar": {
+                "action": {
+                    "type": "string",
+                    "enum": [
+                        "read",
+                        "write",
+                        "delete",
+                        "update"
+                    ]
+                },
+                "resource": {
                     "type": "string"
                 },
+                "scope": {
+                    "type": "string",
+                    "enum": [
+                        "own",
+                        "org",
+                        "all"
+                    ]
+                }
+            }
+        },
+        "types.RolePermissionBindingBody": {
+            "type": "object",
+            "properties": {
+                "action_name": {
+                    "type": "string"
+                },
+                "resource_name": {
+                    "type": "string"
+                },
+                "role_key": {
+                    "type": "string"
+                },
+                "scope": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.SignupRequestBody": {
+            "type": "object",
+            "required": [
+                "email",
+                "firstName",
+                "lastName",
+                "password"
+            ],
+            "properties": {
                 "email": {
                     "type": "string"
                 },
@@ -367,16 +882,9 @@
                 "lastName": {
                     "type": "string"
                 },
-                "phone": {
-                    "type": "string"
-                }
-            }
-        },
-        "types.Role": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
+                "password": {
+                    "type": "string",
+                    "minLength": 6
                 }
             }
         },
@@ -396,12 +904,12 @@
                     "type": "boolean"
                 },
                 "profile": {
-                    "$ref": "#/definitions/types.Profile"
+                    "$ref": "#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Profile"
                 },
                 "roles": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/types.Role"
+                        "$ref": "#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Role"
                     }
                 },
                 "username": {

@@ -44,6 +44,7 @@ func init() {
 // @Failure      500  ""
 // @Router       /signin [post]
 func Signin(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+	// time.Sleep(50 * time.Second)
 	var cred JsonCred
 	err := json.NewDecoder(r.Body).Decode(&cred)
 	if err != nil {
@@ -59,9 +60,10 @@ func Signin(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int,
 func GoogleSignin(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
 	var googCred GoogleSigninCred
 	err := json.NewDecoder(r.Body).Decode(&googCred)
-	err = googleIdTokenver.VerifyIDToken(googCred.IdToken, []string{
-		cnst.GoogleClientID,
-	})
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
+	err = googleIdTokenver.VerifyIDToken(googCred.IdToken, cnst.GoogleClientID)
 	if err == nil {
 		success, user, _ := oauth.GoogleAuthenticate(googCred.IdToken, googCred.AccessToken)
 		if !success {
@@ -89,7 +91,7 @@ func RenewToken(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (
 	return printToken(w, r, user, &ctx.Settings)
 }
 
-func printToken(w http.ResponseWriter, r *http.Request, user *models.User, settings *settings.Settings) (int, error) {
+func printToken(w http.ResponseWriter, _ *http.Request, user *models.User, _ *settings.Settings) (int, error) {
 	signed, err := jwtops.SignJWT(user)
 	if err != nil {
 		return http.StatusInternalServerError, err

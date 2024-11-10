@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	description, resource string
+	description, resource, scope, action string
 )
 
 // createPermissionCmd represents the createPermission command
@@ -37,8 +37,8 @@ For example:
 `,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		_, err := models.CreatePermission(&models.Permission{Code: args[0], Description: description,
-			Resource: resource})
+		_, err := models.CreatePermission(&models.Permission{Description: description,
+			Resource: resource, Scope: models.Scope(scope), Action: action})
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -59,4 +59,7 @@ func init() {
 	// is called directly, e.g.:
 	createPermissionCmd.Flags().StringVarP(&description, "description", "d", "", "description for permission")
 	createPermissionCmd.Flags().StringVarP(&resource, "resource", "r", "", "resource affected")
+	createPermissionCmd.Flags().StringVarP(&scope, "scope", "s", "", "scope of resource")
+	createPermissionCmd.Flags().StringVarP(&action, "action", "a", "", "action on resource[write, read, delete, update]")
+
 }

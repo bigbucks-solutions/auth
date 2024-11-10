@@ -3,6 +3,7 @@ package validations
 import (
 	"encoding/json"
 	"fmt"
+	"unicode"
 
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
@@ -57,5 +58,15 @@ func InitializeValidations() {
 		t, _ := ut.T("required", fe.Field())
 
 		return t
+	})
+
+	Validate.RegisterValidation("alphanum_", func(fl validator.FieldLevel) bool {
+		value := fl.Field().String()
+		for _, char := range value {
+			if !unicode.IsLetter(char) && !unicode.IsNumber(char) && char != '_' {
+				return false
+			}
+		}
+		return true
 	})
 }

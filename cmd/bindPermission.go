@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,12 +17,15 @@ package cmd
 
 import (
 	"bigbucks/solution/auth/models"
+	"fmt"
+	"strconv"
 
 	"github.com/spf13/cobra"
 )
 
 var (
-	role_key, perm_key string
+	role_key string
+	org_id   string
 )
 
 // bindPermissionCmd represents the bindPermission command
@@ -33,15 +36,25 @@ var bindPermissionCmd = &cobra.Command{
 For example:
 	auth role bind-permission ROLE_NAME PERM_NAME`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		_, err := models.BindPermission(perm_key, role_key)
+		orgID, err := strconv.Atoi(org_id)
+		if err != nil {
+			return fmt.Errorf("invalid org_id: %v", err)
+		}
+		_, err = models.BindPermission(resource, scope, action, role_key, orgID)
 		return err
 	},
 }
 
 func init() {
 	roleCmd.AddCommand(bindPermissionCmd)
-	bindPermissionCmd.Flags().StringVarP(&role_key, "rolename", "r", "", "Role name to select")
-	bindPermissionCmd.Flags().StringVarP(&perm_key, "perm", "p", "", "Permission code to bind")
+	bindPermissionCmd.Flags().StringVarP(&role_key, "rolename", "", "", "Role name to select")
+	bindPermissionCmd.Flags().StringVarP(&resource, "resource", "r", "", "Permission resource to bind")
+	bindPermissionCmd.Flags().StringVarP(&scope, "scope", "s", "", "Permission scope bind")
+	bindPermissionCmd.Flags().StringVarP(&action, "action", "a", "", "Permission action bind")
+	bindPermissionCmd.Flags().StringVarP(&org_id, "orgid", "o", "", "Role OrgID to bind")
 	bindPermissionCmd.MarkFlagRequired("rolename")
-	bindPermissionCmd.MarkFlagRequired("perm")
+	bindPermissionCmd.MarkFlagRequired("resource")
+	bindPermissionCmd.MarkFlagRequired("scope")
+	bindPermissionCmd.MarkFlagRequired("action")
+	bindPermissionCmd.MarkFlagRequired("orgid")
 }

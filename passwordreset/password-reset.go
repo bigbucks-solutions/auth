@@ -193,7 +193,7 @@ func VerifyToken(token string, pwdvalFn func(string) ([]byte, error), secret []b
 
 // SendResetEmail Send Password Reset Email
 func SendResetEmail(token string, to string, username string) {
-	auth := smtp.PlainAuth("", "npmedco@gmail.com", "npmedcopass681", "smtp.gmail.com")
+	auth := smtp.PlainAuth("", "npmedco@gmail.com", "zerj tpau wazl jtcb", "smtp.gmail.com")
 	toEmail := []string{to}
 	templateFileName := "./passwordreset/template.html"
 	t, err := template.ParseFiles(templateFileName)

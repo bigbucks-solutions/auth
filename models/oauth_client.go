@@ -7,8 +7,8 @@ import (
 
 // ForgotPassword : GORM model for social oauth data
 type OAuthClient struct {
-	gorm.Model `json:"-"`
+	gorm.Model `json:"-" swaggerignore:"true"`
 	UserID     int
-	Source     string `gorm:"not null" validate:"required,oneof=google facebook"`
-	Details    datatypes.JSON
+	Source     string         `gorm:"not null" validate:"required,oneof=google facebook"`
+	Details    datatypes.JSON `swaggerignore:"true"`
 }

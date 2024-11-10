@@ -16,5 +16,12 @@ type Profile struct {
 }
 
 type Role struct {
-	Name string `json:"name"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+type Permission struct {
+	Resource string `json:"resource"`
+	Scope    string `json:"scope"`
+	Action   string `json:"action"`
 }

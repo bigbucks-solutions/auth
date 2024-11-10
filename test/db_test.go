@@ -14,6 +14,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	valids "bigbucks/solution/auth/validations"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/ory/dockertest/v3"
@@ -59,6 +61,7 @@ var _ = BeforeSuite(func() {
 	Ω(err).Should(Succeed())
 	s = httptest.NewServer(handler)
 	c = s.Client()
+	valids.InitializeValidations()
 })
 
 var _ = AfterSuite(func() {
@@ -91,6 +94,9 @@ func setupGormWithDocker() (*gorm.DB, func()) {
 	fnConfig := func(config *docker.HostConfig) {
 		config.AutoRemove = true                     // set AutoRemove to true so that stopped container goes away by itself
 		config.RestartPolicy = docker.NeverRestart() // don't restart container
+		config.PortBindings = map[docker.Port][]docker.PortBinding{
+			"5432/tcp": {{HostIP: "", HostPort: "6432"}},
+		}
 	}
 
 	resource, err := pool.RunWithOptions(runDockerOpt, fnConfig)
@@ -102,7 +108,7 @@ func setupGormWithDocker() (*gorm.DB, func()) {
 	}
 
 	conStr := fmt.Sprintf("host=localhost port=%s user=postgres dbname=%s password=%s sslmode=disable",
-		resource.GetPort("5432/tcp"), // get port of localhost
+		"6432", // get port of localhost
 		dbName,
 		passwd,
 	)

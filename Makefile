@@ -1,5 +1,5 @@
 # Docker image to run shell and go utility functions in
-WORKER_IMAGE = golang:1.19.1-alpine3.16
+WORKER_IMAGE = golang:1.23.2-alpine3.20
 # Docker image to generate OAS3 specs
 OAS3_GENERATOR_DOCKER_IMAGE = openapitools/openapi-generator-cli:latest-release
 
@@ -7,8 +7,7 @@ MKDOCS_IMAGE = jamshi/mk-docs-gh:latest
 
 .PHONY: ci-swaggen2
 ci-swaggen2:
-	@docker run --rm -v $(PWD):/work $(WORKER_IMAGE) \
-	  sh -c "apk update && apk add --no-cache git; go install github.com/swaggo/swag/cmd/swag@latest; cd /work; swag init -g ./rest-api/routes.go"
+	@docker run --rm -v $(PWD):/work $(WORKER_IMAGE) \	  sh -c "apk update && apk add --no-cache git && export PATH=$PATH:$(go env GOPATH)/bin && go install github.com/swaggo/swag/cmd/swag@latest && cd /work && swag init -g ./rest-api/routes.go"
 
 # Generate OAS3 from swaggo/swag output since that project doesn't support it
 # TODO: Remove this if V3 spec is ever returned from that project
@@ -36,11 +35,21 @@ ci-swaggen: ci-swaggen2
 		apk add bash; cd /work/; .devops/scripts/update_openapi.sh"
 	@docker run --rm -v $(PWD):/work $(MKDOCS_IMAGE) \
 	  gh-deploy
+
 .PHONY: gh-deploy
 gh-deploy: ci-swaggen2
-	@docker run --rm -v $(PWD):/work -v $(HOME)/.config:/root/.config -v ${HOME}/.gitconfig-copy:/root/.gitconfig \
+	@docker run --rm -v $(PWD):/work -v ${HOME}/.config:/root/.config -v ${HOME}/.gitconfig-copy:/root/.gitconfig \
 	$(MKDOCS_IMAGE) \
 	bash -c "cd /work;mkdocs gh-deploy"
+
 .PHONY: gen-ecs256-pair
 gen-ecs256-pair:
 	@openssl ecparam -genkey -name prime256v1 -noout -out ec_private.pem && openssl ec -in ec_private.pem -pubout -out ec_public.pem
+
+.PHONY: migration-generate
+migration-generate:
+	atlas migrate diff --env gorm
+
+.PHONY: migration-apply
+migration-apply:
+	atlas migrate apply --env gorm --url "postgres://bigbucks:bigbucks@localhost:5432/bigbucks?search_path=public&sslmode=disable"

@@ -40,14 +40,19 @@ var (
 	VerifyingKey []byte
 )
 
+type UserOrgRole struct {
+	Role  string `json:"role"`
+	OrgID int    `json:"orgID"`
+}
+
 type UserInfo struct {
-	Username string   `json:"username"`
-	Roles    []string `json:"roles"`
+	Username string        `json:"username"`
+	Roles    []UserOrgRole `json:"roles"`
 }
 
 type AuthToken struct {
 	User UserInfo `json:"user"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 // Context :: Http Context Object
@@ -66,6 +71,12 @@ type Settings struct {
 	Alg        string `json:"alg"`
 	PrivateKey string `json:"privateKey"`
 	PublicKey  string `json:"publicKey"`
+	DBUsername string `json:"dBUsername"`
+	DBPassword string `json:"dBPassword"`
+	DBName     string `json:"dBName"`
+	DBHost     string `json:"dBHost"`
+	DBPort     string `json:"dBPort"`
+	DBSSLMode  string `json:"dBSSLMode"`
 }
 
 // Clean cleans any variables that might need cleaning.

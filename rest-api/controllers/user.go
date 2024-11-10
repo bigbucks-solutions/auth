@@ -124,3 +124,37 @@ func GetMeDetails(w http.ResponseWriter, r *http.Request, ctx *settings.Context)
 	json.NewEncoder(w).Encode(user)
 	return 0, nil
 }
+
+// Signup godoc
+// @Summary      Register a new user
+// @Description  Create a new user account
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request  body  types.SignupRequestBody  true  "User signup details"
+// @Router       /signup [post]
+func Signup(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+	var signupRequest types.SignupRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&signupRequest); err != nil {
+		return http.StatusBadRequest, err
+	}
+
+	user := models.User{
+		Username: signupRequest.Email,
+		Password: signupRequest.Password,
+		Profile: models.Profile{
+			FirstName: signupRequest.FirstName,
+			LastName:  signupRequest.LastName,
+			Email:     signupRequest.Email,
+		},
+	}
+
+	if err := models.Dbcon.Create(&user).Error; err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	json.NewEncoder(w).Encode(&types.SimpleResponse{
+		Message: "User registered successfully",
+	})
+	return 0, nil
+}

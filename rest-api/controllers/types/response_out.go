@@ -1,5 +1,13 @@
 package types
 
+type SimpleResponse struct {
+	Message string `json:"message" example:"message"`
+}
+
+type AuthorizeResponse struct {
+	Status bool `json:"status"`
+}
+
 type UserInfo struct {
 	Username string  `json:"username"`
 	Roles    []*Role `json:"roles,omitempty"`
@@ -13,14 +21,4 @@ type Profile struct {
 	Phone     string  `json:"phone"`
 	Email     string  `json:"email"`
 	Picture   *string `json:"avatar"`
-}
-
-type Role struct {
-	Name string `json:"name"`
-}
-
-type CheckPermissionBody struct {
-	Permission string
-	Resource   string
-	OrgID      int
 }

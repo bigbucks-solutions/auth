@@ -1,5 +1,27 @@
 basePath: /api/v1
 definitions:
+  bigbucks_solution_auth_rest-api_controllers_types.Profile:
+    properties:
+      avatar:
+        type: string
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+    type: object
+  bigbucks_solution_auth_rest-api_controllers_types.Role:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
   controllers.JsonCred:
     properties:
       password:
@@ -22,6 +44,145 @@ definitions:
       password:
         type: string
     type: object
+  models.ForgotPassword:
+    properties:
+      expiry:
+        type: string
+      resetToken:
+        type: string
+      userID:
+        type: integer
+    type: object
+  models.OAuthClient:
+    properties:
+      source:
+        enum:
+        - google
+        - facebook
+        type: string
+      userID:
+        type: integer
+    required:
+    - source
+    type: object
+  models.Organization:
+    properties:
+      address:
+        type: string
+      contactEmail:
+        type: string
+      contactNumber:
+        minLength: 8
+        type: string
+      name:
+        minLength: 4
+        type: string
+      users:
+        description: Branches      []OrganizationBranch `gorm:"foreignkey:ParentOrg;"`
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+    required:
+    - contactEmail
+    - name
+    - users
+    type: object
+  models.Permission:
+    properties:
+      action:
+        enum:
+        - read
+        - write
+        - delete
+        - update
+        type: string
+      description:
+        type: string
+      resource:
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/models.Role'
+        type: array
+      scope:
+        allOf:
+        - $ref: '#/definitions/models.Scope'
+        enum:
+        - own
+        - org
+        - all
+    required:
+    - action
+    - scope
+    type: object
+  models.Profile:
+    properties:
+      email:
+        type: string
+      file:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+    type: object
+  models.Role:
+    properties:
+      description:
+        type: string
+      name:
+        minLength: 4
+        type: string
+      orgID:
+        type: integer
+      permissions:
+        items:
+          $ref: '#/definitions/models.Permission'
+        type: array
+      users:
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+    required:
+    - name
+    type: object
+  models.Scope:
+    enum:
+    - own
+    - org
+    - all
+    type: string
+    x-enum-varnames:
+    - Own
+    - Org
+    - All
+  models.User:
+    properties:
+      forgotPassword:
+        $ref: '#/definitions/models.ForgotPassword'
+      oauthClient:
+        $ref: '#/definitions/models.OAuthClient'
+      organizations:
+        items:
+          $ref: '#/definitions/models.Organization'
+        type: array
+      password:
+        minLength: 8
+        type: string
+      profile:
+        $ref: '#/definitions/models.Profile'
+      roles:
+        items:
+          $ref: '#/definitions/models.Role'
+        type: array
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
   types.AuthorizeResponse:
     properties:
       status:
@@ -36,23 +197,55 @@ definitions:
       resource:
         type: string
     type: object
-  types.Profile:
+  types.CreatePermissionBody:
     properties:
-      avatar:
+      action:
+        enum:
+        - read
+        - write
+        - delete
+        - update
         type: string
+      resource:
+        type: string
+      scope:
+        enum:
+        - own
+        - org
+        - all
+        type: string
+    required:
+    - action
+    - resource
+    - scope
+    type: object
+  types.RolePermissionBindingBody:
+    properties:
+      action_name:
+        type: string
+      resource_name:
+        type: string
+      role_key:
+        type: string
+      scope:
+        type: string
+    type: object
+  types.SignupRequestBody:
+    properties:
       email:
         type: string
       firstName:
         type: string
       lastName:
         type: string
-      phone:
+      password:
+        minLength: 6
         type: string
-    type: object
-  types.Role:
-    properties:
-      name:
-        type: string
+    required:
+    - email
+    - firstName
+    - lastName
+    - password
     type: object
   types.SimpleResponse:
     properties:
@@ -65,10 +258,10 @@ definitions:
       isSocialAccount:
         type: boolean
       profile:
-        $ref: '#/definitions/types.Profile'
+        $ref: '#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Profile'
       roles:
         items:
-          $ref: '#/definitions/types.Role'
+          $ref: '#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Role'
         type: array
       username:
         type: string
@@ -113,6 +306,132 @@ paths:
       summary: Get logged in user profile information
       tags:
       - auth
+  /permissions:
+    post:
+      consumes:
+      - application/json
+      description: Create a new permission in the system
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: Permission object
+        in: body
+        name: permission
+        required: true
+        schema:
+          $ref: '#/definitions/types.CreatePermissionBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+      security:
+      - JWTAuth: []
+      summary: Create new permission
+      tags:
+      - permissions
+  /roles:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of roles with user count
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Filter by role name
+        in: query
+        name: role_name
+        type: string
+      - description: Filter by organization ID
+        in: query
+        name: org_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Role'
+            type: array
+      security:
+      - JWTAuth: []
+      - JWTAuth: []
+      summary: List roles
+      tags:
+      - roles
+    post:
+      consumes:
+      - application/json
+      description: Create a new role in the system
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: Role object
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Role'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+      security:
+      - JWTAuth: []
+      summary: Create new role
+      tags:
+      - roles
+  /roles/bind-permission:
+    post:
+      consumes:
+      - application/json
+      description: Associates a permission with a role
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: Binding details
+        in: body
+        name: rolepermission
+        required: true
+        schema:
+          $ref: '#/definitions/types.RolePermissionBindingBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permission bound successfully
+          schema:
+            type: string
+      security:
+      - JWTAuth: []
+      summary: Bind permission to role
+      tags:
+      - roles
   /signin:
     post:
       consumes:
@@ -139,6 +458,24 @@ paths:
         "500":
           description: ""
       summary: Authenticate with username and pssword
+      tags:
+      - auth
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account
+      parameters:
+      - description: User signup details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/types.SignupRequestBody'
+      produces:
+      - application/json
+      responses: {}
+      summary: Register a new user
       tags:
       - auth
   /user/authorize:

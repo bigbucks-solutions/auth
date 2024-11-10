@@ -29,7 +29,7 @@ func Migrate() {
 	// Create
 	results := Dbcon.Create(&User{Username: "L1212", Password: "jamsheed"})
 	fmt.Print(results.Error != nil)
-	Dbcon.Create(&Role{Name: "SuperUser",
-		Description: "Super User Role for Organizations",
-		Permissions: []*Permission{{Code: "ACCNT_ALL"}}})
+	// Dbcon.Create(&Role{Name: "SuperUser",
+	// 	Description: "Super User Role for Organizations",
+	// 	Permissions: []*Permission{{Code: "ACCNT_ALL"}}})
 }

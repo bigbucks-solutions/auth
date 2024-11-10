@@ -76,6 +76,22 @@ var rootCmd = &cobra.Command{
 		ctx = context.Background()
 		ctx, cancel = context.WithCancel(ctx)
 		g, ctx = errgroup.WithContext(ctx)
+
+		// dsn := "user=bigbucks password=bigbucks DB.name=bigbucks port=5432 host=localhost sslmode=disable"
+		dsn := fmt.Sprintf("host=%s user=%s password=%s DB.name=%s port=%s sslmode=disable", settings.Current.DBHost, settings.Current.DBUsername, settings.Current.DBPassword, settings.Current.DBName, settings.Current.DBPort)
+		models.Dbcon, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err != nil {
+			panic("failed to connect database")
+		}
+		// Automigrate GORM models
+		// models.Dbcon.Config.Logger = models.Dbcon.Config.Logger.LogMode(logger.Error)
+
+		err = models.Dbcon.SetupJoinTable(&models.Organization{}, "Users", &models.UserOrgRole{})
+		err = models.Dbcon.SetupJoinTable(&models.User{}, "Roles", &models.UserOrgRole{})
+		fmt.Println(err)
+		// models.Dbcon.Config.
+		// models.Dbcon.Logger.LogMode(logger.Error)
+
 		g.Go(func() error { return startGrpcServer(settings.Current) })
 		g.Go(func() error { return startHttpServer(settings.Current) })
 		HandleGracefulShutdown(g)
@@ -155,20 +171,7 @@ func HandleGracefulShutdown(g *errgroup.Group) {
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	dsn := "user=bigbucks password=bigbucks DB.name=bigbucks port=5432 sslmode=disable"
-	var err error
-	models.Dbcon, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	// Automigrate GORM models
-	// models.Dbcon.Config.Logger = models.Dbcon.Config.Logger.LogMode(logger.Error)
 
-	err = models.Dbcon.SetupJoinTable(&models.Organization{}, "Users", &models.UserOrgRole{})
-	err = models.Dbcon.SetupJoinTable(&models.User{}, "Roles", &models.UserOrgRole{})
-	fmt.Println(err)
-	// models.Dbcon.Config.
-	// models.Dbcon.Logger.LogMode(logger.Error)
-	if err != nil {
-		panic("failed to connect database")
-	}
 	valids.InitializeValidations()
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

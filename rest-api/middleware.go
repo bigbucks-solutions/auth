@@ -3,6 +3,7 @@ package rest
 import (
 	jwtops "bigbucks/solution/auth/jwt-ops"
 	"bigbucks/solution/auth/loging"
+	perm_cache "bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/settings"
 	"encoding/json"
 	"net/http"
@@ -53,7 +54,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request, settings *settings.Set
 		return false, authToken, err
 	}
 
-	expired := !authToken.VerifyExpiresAt(time.Now().Add(time.Hour).Unix(), true)
+	expired := !authToken.VerifyExpiresAt(time.Now().Add(time.Hour), true)
 	if expired {
 		w.Header().Add("X-Renew-Token", "true")
 	}
@@ -61,7 +62,6 @@ func Authenticate(w http.ResponseWriter, r *http.Request, settings *settings.Set
 	return true, authToken, err
 
 }
-
 func JSONError(w http.ResponseWriter, err interface{}, code int) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -69,12 +69,12 @@ func JSONError(w http.ResponseWriter, err interface{}, code int) {
 	json.NewEncoder(w).Encode(err)
 }
 
-func handle(fn handleFunc, prefix string, auth bool, setting *settings.Settings) http.Handler {
+func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings) http.Handler {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_responseLogger := &responseLogger{w: w, status: http.StatusOK}
 		ctx := &settings.Context{}
 		ctx.Settings = *setting
-		if auth {
+		if config.auth {
 			success, authToken, _ := Authenticate(w, r, setting)
 			loging.Logger.Debugln(success, zap.String("Authenticated User", authToken.User.Username))
 			if !success {
@@ -82,6 +82,13 @@ func handle(fn handleFunc, prefix string, auth bool, setting *settings.Settings)
 				return
 			}
 			ctx.Auth = authToken
+		}
+		if config.resource != "" && config.scope != "" && config.action != "" {
+			hasPermission, err := perm_cache.PermCache.CheckPermission(config.resource, config.scope, config.action, &ctx.Auth.User)
+			if err != nil || !hasPermission {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
 		}
 		start := time.Now()
 		status, err := fn(_responseLogger, r, ctx)
@@ -101,5 +108,5 @@ func handle(fn handleFunc, prefix string, auth bool, setting *settings.Settings)
 		)
 	})
 
-	return http.StripPrefix(prefix, handler)
+	return http.StripPrefix(config.prefix, handler)
 }
