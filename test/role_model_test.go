@@ -149,7 +149,7 @@ var _ = Describe("Role Model", func() {
 			status, err := actions.BindPermission("users", "all", "read", "admin_role", 1, perm_cache)
 			Ω(err).To(Succeed())
 			Ω(status).To(Equal(0))
-			Ω(perm_cache.RedisClient.SIsMember(context.Background(), "perm:1:USERS:ALL:READ", "admin_role").Val()).To(BeTrue())
+			Ω(perm_cache.RedisClient.SIsMember(context.Background(), "perm:1:USERS:ALL:READ", "ADMIN_ROLE").Val()).To(BeTrue())
 		})
 
 		It("Fails with non-existent role", func() {
