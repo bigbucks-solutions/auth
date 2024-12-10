@@ -8,6 +8,10 @@
     "dBPassword": "bigbucks",
     "dBName": "bigbucks",
     "dBHost": "localhost",
-    "dBPort": "5432",
-    "dBSSLMode": "true"
+    "dBPort": "6432",
+    "dBSSLMode": "true",
+    "redisAddress": "localhost:6379",
+    "redisPassword": "bigbucks",
+    "redisDB": "0",
+    "redisUsername": "bigbucks"
 }

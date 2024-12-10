@@ -16,7 +16,9 @@ limitations under the License.
 package cmd
 
 import (
-	"bigbucks/solution/auth/models"
+	"bigbucks/solution/auth/actions"
+	"bigbucks/solution/auth/permission_cache"
+	"bigbucks/solution/auth/settings"
 	"fmt"
 	"strconv"
 
@@ -40,7 +42,7 @@ For example:
 		if err != nil {
 			return fmt.Errorf("invalid org_id: %v", err)
 		}
-		_, err = models.BindPermission(resource, scope, action, role_key, orgID)
+		_, err = actions.BindPermission(resource, scope, action, role_key, orgID, permission_cache.NewPermissionCache(settings.Current))
 		return err
 	},
 }

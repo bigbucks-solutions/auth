@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"bigbucks/solution/auth/actions"
 	"bigbucks/solution/auth/models"
 	"fmt"
 
@@ -37,7 +38,7 @@ For example:
 `,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		_, err := models.CreatePermission(&models.Permission{Description: description,
+		_, err := actions.CreatePermission(&models.Permission{Description: description,
 			Resource: resource, Scope: models.Scope(scope), Action: action})
 		if err != nil {
 			fmt.Println(err)

@@ -1,15 +1,12 @@
 package settings
 
 import (
-	"bigbucks/solution/auth/loging"
-	"bigbucks/solution/auth/models"
 	"crypto/rand"
 	"os"
 	"strings"
 	"sync"
 
 	"github.com/golang-jwt/jwt/v4"
-	"gorm.io/gorm"
 )
 
 // AuthMethod describes an authentication method.
@@ -55,28 +52,25 @@ type AuthToken struct {
 	jwt.RegisteredClaims
 }
 
-// Context :: Http Context Object
-type Context struct {
-	Auth     AuthToken `json:"user"`
-	Settings Settings  `json:"settings"`
-}
-
 // Server specific settings.
 type Settings struct {
-	SecretKey  string `json:"key" mapstructure:"key"`
-	BaseURL    string `json:"baseURL"`
-	Port       string `json:"port"`
-	Address    string `json:"address"`
-	Log        string `json:"log"`
-	Alg        string `json:"alg"`
-	PrivateKey string `json:"privateKey"`
-	PublicKey  string `json:"publicKey"`
-	DBUsername string `json:"dBUsername"`
-	DBPassword string `json:"dBPassword"`
-	DBName     string `json:"dBName"`
-	DBHost     string `json:"dBHost"`
-	DBPort     string `json:"dBPort"`
-	DBSSLMode  string `json:"dBSSLMode"`
+	SecretKey     string `json:"key" mapstructure:"key"`
+	BaseURL       string `json:"baseURL"`
+	Port          string `json:"port"`
+	Address       string `json:"address"`
+	Log           string `json:"log"`
+	Alg           string `json:"alg"`
+	PrivateKey    string `json:"privateKey"`
+	PublicKey     string `json:"publicKey"`
+	DBUsername    string `json:"dBUsername"`
+	DBPassword    string `json:"dBPassword"`
+	DBName        string `json:"dBName"`
+	DBHost        string `json:"dBHost"`
+	DBPort        string `json:"dBPort"`
+	DBSSLMode     string `json:"dBSSLMode"`
+	RedisAddress  string `json:"redisAddress"`
+	RedisUsername string `json:"redisUsername"`
+	RedisPassword string `json:"redisPassword"`
 }
 
 // Clean cleans any variables that might need cleaning.
@@ -100,14 +94,6 @@ func (s *Settings) LoadKeys() {
 		check(err)
 		VerifyingKey = pubdat
 	})
-}
-
-func (c *Context) GetCurrentUserModel() (user *models.User, err error) {
-	if err := models.Dbcon.Where("username = ?", c.Auth.User.Username).First(&user).Error; gorm.ErrRecordNotFound == err {
-		loging.Logger.Debugln(err)
-		return nil, err
-	}
-	return
 }
 
 // GenerateKey generates a key of 256 bits.

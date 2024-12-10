@@ -52,4 +52,8 @@ migration-generate:
 
 .PHONY: migration-apply
 migration-apply:
-	atlas migrate apply --env gorm --url "postgres://bigbucks:bigbucks@localhost:5432/bigbucks?search_path=public&sslmode=disable"
+	atlas migrate apply --env gorm --url "postgres://bigbucks:bigbucks@localhost:6432/bigbucks?search_path=public&sslmode=disable"
+
+.PHONY: run-local-dependencies
+run-local-dependencies:
+	docker compose -f docker-compose.yml up

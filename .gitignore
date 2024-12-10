@@ -5,3 +5,4 @@ vendor/
 site/
 docs/v3/
 *.pem
+postgres-data/

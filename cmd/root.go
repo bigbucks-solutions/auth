@@ -19,6 +19,7 @@ import (
 	grpc_auth "bigbucks/solution/auth/grpc-auth"
 	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
+	"bigbucks/solution/auth/permission_cache"
 	router "bigbucks/solution/auth/rest-api"
 	"context"
 	"os/signal"
@@ -99,7 +100,8 @@ var rootCmd = &cobra.Command{
 }
 
 func startHttpServer(settings *settings.Settings) (err error) {
-	handler, err := router.NewHandler(settings)
+	perm_cache := permission_cache.NewPermissionCache(settings)
+	handler, err := router.NewHandler(settings, perm_cache)
 	if err != nil {
 		return
 	}

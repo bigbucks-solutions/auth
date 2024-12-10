@@ -5,6 +5,7 @@ import (
 	jwtops "bigbucks/solution/auth/jwt-ops"
 	"bigbucks/solution/auth/models"
 	oauth "bigbucks/solution/auth/oauthutils"
+	"bigbucks/solution/auth/request_context"
 	"bigbucks/solution/auth/settings"
 	"encoding/json"
 	"net/http"
@@ -43,7 +44,7 @@ func init() {
 // @Failure      404  ""
 // @Failure      500  ""
 // @Router       /signin [post]
-func Signin(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+func Signin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	// time.Sleep(50 * time.Second)
 	var cred JsonCred
 	err := json.NewDecoder(r.Body).Decode(&cred)
@@ -54,10 +55,10 @@ func Signin(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int,
 	if !success {
 		return http.StatusUnauthorized, nil
 	}
-	return printToken(w, r, &user, &ctx.Settings)
+	return printToken(w, r, &user, ctx.Settings)
 }
 
-func GoogleSignin(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+func GoogleSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var googCred GoogleSigninCred
 	err := json.NewDecoder(r.Body).Decode(&googCred)
 	if err != nil {
@@ -69,26 +70,26 @@ func GoogleSignin(w http.ResponseWriter, r *http.Request, ctx *settings.Context)
 		if !success {
 			return http.StatusUnauthorized, nil
 		}
-		return printToken(w, r, &user, &ctx.Settings)
+		return printToken(w, r, &user, ctx.Settings)
 	}
 	return http.StatusBadRequest, err
 	// return printToken(w, r, &user, &ctx.Settings)
 }
 
-func FbSignin(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+func FbSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var googCred GoogleSigninCred
 	json.NewDecoder(r.Body).Decode(&googCred)
 	success, user, _ := oauth.FBAuthenticate(googCred.AccessToken)
 	if !success {
 		return http.StatusUnauthorized, nil
 	}
-	return printToken(w, r, &user, &ctx.Settings)
+	return printToken(w, r, &user, ctx.Settings)
 	// return printToken(w, r, &user, &ctx.Settings)
 }
 
-func RenewToken(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+func RenewToken(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	user, _ := ctx.GetCurrentUserModel()
-	return printToken(w, r, user, &ctx.Settings)
+	return printToken(w, r, user, ctx.Settings)
 }
 
 func printToken(w http.ResponseWriter, _ *http.Request, user *models.User, _ *settings.Settings) (int, error) {

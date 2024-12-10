@@ -1,9 +1,10 @@
 package controllers
 
 import (
+	"bigbucks/solution/auth/actions"
 	"bigbucks/solution/auth/models"
+	"bigbucks/solution/auth/request_context"
 	"bigbucks/solution/auth/rest-api/controllers/types"
-	"bigbucks/solution/auth/settings"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -23,7 +24,7 @@ import (
 // @Success 200 {object} []models.Role
 // @Security 	 JWTAuth
 // @Router /roles [get]
-func ListRoles(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+func ListRoles(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 	if page < 1 {
 		page = 1
@@ -64,14 +65,14 @@ func ListRoles(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (i
 // @Param role body types.Role true "Role object"
 // @Success 201
 // @Router /roles [post]
-func CreateRole(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+func CreateRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var role types.Role
 	err := json.NewDecoder(r.Body).Decode(&role)
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
 
-	code, err := models.CreateRole(&models.Role{Name: role.Name, Description: role.Description})
+	code, err := actions.CreateRole(&models.Role{Name: role.Name, Description: role.Description})
 	if err != nil {
 		return code, err
 	}
@@ -92,14 +93,14 @@ func CreateRole(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (
 // @Param permission body types.CreatePermissionBody true "Permission object"
 // @Success 201
 // @Router /permissions [post]
-func CreatePermission(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+func CreatePermission(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var permission types.CreatePermissionBody
 	err := json.NewDecoder(r.Body).Decode(&permission)
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
 
-	code, err := models.CreatePermission(&models.Permission{Resource: permission.Resource, Scope: models.Scope(permission.Scope), Action: permission.Action})
+	code, err := actions.CreatePermission(&models.Permission{Resource: permission.Resource, Scope: models.Scope(permission.Scope), Action: permission.Action})
 	if err != nil {
 		return code, err
 	}
@@ -120,18 +121,19 @@ func CreatePermission(w http.ResponseWriter, r *http.Request, ctx *settings.Cont
 // @Param rolepermission body types.RolePermissionBindingBody true "Binding details"
 // @Success 200 {string} string "Permission bound successfully"
 // @Router /roles/bind-permission [post]
-func BindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+func BindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var binding types.RolePermissionBindingBody
 	if err := json.NewDecoder(r.Body).Decode(&binding); err != nil {
 		return http.StatusBadRequest, err
 	}
 
-	code, err := models.BindPermission(
+	code, err := actions.BindPermission(
 		binding.ResourceName,
 		binding.Scope,
 		binding.ActionName,
 		binding.RoleKey,
 		ctx.Auth.User.Roles[0].OrgID,
+		ctx.PermCache,
 	)
 	if err != nil {
 		return code, err

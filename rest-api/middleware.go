@@ -3,8 +3,10 @@ package rest
 import (
 	jwtops "bigbucks/solution/auth/jwt-ops"
 	"bigbucks/solution/auth/loging"
-	perm_cache "bigbucks/solution/auth/permission_cache"
+	"bigbucks/solution/auth/permission_cache"
+	"bigbucks/solution/auth/request_context"
 	"bigbucks/solution/auth/settings"
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -69,11 +71,12 @@ func JSONError(w http.ResponseWriter, err interface{}, code int) {
 	json.NewEncoder(w).Encode(err)
 }
 
-func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings) http.Handler {
+func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, perm_cache *permission_cache.PermissionCache) http.Handler {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_responseLogger := &responseLogger{w: w, status: http.StatusOK}
-		ctx := &settings.Context{}
-		ctx.Settings = *setting
+		ctx := &request_context.Context{}
+		ctx.Settings = setting
+		ctx.Context = context.TODO()
 		if config.auth {
 			success, authToken, _ := Authenticate(w, r, setting)
 			loging.Logger.Debugln(success, zap.String("Authenticated User", authToken.User.Username))
@@ -81,15 +84,15 @@ func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings) ht
 				http.Error(w, strconv.Itoa(http.StatusForbidden)+" "+http.StatusText(http.StatusForbidden), http.StatusForbidden)
 				return
 			}
-			ctx.Auth = authToken
+			ctx.Auth = &authToken
 		}
-		if config.resource != "" && config.scope != "" && config.action != "" {
-			hasPermission, err := perm_cache.PermCache.CheckPermission(config.resource, config.scope, config.action, &ctx.Auth.User)
-			if err != nil || !hasPermission {
-				http.Error(w, "Forbidden", http.StatusForbidden)
-				return
-			}
-		}
+		// if config.resource != "" && config.scope != "" && config.action != "" {
+		// 	hasPermission, err := perm_cache.PermCache.CheckPermission(config.resource, config.scope, config.action, &ctx.Auth.User)
+		// 	if err != nil || !hasPermission {
+		// 		http.Error(w, "Forbidden", http.StatusForbidden)
+		// 		return
+		// 	}
+		// }
 		start := time.Now()
 		status, err := fn(_responseLogger, r, ctx)
 

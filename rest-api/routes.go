@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"bigbucks/solution/auth/permission_cache"
+	"bigbucks/solution/auth/request_context"
 	ctr "bigbucks/solution/auth/rest-api/controllers" //Load all controllers methods by deafult
 	"bigbucks/solution/auth/settings"
 	"net/http"
@@ -12,7 +14,7 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-type handleFunc func(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error)
+type handleFunc func(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error)
 
 // @title           BigBucks Solutions Auth Engine
 // @version         0.0.1
@@ -34,7 +36,7 @@ type handleFunc func(w http.ResponseWriter, r *http.Request, ctx *settings.Conte
 //@name X-Auth
 
 // NewHandler Provide Http handler
-func NewHandler(settings *settings.Settings) (http.Handler, error) {
+func NewHandler(settings *settings.Settings, perm_cache *permission_cache.PermissionCache) (http.Handler, error) {
 	settings.Clean()
 
 	r := mux.NewRouter()
@@ -49,7 +51,7 @@ func NewHandler(settings *settings.Settings) (http.Handler, error) {
 			opt(config)
 		}
 
-		return handle(fn, config, settings)
+		return handle(fn, config, settings, perm_cache)
 	}
 	//cors
 

@@ -1,8 +1,8 @@
 package controllers
 
 import (
+	"bigbucks/solution/auth/request_context"
 	"bigbucks/solution/auth/rest-api/controllers/types"
-	"bigbucks/solution/auth/settings"
 	"encoding/json"
 	"net/http"
 )
@@ -19,11 +19,11 @@ import (
 // @Failure      400  ""
 // @Failure      500  ""
 // @Router       /user/authorize [post]
-func Authorize(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+func Authorize(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var body = &types.CheckPermissionBody{}
 	json.NewDecoder(r.Body).Decode(&body)
-	user, _ := ctx.GetCurrentUserModel()
-	status, _ := user.Authorize(body.Permission, body.Resource, body.OrgID)
+	// user, _ := ctx.GetCurrentUserModel()
+	status, _ := ctx.PermCache.CheckPermission(ctx.Context, body.Resource, body.Scope, body.Action, &ctx.Auth.User)
 	json.NewEncoder(w).Encode(&types.AuthorizeResponse{Status: status})
 	return 0, nil
 }

@@ -1,14 +1,9 @@
 package models
 
 import (
-	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models/types"
-	valids "bigbucks/solution/auth/validations"
 	"database/sql/driver"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"net/http"
 
 	"gorm.io/gorm"
 )
@@ -64,73 +59,6 @@ func (role Role) MarshalJSON() ([]byte, error) {
 	var tmp = &types.Role{}
 	tmp.Name = role.Name
 	return json.Marshal(&tmp)
-}
-
-// CreateRole : Creates new Role
-func CreateRole(role *Role) (int, error) {
-	err := valids.Validate.Struct(role)
-	loging.Logger.Debug(role, err)
-	customerr := valids.NewErrorDict()
-	if err != nil {
-		customerr.GetErrorTranslations(err)
-		return http.StatusBadRequest, customerr
-	}
-	loging.Logger.Info(fmt.Sprintf("Creating Role %s", role.Name))
-	if err := Dbcon.Create(role).Error; err != nil {
-		loging.Logger.Error(err)
-		if nerr := ParseError(err); errors.Is(nerr, ErrDuplicateKey) {
-			customerr.Errors["name"] = "Role with same name already exists"
-			return http.StatusConflict, customerr
-		}
-		return http.StatusConflict, err
-	}
-	return 0, nil
-}
-
-// CreatePermission : Creates new Permission object
-func CreatePermission(perm *Permission) (int, error) {
-	err := valids.Validate.Struct(perm)
-	loging.Logger.Debug(perm, err)
-	customerr := valids.NewErrorDict()
-	if err != nil {
-		customerr.GetErrorTranslations(err)
-		return http.StatusBadRequest, customerr
-	}
-	loging.Logger.Info("Creating Permission..")
-	if err := Dbcon.Create(perm).Error; err != nil {
-		loging.Logger.Error(err)
-		if nerr := ParseError(err); errors.Is(nerr, ErrDuplicateKey) {
-			customerr.Errors["code"] = "Permission with same code already exists"
-			return http.StatusConflict, customerr
-		}
-		return http.StatusConflict, err
-	}
-	return 0, nil
-}
-
-// BindPermission : Binds the permission to the role specified
-func BindPermission(resourceName, scope, actionName, roleKey string, orgID int) (int, error) {
-	var role Role
-	var perm Permission
-	customerr := valids.NewErrorDict()
-	err := Dbcon.First(&role, "name = ? and org_id = ?", roleKey, orgID).Error
-	if err != nil {
-		// if errors.Is(err, gorm.ErrRecordNotFound) {
-		customerr.Errors["Role"] = err.Error()
-		// }
-		return http.StatusConflict, customerr
-	}
-	err = Dbcon.Where("LOWER(resource) = LOWER(?) AND LOWER(scope) = LOWER(?) AND LOWER(action) = LOWER(?)", resourceName, scope, actionName).Find(&perm).Error
-	if err != nil {
-		customerr.Errors["Permission"] = err.Error()
-		return http.StatusConflict, customerr
-	}
-	err = Dbcon.Model(&role).Association("Permissions").Append(&perm)
-	if err != nil {
-		customerr.Errors["Error"] = err.Error()
-		return http.StatusConflict, customerr
-	}
-	return 0, nil
 }
 
 // func (usr *UserOrgRole) BeforeCreate(db *gorm.DB) error {

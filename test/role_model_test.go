@@ -1,7 +1,11 @@
 package auth_test
 
 import (
+	"bigbucks/solution/auth/actions"
 	"bigbucks/solution/auth/models"
+	"bigbucks/solution/auth/permission_cache"
+	"bigbucks/solution/auth/settings"
+	"context"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -15,7 +19,7 @@ var _ = Describe("Role Model", func() {
 				Description: "Administrator role",
 				OrgID:       1,
 			}
-			status, err := models.CreateRole(role)
+			status, err := actions.CreateRole(role)
 			Ω(err).To(Succeed())
 			Ω(status).To(Equal(0))
 			Ω(role.ID).To(BeNumerically(">", 0))
@@ -27,7 +31,7 @@ var _ = Describe("Role Model", func() {
 				Description: "Duplicate role",
 				OrgID:       1,
 			}
-			status, err := models.CreateRole(role)
+			status, err := actions.CreateRole(role)
 			Ω(err).To(HaveOccurred())
 			Ω(status).To(Equal(409))
 		})
@@ -38,7 +42,7 @@ var _ = Describe("Role Model", func() {
 				Description: "Invalid role",
 				OrgID:       1,
 			}
-			status, err := models.CreateRole(role)
+			status, err := actions.CreateRole(role)
 			Ω(err).To(HaveOccurred())
 			Ω(status).To(Equal(400))
 		})
@@ -52,7 +56,7 @@ var _ = Describe("Role Model", func() {
 				Action:      "read",
 				Description: "Read all users",
 			}
-			status, err := models.CreatePermission(perm)
+			status, err := actions.CreatePermission(perm)
 			Ω(err).To(Succeed())
 			Ω(status).To(Equal(0))
 			Ω(perm.ID).To(BeNumerically(">", 0))
@@ -64,7 +68,7 @@ var _ = Describe("Role Model", func() {
 				Scope:    models.Own,
 				Action:   "read",
 			}
-			status, err := models.CreatePermission(perm)
+			status, err := actions.CreatePermission(perm)
 			Ω(err).To(HaveOccurred())
 			Ω(status).To(Equal(400))
 		})
@@ -75,7 +79,7 @@ var _ = Describe("Role Model", func() {
 				Scope:    models.Own,
 				Action:   "read",
 			}
-			status, err := models.CreatePermission(perm)
+			status, err := actions.CreatePermission(perm)
 			Ω(err).To(HaveOccurred())
 			Ω(status).To(Equal(400))
 		})
@@ -87,7 +91,7 @@ var _ = Describe("Role Model", func() {
 				Action:      "invalid_action", // only read,write,delete,update allowed
 				Description: "Invalid action",
 			}
-			status, err := models.CreatePermission(perm)
+			status, err := actions.CreatePermission(perm)
 			Ω(err).To(HaveOccurred())
 			Ω(status).To(Equal(400))
 		})
@@ -99,7 +103,7 @@ var _ = Describe("Role Model", func() {
 				Action:      "read",
 				Description: "Short resource name",
 			}
-			status, err := models.CreatePermission(perm)
+			status, err := actions.CreatePermission(perm)
 			Ω(err).To(HaveOccurred())
 			Ω(status).To(Equal(400))
 		})
@@ -111,7 +115,7 @@ var _ = Describe("Role Model", func() {
 				Action:      "write",
 				Description: "First permission",
 			}
-			status, err := models.CreatePermission(perm1)
+			status, err := actions.CreatePermission(perm1)
 			Ω(err).To(Succeed())
 			Ω(status).To(Equal(0))
 
@@ -121,7 +125,7 @@ var _ = Describe("Role Model", func() {
 				Action:      "write",
 				Description: "Duplicate permission",
 			}
-			status, err = models.CreatePermission(perm2)
+			status, err = actions.CreatePermission(perm2)
 			Ω(err).To(HaveOccurred())
 			Ω(status).To(Equal(409))
 		})
@@ -133,7 +137,7 @@ var _ = Describe("Role Model", func() {
 				Action:      "read",
 				Description: "Invalid scope",
 			}
-			status, err := models.CreatePermission(perm)
+			status, err := actions.CreatePermission(perm)
 			Ω(err).To(HaveOccurred())
 			Ω(status).To(Equal(400))
 		})
@@ -141,13 +145,15 @@ var _ = Describe("Role Model", func() {
 
 	Context("Bind Permission to Role", Ordered, func() {
 		It("Successfully binds permission to role", func() {
-			status, err := models.BindPermission("users", "all", "read", "admin_role", 1)
+			perm_cache := permission_cache.NewPermissionCache(settings.Current)
+			status, err := actions.BindPermission("users", "all", "read", "admin_role", 1, perm_cache)
 			Ω(err).To(Succeed())
 			Ω(status).To(Equal(0))
+			Ω(perm_cache.RedisClient.SIsMember(context.Background(), "perm:1:USERS:ALL:READ", "admin_role").Val()).To(BeTrue())
 		})
 
 		It("Fails with non-existent role", func() {
-			status, err := models.BindPermission("users", "all", "read", "non_existent_role", 1)
+			status, err := actions.BindPermission("users", "all", "read", "non_existent_role", 1, permission_cache.NewPermissionCache(settings.Current))
 			Ω(err).To(HaveOccurred())
 			Ω(status).To(Equal(409))
 		})

@@ -6,9 +6,10 @@ type Role struct {
 }
 
 type CheckPermissionBody struct {
-	Permission string
-	Resource   string
-	OrgID      int
+	Scope    string
+	Resource string
+	Action   string
+	OrgID    int
 }
 
 type CreatePermissionBody struct {

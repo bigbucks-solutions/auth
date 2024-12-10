@@ -2,8 +2,10 @@ package auth_test
 
 import (
 	"bigbucks/solution/auth/models"
+	"bigbucks/solution/auth/permission_cache"
 	router "bigbucks/solution/auth/rest-api"
 	"bigbucks/solution/auth/settings"
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -20,6 +22,8 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
+
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -57,7 +61,7 @@ var _ = BeforeSuite(func() {
 	Ω(err).To(Succeed())
 	settings.Current = &settings.Settings{Alg: "ES256", PrivateKey: "ec_private.pem", PublicKey: "ec_public.pem"}
 	// settings.Current.LoadKeys()
-	handler, err := router.NewHandler(settings.Current)
+	handler, err := router.NewHandler(settings.Current, permission_cache.NewPermissionCache((settings.Current)))
 	Ω(err).Should(Succeed())
 	s = httptest.NewServer(handler)
 	c = s.Client()
@@ -84,37 +88,52 @@ const (
 func setupGormWithDocker() (*gorm.DB, func()) {
 	pool, err := dockertest.NewPool("")
 	chk(err)
-
-	runDockerOpt := &dockertest.RunOptions{
-		Repository: "postgres", // image
-		Tag:        "14",       // version
-		Env:        []string{"POSTGRES_PASSWORD=" + passwd, "POSTGRES_DB=" + dbName},
-	}
-
-	fnConfig := func(config *docker.HostConfig) {
-		config.AutoRemove = true                     // set AutoRemove to true so that stopped container goes away by itself
-		config.RestartPolicy = docker.NeverRestart() // don't restart container
+	// Start postgres container
+	postgresResource, err := pool.RunWithOptions(&dockertest.RunOptions{
+		Repository: "postgres",
+		Tag:        "14",
+		Env: []string{
+			"POSTGRES_PASSWORD=" + passwd,
+			"POSTGRES_DB=" + dbName,
+		},
+	}, func(config *docker.HostConfig) {
+		config.AutoRemove = true
+		config.RestartPolicy = docker.NeverRestart()
 		config.PortBindings = map[docker.Port][]docker.PortBinding{
 			"5432/tcp": {{HostIP: "", HostPort: "6432"}},
 		}
-	}
-
-	resource, err := pool.RunWithOptions(runDockerOpt, fnConfig)
+	})
 	chk(err)
-	// call clean up function to release resource
+
+	// Start redis container
+	redisResource, err := pool.RunWithOptions(&dockertest.RunOptions{
+		Repository: "redis",
+		Tag:        "6",
+	}, func(config *docker.HostConfig) {
+		config.AutoRemove = true
+		config.RestartPolicy = docker.NeverRestart()
+		config.PortBindings = map[docker.Port][]docker.PortBinding{
+			"6379/tcp": {{HostIP: "", HostPort: "6379"}},
+		}
+	})
+	chk(err)
+
+	// Cleanup function to remove both containers
 	fnCleanup := func() {
-		err := resource.Close()
+		err := postgresResource.Close()
+		chk(err)
+		err = redisResource.Close()
 		chk(err)
 	}
 
 	conStr := fmt.Sprintf("host=localhost port=%s user=postgres dbname=%s password=%s sslmode=disable",
-		"6432", // get port of localhost
+		"6432",
 		dbName,
 		passwd,
 	)
 
 	var gdb *gorm.DB
-	// retry until db server is ready
+	// retry until postgres is ready
 	err = pool.Retry(func() error {
 		gdb, err = gorm.Open(postgres.Open(conStr), &gorm.Config{})
 		if err != nil {
@@ -125,6 +144,15 @@ func setupGormWithDocker() (*gorm.DB, func()) {
 			return err
 		}
 		return db.Ping()
+	})
+	chk(err)
+
+	// retry until redis is ready
+	err = pool.Retry(func() error {
+		client := redis.NewClient(&redis.Options{
+			Addr: "localhost:6379",
+		})
+		return client.Ping(context.Background()).Err()
 	})
 	chk(err)
 

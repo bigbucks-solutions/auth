@@ -3,8 +3,8 @@ package controllers
 import (
 	. "bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
+	"bigbucks/solution/auth/request_context"
 	"bigbucks/solution/auth/rest-api/controllers/types"
-	"bigbucks/solution/auth/settings"
 	"encoding/json"
 	"errors"
 	"mime/multipart"
@@ -39,7 +39,7 @@ type UpdateProfileBody struct {
 // @Failure      404  ""
 // @Failure      500  ""
 // @Router       /user/reset [post]
-func SendResetToken(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+func SendResetToken(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var requestBody RequestPasswordResetToken
 	json.NewDecoder(r.Body).Decode(&requestBody)
 	var usr models.User
@@ -63,7 +63,7 @@ func SendResetToken(w http.ResponseWriter, r *http.Request, ctx *settings.Contex
 // @Failure      404  ""
 // @Failure      500  ""
 // @Router       /user/changepassword/{token} [post]
-func ChangePassword(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+func ChangePassword(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var body ResetPassword
 	err := json.NewDecoder(r.Body).Decode(&body)
 	vars := mux.Vars(r)
@@ -94,7 +94,7 @@ func ChangePassword(w http.ResponseWriter, r *http.Request, ctx *settings.Contex
 // @Failure      404  ""
 // @Failure      500  ""
 // @Router       /user/updateprofile [post]
-func UpdateProfile(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+func UpdateProfile(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	parseErr := r.ParseMultipartForm(32 << 20) // maxMemory 32MB
 	if parseErr != nil {
 		return http.StatusBadRequest, parseErr
@@ -115,7 +115,7 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request, ctx *settings.Context
 // @Failure      400  ""
 // @Failure      500  ""
 // @Router       /me [get]
-func GetMeDetails(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+func GetMeDetails(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	user, err := ctx.GetCurrentUserModel()
 	if err != nil {
@@ -133,7 +133,7 @@ func GetMeDetails(w http.ResponseWriter, r *http.Request, ctx *settings.Context)
 // @Produce      json
 // @Param        request  body  types.SignupRequestBody  true  "User signup details"
 // @Router       /signup [post]
-func Signup(w http.ResponseWriter, r *http.Request, ctx *settings.Context) (int, error) {
+func Signup(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var signupRequest types.SignupRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&signupRequest); err != nil {
 		return http.StatusBadRequest, err
