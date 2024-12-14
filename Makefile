@@ -57,3 +57,10 @@ migration-apply:
 .PHONY: run-local-dependencies
 run-local-dependencies:
 	docker compose -f docker-compose.yml up
+
+.PHONY: install-pre-commit
+install-pre-commit:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install golang.org/x/tools/cmd/goimports@latest
+	pre-commit install
+	awk 'NR==1{print;print "export PATH=\"$$PATH:'`go env GOPATH`'/bin\""}NR!=1{print}' .git/hooks/pre-commit > .git/hooks/pre-commit.tmp && mv .git/hooks/pre-commit.tmp .git/hooks/pre-commit
