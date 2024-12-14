@@ -29,7 +29,7 @@ var _ = Describe("REST API TESTS", func() {
 			}`)
 			request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/signin", s.URL), bytes.NewBuffer(jsonData))
 			request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-			response, err := c.Do(request)
+			response, _ := c.Do(request)
 			bodyBytes, err := io.ReadAll(response.Body)
 			if err != nil {
 				log.Fatal(err)
@@ -38,6 +38,7 @@ var _ = Describe("REST API TESTS", func() {
 			Ω(response.StatusCode).Should(Equal(202))
 			GinkgoWriter.Println("JWT Repsonse", string(jwt), err)
 			claim, _, err := jwtops.VerifyJWT(string(jwt))
+			Ω(err).Should(BeNil())
 
 			Ω(claim.User.Username).To(Equal("john@x.com"))
 
@@ -72,7 +73,7 @@ var _ = Describe("REST API TESTS", func() {
 			}`)
 			request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/signin", s.URL), bytes.NewBuffer(jsonData))
 			request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-			response, err := c.Do(request)
+			response, _ := c.Do(request)
 			bodyBytes, err := io.ReadAll(response.Body)
 			if err != nil {
 				log.Fatal(err)
@@ -86,13 +87,13 @@ var _ = Describe("REST API TESTS", func() {
 			request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			request.Header.Set("X-Auth", jwt)
 			response, err := c.Do(request)
-			bodyBytes, err := io.ReadAll(response.Body)
-			GinkgoWriter.Println("Profile Repsonse", string(bodyBytes), err)
 			if err != nil {
 				log.Fatal(err)
 			}
+			bodyBytes, err := io.ReadAll(response.Body)
+			GinkgoWriter.Println("Profile Repsonse", string(bodyBytes), err)
 			var profile map[string]interface{}
-			json.Unmarshal(bodyBytes, &profile)
+			_ = json.Unmarshal(bodyBytes, &profile)
 			Ω(response.StatusCode).Should(Equal(200))
 
 			Ω(profile["profile"].(map[string]interface{})["firstName"]).To(Equal("John"))

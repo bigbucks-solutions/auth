@@ -18,6 +18,9 @@ func FBAuthenticate(accesstoken string) (success bool, user models.User, err err
 	res, err := fb.Get("/me/?fields=email,first_name,last_name,hometown,gender,birthday", fb.Params{
 		"access_token": accesstoken,
 	})
+	if err != nil {
+		return false, user, err
+	}
 	username := fmt.Sprintf("%s+%s", res.Get("email"), FB_SUFFIX)
 	if err := models.Dbcon.First(&user, "username = ?", username).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		models.Dbcon.Create(&models.User{Username: username, Password: accesstoken, Profile: models.Profile{

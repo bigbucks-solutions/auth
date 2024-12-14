@@ -35,7 +35,7 @@ var createCmd = &cobra.Command{
 auth role create accounts`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		_, err := actions.CreateRole(&models.Role{Name: args[0]})
+		_, err := actions.CreateRole(&models.Role{Name: role})
 		return err
 	},
 }
@@ -51,5 +51,5 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// createCmd.Flags().StringVar(&role, "rolename", "", "Help message for rolename")
+	createCmd.Flags().StringVar(&role, "rolename", "", "Help message for rolename")
 }

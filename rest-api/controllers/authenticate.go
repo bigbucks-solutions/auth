@@ -3,6 +3,7 @@ package controllers
 import (
 	cnst "bigbucks/solution/auth/constants"
 	jwtops "bigbucks/solution/auth/jwt-ops"
+	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	oauth "bigbucks/solution/auth/oauthutils"
 	"bigbucks/solution/auth/request_context"
@@ -78,7 +79,11 @@ func GoogleSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 
 func FbSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var googCred GoogleSigninCred
-	json.NewDecoder(r.Body).Decode(&googCred)
+	err := json.NewDecoder(r.Body).Decode(&googCred)
+	if err != nil {
+		loging.Logger.Error("Error decoding json", err)
+		return http.StatusBadRequest, err
+	}
 	success, user, _ := oauth.FBAuthenticate(googCred.AccessToken)
 	if !success {
 		return http.StatusUnauthorized, nil
@@ -99,6 +104,10 @@ func printToken(w http.ResponseWriter, _ *http.Request, user *models.User, _ *se
 	}
 	w.WriteHeader(http.StatusAccepted)
 	w.Header().Set("Content-Type", "cty")
-	w.Write([]byte(signed))
+	_, err = w.Write([]byte(signed))
+	if err != nil {
+		loging.Logger.Error("Error writing to response on token print", err)
+		return http.StatusInternalServerError, err
+	}
 	return 0, nil
 }

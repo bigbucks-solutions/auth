@@ -41,12 +41,21 @@ type UpdateProfileBody struct {
 // @Router       /user/reset [post]
 func SendResetToken(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var requestBody RequestPasswordResetToken
-	json.NewDecoder(r.Body).Decode(&requestBody)
+	err := json.NewDecoder(r.Body).Decode(&requestBody)
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
 	var usr models.User
 	models.Dbcon.Preload("Profile").Find(&usr, &models.User{Username: requestBody.Email})
-	usr.GenerateResetToken()
+	_, err = usr.GenerateResetToken()
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
 	Logger.Debugln("Sending Reset Token..")
-	json.NewEncoder(w).Encode(&types.SimpleResponse{Message: "Password reset token sent to registered email"})
+	err = json.NewEncoder(w).Encode(&types.SimpleResponse{Message: "Password reset token sent to registered email"})
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
 	return 0, nil
 }
 
@@ -66,6 +75,9 @@ func SendResetToken(w http.ResponseWriter, r *http.Request, ctx *request_context
 func ChangePassword(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var body ResetPassword
 	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
 	vars := mux.Vars(r)
 	body.Token = vars["token"]
 	var usr models.User
@@ -100,6 +112,9 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request, ctx *request_context.
 		return http.StatusBadRequest, parseErr
 	}
 	user, err := ctx.GetCurrentUserModel()
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
 	num, err := user.UpdateUserProfile(r.Form, r.MultipartForm.File["file"])
 	return num, err
 }
@@ -121,7 +136,10 @@ func GetMeDetails(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 	if err != nil {
 		return http.StatusNotFound, err
 	}
-	json.NewEncoder(w).Encode(user)
+	err = json.NewEncoder(w).Encode(user)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
 	return 0, nil
 }
 
@@ -153,8 +171,11 @@ func Signup(w http.ResponseWriter, r *http.Request, ctx *request_context.Context
 		return http.StatusInternalServerError, err
 	}
 
-	json.NewEncoder(w).Encode(&types.SimpleResponse{
+	err := json.NewEncoder(w).Encode(&types.SimpleResponse{
 		Message: "User registered successfully",
 	})
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
 	return 0, nil
 }

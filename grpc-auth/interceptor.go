@@ -10,6 +10,8 @@ import (
 	status "google.golang.org/grpc/status"
 )
 
+type UserValue string
+
 func (s *Server) JWTInterceptor(
 	ctx context.Context,
 	req interface{},
@@ -37,7 +39,7 @@ func (s *Server) JWTInterceptor(
 		return nil, status.Errorf(codes.Unauthenticated, "authorization token expired")
 	}
 
-	newCtx := context.WithValue(ctx, "user", AuthClaim.User)
+	newCtx := context.WithValue(ctx, UserValue("user"), AuthClaim.User)
 	return handler(newCtx, req)
 
 }

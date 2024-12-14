@@ -1,6 +1,7 @@
 package validations
 
 import (
+	"bigbucks/solution/auth/loging"
 	"encoding/json"
 	"fmt"
 	"unicode"
@@ -51,16 +52,22 @@ func InitializeValidations() {
 	Trans, _ = Uni.GetTranslator("en")
 
 	Validate = validator.New()
-	en_translations.RegisterDefaultTranslations(Validate, Trans)
-	Validate.RegisterTranslation("required", Trans, func(ut ut.Translator) error {
+	err := en_translations.RegisterDefaultTranslations(Validate, Trans)
+	if err != nil {
+		loging.Logger.Error(err)
+	}
+	err = Validate.RegisterTranslation("required", Trans, func(ut ut.Translator) error {
 		return ut.Add("required", "{0} must have a value!", true) // see universal-translator for details
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		t, _ := ut.T("required", fe.Field())
 
 		return t
 	})
+	if err != nil {
+		loging.Logger.Error(err)
+	}
 
-	Validate.RegisterValidation("alphanum_", func(fl validator.FieldLevel) bool {
+	err = Validate.RegisterValidation("alphanum_", func(fl validator.FieldLevel) bool {
 		value := fl.Field().String()
 		for _, char := range value {
 			if !unicode.IsLetter(char) && !unicode.IsNumber(char) && char != '_' {
@@ -69,4 +76,7 @@ func InitializeValidations() {
 		}
 		return true
 	})
+	if err != nil {
+		loging.Logger.Error(err)
+	}
 }

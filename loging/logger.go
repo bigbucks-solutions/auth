@@ -38,5 +38,7 @@ func init() {
 	ZapWrapper = &fwdToZapWriter{
 		logger: Logger,
 	}
-	defer Logger.Sync()
+	defer func() {
+		_ = Logger.Sync()
+	}()
 }

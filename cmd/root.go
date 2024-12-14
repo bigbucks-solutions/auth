@@ -88,10 +88,13 @@ var rootCmd = &cobra.Command{
 		// models.Dbcon.Config.Logger = models.Dbcon.Config.Logger.LogMode(logger.Error)
 
 		err = models.Dbcon.SetupJoinTable(&models.Organization{}, "Users", &models.UserOrgRole{})
+		if err != nil {
+			fmt.Println("Error setting up join table:", err)
+		}
 		err = models.Dbcon.SetupJoinTable(&models.User{}, "Roles", &models.UserOrgRole{})
-		fmt.Println(err)
-		// models.Dbcon.Config.
-		// models.Dbcon.Logger.LogMode(logger.Error)
+		if err != nil {
+			fmt.Println("Error setting up join table:", err)
+		}
 
 		g.Go(func() error { return startGrpcServer(settings.Current) })
 		g.Go(func() error { return startHttpServer(settings.Current) })
@@ -184,7 +187,7 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.auth.yaml)")
 	rootCmd.Flags().StringVarP(&port, "port", "p", "", "port to listen on")
-	viper.BindPFlag("port", rootCmd.Flags().Lookup("port"))
+	_ = viper.BindPFlag("port", rootCmd.Flags().Lookup("port"))
 	cobra.OnInitialize(initConfig)
 }
 

@@ -161,14 +161,14 @@ var _ = Describe("Role Model", func() {
 
 	Context("List Roles", Ordered, func() {
 		It("Successfully lists roles with pagination", func() {
-			roles, total, err := models.ListRoles(1, 10, "", 1)
+			roles, total, err := actions.ListRoles(1, 10, "", 1)
 			Ω(err).To(Succeed())
 			Ω(total).To(BeNumerically(">", 0))
 			Ω(roles).NotTo(BeEmpty())
 		})
 
 		It("Successfully filters roles by name", func() {
-			roles, total, err := models.ListRoles(1, 10, "admin", 1)
+			roles, total, err := actions.ListRoles(1, 10, "admin", 1)
 			Ω(err).To(Succeed())
 			Ω(total).To(BeNumerically(">", 0))
 			Ω(roles[0].Name).To(ContainSubstring("admin"))

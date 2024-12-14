@@ -1,6 +1,7 @@
 package models
 
 import (
+	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models/types"
 	"bigbucks/solution/auth/passwordreset"
 	valids "bigbucks/solution/auth/validations"
@@ -39,7 +40,10 @@ func (usr User) MarshalJSON() ([]byte, error) {
 	var tmp = &types.User{}
 	tmp.Username = usr.Username
 	tmp.Roles = usr.Roles
-	Dbcon.Model(&usr).Association("Profile").Find(&usr.Profile)
+	err := Dbcon.Model(&usr).Association("Profile").Find(&usr.Profile)
+	if err != nil {
+		return nil, err
+	}
 	tmp.Profile = usr.Profile
 	tmp.IsSocial = Dbcon.Model(&usr).Association("OAuthClient").Count() > 0
 	return json.Marshal(&tmp)
@@ -48,9 +52,17 @@ func (usr User) MarshalJSON() ([]byte, error) {
 // GenerateResetToken Generate a reset token to change password
 func (usr User) GenerateResetToken() (string, error) {
 	b := make([]byte, 8)
-	rand.Read(b)
+	_, err := rand.Read(b)
+	if err != nil {
+		loging.Logger.Error("Error generating reset token", err)
+		return "", err
+	}
 	var fg ForgotPassword
-	Dbcon.Model(&usr).Association("ForgotPassword").Find(&fg)
+	err = Dbcon.Model(&usr).Association("ForgotPassword").Find(&fg)
+	if err != nil {
+		loging.Logger.Error("Error finding forgot password", err)
+		return "", err
+	}
 	fg.ResetToken = fmt.Sprintf("%x", b)
 	fg.Expiry = time.Now().Add(5 * time.Hour)
 	if fg.ID == 0 {
@@ -124,11 +136,19 @@ func (usr User) UpdateUserProfile(data map[string][]string, picture []*multipart
 		file, _ := picture[0].Open()
 		filename = fmt.Sprintf("%s.jpg", uuid)
 		tmpfile, _ := os.Create(fmt.Sprintf("./profile_pics/%s", filename))
-		io.Copy(tmpfile, file)
+		_, err := io.Copy(tmpfile, file)
+		if err != nil {
+			loging.Logger.Error("Error saving profile picture", err)
+			return http.StatusInternalServerError, err
+		}
 		tmpfile.Close()
 	}
 	var profile Profile
-	Dbcon.Model(&usr).Association("Profile").Find(&profile)
+	err := Dbcon.Model(&usr).Association("Profile").Find(&profile)
+	if err != nil {
+		loging.Logger.Error("Error finding profile", err)
+		return http.StatusInternalServerError, err
+	}
 	if len(profile.Picture) > 0 {
 		os.Remove(fmt.Sprintf("./profile_pics/%s", profile.Picture))
 	}

@@ -21,9 +21,14 @@ import (
 // @Router       /user/authorize [post]
 func Authorize(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var body = &types.CheckPermissionBody{}
-	json.NewDecoder(r.Body).Decode(&body)
-	// user, _ := ctx.GetCurrentUserModel()
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
 	status, _ := ctx.PermCache.CheckPermission(ctx.Context, body.Resource, body.Scope, body.Action, &ctx.Auth.User)
-	json.NewEncoder(w).Encode(&types.AuthorizeResponse{Status: status})
+	err = json.NewEncoder(w).Encode(&types.AuthorizeResponse{Status: status})
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
 	return 0, nil
 }

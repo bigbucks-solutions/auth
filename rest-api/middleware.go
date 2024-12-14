@@ -68,7 +68,10 @@ func JSONError(w http.ResponseWriter, err interface{}, code int) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(code)
-	json.NewEncoder(w).Encode(err)
+	err = json.NewEncoder(w).Encode(err)
+	if err != nil {
+		loging.Logger.Errorln(err)
+	}
 }
 
 func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, perm_cache *permission_cache.PermissionCache) http.Handler {

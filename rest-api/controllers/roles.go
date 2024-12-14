@@ -38,7 +38,7 @@ func ListRoles(w http.ResponseWriter, r *http.Request, ctx *request_context.Cont
 	roleName := r.URL.Query().Get("role_name")
 	orgID, _ := strconv.Atoi(r.URL.Query().Get("org_id"))
 
-	roles, total, err := models.ListRoles(page, pageSize, roleName, orgID)
+	roles, total, err := actions.ListRoles(page, pageSize, roleName, orgID)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
@@ -51,7 +51,10 @@ func ListRoles(w http.ResponseWriter, r *http.Request, ctx *request_context.Cont
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
 	return 0, nil
 }
 
@@ -79,7 +82,10 @@ func CreateRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Con
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(role)
+	err = json.NewEncoder(w).Encode(role)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
 	return 0, nil
 }
 
@@ -107,7 +113,10 @@ func CreatePermission(w http.ResponseWriter, r *http.Request, ctx *request_conte
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(permission)
+	err = json.NewEncoder(w).Encode(permission)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
 	return 0, nil
 }
 
@@ -140,6 +149,9 @@ func BindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request_c
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "Permission bound successfully"})
+	err = json.NewEncoder(w).Encode(map[string]string{"message": "Permission bound successfully"})
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
 	return 0, nil
 }

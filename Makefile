@@ -64,3 +64,4 @@ install-pre-commit:
 	go install golang.org/x/tools/cmd/goimports@latest
 	pre-commit install
 	awk 'NR==1{print;print "export PATH=\"$$PATH:'`go env GOPATH`'/bin\""}NR!=1{print}' .git/hooks/pre-commit > .git/hooks/pre-commit.tmp && mv .git/hooks/pre-commit.tmp .git/hooks/pre-commit
+	chmod +x .git/hooks/pre-commit

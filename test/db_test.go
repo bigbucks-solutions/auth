@@ -45,12 +45,21 @@ var _ = BeforeSuite(func() {
 	models.Dbcon, cleanupDocker = setupGormWithDocker()
 
 	err := models.Dbcon.SetupJoinTable(&models.Organization{}, "Users", &models.UserOrgRole{})
+	if err != nil {
+		fmt.Println("Error setting up join table:", err)
+	}
 	err = models.Dbcon.SetupJoinTable(&models.User{}, "Roles", &models.UserOrgRole{})
 	models.Migrate()
 	GinkgoWriter.Println("Migration complete", err)
 
 	priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		fmt.Println("Error generating private key:", err)
+	}
 	ecder, err := x509.MarshalECPrivateKey(priv)
+	if err != nil {
+		fmt.Println("Error marshaling private key:", err)
+	}
 	settings.SingingKey = pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: ecder})
 	x509EncodedPub, _ := x509.MarshalPKIXPublicKey(&priv.PublicKey)
 	settings.VerifyingKey = pem.EncodeToMemory(&pem.Block{Type: "EC PUBLIC KEY", Bytes: x509EncodedPub})

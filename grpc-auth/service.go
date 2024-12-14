@@ -16,7 +16,6 @@ import (
 type Server struct {
 	UnimplementedAuthServer
 	settings *settings.Settings
-	user     *models.User
 }
 
 func NewGRPCServer(settings *settings.Settings) (server *Server) {

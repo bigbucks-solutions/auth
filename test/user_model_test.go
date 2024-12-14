@@ -21,7 +21,7 @@ var _ = Describe("User Model", func() {
 			}`)
 		request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/signin", s.URL), bytes.NewBuffer(jsonData))
 		request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-		response, err := c.Do(request)
+		response, _ := c.Do(request)
 		bodyBytes, err := io.ReadAll(response.Body)
 		if err != nil {
 			log.Fatal(err)

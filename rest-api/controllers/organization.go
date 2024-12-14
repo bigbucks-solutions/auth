@@ -10,20 +10,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type Post struct {
-	ID    string `json:"id"`
-	Title string `json:"title"`
-	Body  string `json:"body"`
-}
-
-var posts []Post
-
 func GetOrg(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
 	org, _, _ := models.GetOrganization(id)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(org)
+	err := json.NewEncoder(w).Encode(org)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
 	return 0, nil
 }
 
