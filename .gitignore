@@ -6,3 +6,6 @@ site/
 docs/v3/
 *.pem
 postgres-data/
+__debug_*
+cover.profile
+report.json
