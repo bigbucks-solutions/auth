@@ -84,7 +84,7 @@ func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, pe
 			success, authToken, _ := Authenticate(w, r, setting)
 			loging.Logger.Debugln(success, zap.String("Authenticated User", authToken.User.Username))
 			if !success {
-				http.Error(w, strconv.Itoa(http.StatusForbidden)+" "+http.StatusText(http.StatusForbidden), http.StatusForbidden)
+				http.Error(w, strconv.Itoa(http.StatusUnauthorized)+" "+http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 				return
 			}
 			ctx.Auth = &authToken

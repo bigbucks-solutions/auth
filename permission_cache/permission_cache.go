@@ -36,6 +36,7 @@ func NewPermissionCache(settings *settings.Settings) *PermissionCache {
 			"READ":   {"WRITE", "UPDATE", "DELETE"},
 			"UPDATE": {"WRITE"},
 			"DELETE": {"WRITE"},
+			"CREATE": {"WRITE"},
 		},
 		validScopes: map[string]struct{}{
 			string(models.All): {},
@@ -80,7 +81,7 @@ func (pc *PermissionCache) expandScope(scope string) []string {
 
 func (pc *PermissionCache) getTransientActions(action string) []string {
 	if action == "*" {
-		return []string{"WRITE", "UPDATE", "DELETE", "READ"}
+		return []string{"WRITE", "UPDATE", "DELETE", "CREATE", "READ"}
 	}
 	if actions, exists := pc.actionHierarchy[action]; exists {
 		return append(actions, action)

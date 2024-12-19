@@ -75,6 +75,11 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	api.Handle("/permissions", makeHandler(ctr.CreatePermission, WithAuth(true))).Methods("POST")
 	api.Handle("/roles/bind-permission", makeHandler(ctr.BindPermissionToRole, WithAuth(true))).Methods("POST")
 
+	// Master data
+	api.Handle("/master-data/resources", makeHandler(ctr.GetResources, WithAuth(true))).Methods("GET")
+	api.Handle("/master-data/scopes", makeHandler(ctr.GetScopes, WithAuth(true))).Methods("GET")
+	api.Handle("/master-data/actions", makeHandler(ctr.GetActions, WithAuth(true))).Methods("GET")
+
 	// Static file server
 	fileServer := http.FileServer(http.Dir("./profile_pics/"))
 	r.PathPrefix("/avatar/").Handler(http.StripPrefix("/avatar/", fileServer))

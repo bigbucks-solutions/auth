@@ -16,3 +16,11 @@ repos:
       - id: go-imports
       - id: no-go-testing
       - id: golangci-lint
+  - repo: local
+    hooks:
+      - id: go-test-coverage
+        name: Test Coverage Check
+        entry: bash -c 'go run github.com/onsi/ginkgo/v2/ginkgo -r --fail-on-pending --fail-on-empty --keep-going --cover --coverprofile=cover.profile --coverpkg=./... --race --trace --json-report=report.json --poll-progress-after=10s --poll-progress-interval=10s . && go tool cover -func=cover.profile'
+        language: system
+        types: [go]
+        pass_filenames: false

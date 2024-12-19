@@ -90,8 +90,14 @@ func VerifyJWT(obj interface{}) (claims settings.AuthToken, token *jwt.Token, er
 		token, err = jwt.ParseWithClaims(obj.(string), &claims, keyFunc)
 	}
 
-	if err != nil || !token.Valid {
-		Logger.Debugln(zap.Bool("Token Validity", token.Valid))
+	if err != nil {
+		Logger.Error("Error verifying token", zap.Error(err))
+
+	}
+	if token == nil {
+		Logger.Warn("Token is empty")
+		return
+
 	}
 
 	return

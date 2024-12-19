@@ -65,3 +65,7 @@ install-pre-commit:
 	pre-commit install
 	awk 'NR==1{print;print "export PATH=\"$$PATH:'`go env GOPATH`'/bin\""}NR!=1{print}' .git/hooks/pre-commit > .git/hooks/pre-commit.tmp && mv .git/hooks/pre-commit.tmp .git/hooks/pre-commit
 	chmod +x .git/hooks/pre-commit
+
+.PHONY: run-tests
+run-tests:
+	go run github.com/onsi/ginkgo/v2/ginkgo -r --fail-on-pending --fail-on-empty --keep-going --cover --coverprofile=cover.profile --race --trace --json-report=report.json --poll-progress-after=10s --poll-progress-interval=10s -coverpkg=./... .
