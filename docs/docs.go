@@ -24,6 +24,132 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/master-data/actions": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    },
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "permissions"
+                ],
+                "summary": "Get actions",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/master-data/resources": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    },
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "permissions"
+                ],
+                "summary": "Get resources",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/master-data/scopes": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    },
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "permissions"
+                ],
+                "summary": "Get scopes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/me": {
             "get": {
                 "security": [
@@ -258,6 +384,52 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "Permission bound successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/bind-user": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Associates a role with a user in an organization",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Bind role to user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "User role binding details",
+                        "name": "binding",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.UserRoleBindingBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Role bound to user successfully",
                         "schema": {
                             "type": "string"
                         }
@@ -668,6 +840,7 @@ const docTemplate = `{
             "properties": {
                 "action": {
                     "type": "string",
+                    "minLength": 3,
                     "enum": [
                         "read",
                         "write",
@@ -679,7 +852,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "resource": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "roles": {
                     "type": "array",
@@ -688,6 +862,7 @@ const docTemplate = `{
                     }
                 },
                 "scope": {
+                    "minLength": 3,
                     "enum": [
                         "own",
                         "org",
@@ -812,13 +987,16 @@ const docTemplate = `{
         "types.CheckPermissionBody": {
             "type": "object",
             "properties": {
+                "action": {
+                    "type": "string"
+                },
                 "orgID": {
                     "type": "integer"
                 },
-                "permission": {
+                "resource": {
                     "type": "string"
                 },
-                "resource": {
+                "scope": {
                     "type": "string"
                 }
             }
@@ -833,6 +1011,7 @@ const docTemplate = `{
             "properties": {
                 "action": {
                     "type": "string",
+                    "minLength": 3,
                     "enum": [
                         "read",
                         "write",
@@ -841,10 +1020,12 @@ const docTemplate = `{
                     ]
                 },
                 "resource": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3
                 },
                 "scope": {
                     "type": "string",
+                    "minLength": 3,
                     "enum": [
                         "own",
                         "org",
@@ -919,6 +1100,24 @@ const docTemplate = `{
                     }
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.UserRoleBindingBody": {
+            "type": "object",
+            "required": [
+                "role_key",
+                "user_name"
+            ],
+            "properties": {
+                "org_id": {
+                    "type": "integer"
+                },
+                "role_key": {
+                    "type": "string"
+                },
+                "user_name": {
                     "type": "string"
                 }
             }

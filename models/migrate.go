@@ -1,9 +1,9 @@
 package models
 
 import (
-	"fmt"
-
 	"gorm.io/gorm"
+
+	_ "ariga.io/atlas-provider-gorm/gormschema"
 )
 
 var (
@@ -18,8 +18,8 @@ func Migrate() {
 		&Role{}, &Permission{}, &UserOrgRole{}, &ForgotPassword{})
 
 	// Create
-	results := Dbcon.Create(&User{Username: "L1212", Password: "jamsheed"})
-	fmt.Print(results.Error != nil)
+	// results := Dbcon.Create(&User{Username: "L1212", Password: "jamsheed"})
+	// fmt.Print(results.Error != nil)
 	// Dbcon.Create(&Role{Name: "SuperUser",
 	// 	Description: "Super User Role for Organizations",
 	// 	Permissions: []*Permission{{Code: "ACCNT_ALL"}}})

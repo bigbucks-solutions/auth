@@ -57,7 +57,7 @@ func CreatePermission(perm *models.Permission) (int, error) {
 }
 
 // BindPermission : Binds the permission to the role specified
-func BindPermission(resource, scope, action, roleKey string, orgID int, perm_cache *permission_cache.PermissionCache) (int, error) {
+func BindPermission(resource, scope, action, roleKey string, orgID int, perm_cache *permission_cache.PermissionCache, ctx context.Context) (int, error) {
 	var role models.Role
 	var perm models.Permission
 	customerr := valids.NewErrorDict()
@@ -65,17 +65,13 @@ func BindPermission(resource, scope, action, roleKey string, orgID int, perm_cac
 		if err := tx.First(&role, "name = ? and org_id = ?", roleKey, orgID).Error; err != nil {
 			return err
 		}
-
-		if err := tx.Where("LOWER(resource) = LOWER(?) AND LOWER(scope) = LOWER(?) AND LOWER(action) = LOWER(?)",
-			resource, scope, action).Find(&perm).Error; err != nil {
-			return err
-		}
+		tx.Where(&models.Permission{Resource: resource, Scope: models.Scope(scope), Action: models.Action(action)}).FirstOrCreate(&perm)
 
 		if err := tx.Model(&role).Association("Permissions").Append(&perm); err != nil {
 			return err
 		}
 
-		err := perm_cache.AddRoleToPermKey(context.Background(), strconv.Itoa(orgID), role.Name, resource, scope, action)
+		err := perm_cache.AddRoleToPermKey(ctx, strconv.Itoa(orgID), role.Name, resource, scope, action)
 		if err != nil {
 			return err
 		}
@@ -86,5 +82,72 @@ func BindPermission(resource, scope, action, roleKey string, orgID int, perm_cac
 		customerr.Errors["Error"] = err.Error()
 		return http.StatusConflict, customerr
 	}
+	return 0, nil
+}
+
+func UnBindPermission(resource, scope, action, roleKey string, orgID int, perm_cache *permission_cache.PermissionCache, ctx context.Context) (int, error) {
+	var role models.Role
+	var perm models.Permission
+	customerr := valids.NewErrorDict()
+	err := models.Dbcon.Transaction(func(tx *gorm.DB) error {
+		if err := tx.First(&role, "name = ? and org_id = ?", roleKey, orgID).Error; err != nil {
+			return err
+		}
+		tx.Where(&models.Permission{Resource: resource, Scope: models.Scope(scope), Action: models.Action(action)}).First(&perm)
+		if err := tx.Model(&role).Association("Permissions").Delete(&perm); err != nil {
+			return err
+		}
+		err := perm_cache.RemoveRoleFromPermKey(ctx, strconv.Itoa(orgID), role.Name, resource, scope, action)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		customerr.Errors["Error"] = err.Error()
+		return http.StatusConflict, customerr
+	}
+	return 0, nil
+}
+
+// BindUserRole binds a role to a user for a specific organization
+func BindUserRole(userName string, roleKey string, orgID int) (int, error) {
+	var role models.Role
+	var userOrgRole models.UserOrgRole
+
+	customerr := valids.NewErrorDict()
+
+	err := models.Dbcon.Transaction(func(tx *gorm.DB) error {
+		// Find the user
+		var user models.User
+		if err := tx.Where("LOWER(username) = LOWER(?)", userName).First(&user).Error; err != nil {
+			return err
+		}
+		// Find the role
+		if err := tx.First(&role, "name = ? AND org_id = ?", roleKey, orgID).Error; err != nil {
+			return err
+		}
+
+		// Create user-org-role binding
+		userOrgRole = models.UserOrgRole{
+			UserID: int(user.ID),
+			RoleID: int(role.ID),
+			OrgID:  orgID,
+		}
+
+		if err := tx.Create(&userOrgRole).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		loging.Logger.Error(err)
+		customerr.Errors["Error"] = err.Error()
+		return http.StatusConflict, customerr
+	}
+
 	return 0, nil
 }

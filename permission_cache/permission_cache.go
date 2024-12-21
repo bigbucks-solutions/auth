@@ -23,6 +23,8 @@ type PermissionCache struct {
 	validScopes     map[string]struct{}
 }
 
+type UserPerm string
+
 func NewPermissionCache(settings *settings.Settings) *PermissionCache {
 	return &PermissionCache{
 		RedisClient: redis.NewClient(&redis.Options{
@@ -39,9 +41,10 @@ func NewPermissionCache(settings *settings.Settings) *PermissionCache {
 			"CREATE": {"WRITE"},
 		},
 		validScopes: map[string]struct{}{
-			string(models.All): {},
-			string(models.Org): {},
-			string(models.Own): {},
+			string(models.ScopeAll):        {},
+			string(models.ScopeOrg):        {},
+			string(models.ScopeAssociated): {},
+			string(models.ScopeOwn):        {},
 		},
 	}
 }
@@ -54,6 +57,7 @@ func (pc *PermissionCache) acquireLock(ctx context.Context, orgID string) (bool,
 	if err != nil || !ok {
 		return false, ""
 	}
+	loging.Logger.Debug("Lock acquired", zap.String("lockKey", lockKey), zap.String("lockValue", lockValue))
 	return true, lockValue
 }
 
@@ -66,6 +70,7 @@ func (pc *PermissionCache) releaseLock(orgID, lockValue string) {
             return 0
         end`
 	pc.RedisClient.Eval(context.Background(), script, []string{lockKey}, lockValue)
+	loging.Logger.Debug("Lock released", zap.String("lockKey", lockKey), zap.String("lockValue", lockValue))
 }
 
 func (pc *PermissionCache) expandScope(scope string) []string {
@@ -89,7 +94,7 @@ func (pc *PermissionCache) getTransientActions(action string) []string {
 	return []string{action}
 }
 
-func (pc *PermissionCache) CheckPermission(ctx context.Context, resource, scope, action string, userInfo *settings.UserInfo) (bool, error) {
+func (pc *PermissionCache) CheckPermission(ctx *context.Context, resource, scope, action string, userInfo *settings.UserInfo) (bool, error) {
 	resource = strings.ToUpper(strings.TrimSpace(resource))
 	scopes := pc.expandScope(scope)
 	actions := pc.getTransientActions(strings.ToUpper(action))
@@ -106,8 +111,9 @@ func (pc *PermissionCache) CheckPermission(ctx context.Context, resource, scope,
 				role_ := strings.ToUpper(role.Role)
 				loging.Logger.Debug("Checking permission", zap.String("role", role_), zap.String("resource", resource), zap.String("scope", scp), zap.String("action", act))
 
-				isMember, err := pc.RedisClient.SIsMember(ctx, key, role_).Result()
+				isMember, err := pc.RedisClient.SIsMember(*ctx, key, role_).Result()
 				if err == nil && isMember {
+					*ctx = context.WithValue(*ctx, UserPerm("userPerm"), map[string]interface{}{"role": role.Role, "resource": resource, "scope": models.Scope(strings.ToLower(scp)), "action": models.Action(strings.ToLower(act))})
 					return true, nil
 				}
 
@@ -115,7 +121,7 @@ func (pc *PermissionCache) CheckPermission(ctx context.Context, resource, scope,
 		}
 	}
 	// If key doesn't exist, trigger cache build and continue checking other actions
-	if acquired, lockValue := pc.acquireLock(ctx, orgID); acquired {
+	if acquired, lockValue := pc.acquireLock(*ctx, orgID); acquired {
 		go func(ctx context.Context, orgID, lockValue string) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -131,17 +137,19 @@ func (pc *PermissionCache) CheckPermission(ctx context.Context, resource, scope,
 					zap.String("orgID", orgID),
 					zap.Error(err))
 			}
-		}(ctx, orgID, lockValue)
+		}(*ctx, orgID, lockValue)
 	}
 	// After checking cache, fallback to DB for final verification
-	for _, role := range userInfo.Roles {
-		for _, scp := range scopes {
-			for _, act := range actions {
-				allowed, err := pc.checkPermissionInDB(ctx, role.OrgID, role.Role, resource, scp, act)
+
+	for _, scp := range scopes {
+		for _, act := range actions {
+			for _, role := range userInfo.Roles {
+				allowed, err := pc.checkPermissionInDB(*ctx, role.OrgID, role.Role, resource, scp, act)
 				if err != nil {
 					return false, err
 				}
 				if allowed {
+					*ctx = context.WithValue(*ctx, UserPerm("userPerm"), map[string]interface{}{"role": role.Role, "resource": resource, "scope": models.Scope(strings.ToLower(scp)), "action": models.Action(strings.ToLower(act))})
 					return true, nil
 				}
 			}
@@ -150,11 +158,19 @@ func (pc *PermissionCache) CheckPermission(ctx context.Context, resource, scope,
 
 	return false, nil
 }
-
 func (pc *PermissionCache) AddRoleToPermKey(ctx context.Context, orgID string, roleName string, resource string, scope string, action string) error {
 	key := fmt.Sprintf("perm:%s:%s:%s:%s", orgID, strings.ToUpper(resource), strings.ToUpper(scope), strings.ToUpper(action))
 	pipe := pc.RedisClient.Pipeline()
 	pipe.SAdd(ctx, key, strings.ToUpper(roleName))
+	pipe.Expire(ctx, key, pc.cacheTTL)
+	_, err := pipe.Exec(ctx)
+	return err
+}
+
+func (pc *PermissionCache) RemoveRoleFromPermKey(ctx context.Context, orgID string, roleName string, resource string, scope string, action string) error {
+	key := fmt.Sprintf("perm:%s:%s:%s:%s", orgID, strings.ToUpper(resource), strings.ToUpper(scope), strings.ToUpper(action))
+	pipe := pc.RedisClient.Pipeline()
+	pipe.SRem(ctx, key, strings.ToUpper(roleName))
 	pipe.Expire(ctx, key, pc.cacheTTL)
 	_, err := pipe.Exec(ctx)
 	return err
@@ -187,7 +203,7 @@ func (pc *PermissionCache) buildCacheForOrg(ctx context.Context, orgID string) e
 		default:
 			resource := strings.ToUpper(perm.Resource)
 			scope := strings.ToUpper(string(perm.Scope))
-			action := strings.ToUpper(perm.Action)
+			action := strings.ToUpper(string(perm.Action))
 
 			for _, role := range perm.Roles {
 				key := fmt.Sprintf("perm:%s:%s:%s:%s", orgID, resource, scope, action)

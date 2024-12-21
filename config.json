@@ -11,7 +11,7 @@
     "dBPort": "6432",
     "dBSSLMode": "true",
     "redisAddress": "localhost:6379",
-    "redisPassword": "bigbucks",
+    "redisPassword": "",
     "redisDB": "0",
-    "redisUsername": "bigbucks"
+    "redisUsername": ""
 }

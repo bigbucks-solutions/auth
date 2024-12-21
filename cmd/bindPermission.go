@@ -19,6 +19,7 @@ import (
 	"bigbucks/solution/auth/actions"
 	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/settings"
+	"context"
 	"fmt"
 	"strconv"
 
@@ -42,7 +43,7 @@ For example:
 		if err != nil {
 			return fmt.Errorf("invalid org_id: %v", err)
 		}
-		_, err = actions.BindPermission(resource, scope, action, role_key, orgID, permission_cache.NewPermissionCache(settings.Current))
+		_, err = actions.BindPermission(resource, scope, action, role_key, orgID, permission_cache.NewPermissionCache(settings.Current), context.Background())
 		return err
 	},
 }

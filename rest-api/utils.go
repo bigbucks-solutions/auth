@@ -50,13 +50,13 @@ func parsePermissionString(permStr string) (resource, scope, action string, err 
 	action = strings.TrimSpace(parts[2])
 
 	// Validate scope
-	if !slices.Contains([]string{"own", "org", "all"}, scope) {
+	if !slices.Contains([]string{"own", "org", "all", "*"}, scope) {
 		return "", "", "", fmt.Errorf("invalid scope: must be own, org or all")
 	}
 
 	// Validate action
-	if !slices.Contains([]string{"read", "write", "delete", "update"}, action) {
-		return "", "", "", fmt.Errorf("invalid action: must be read, write, delete or update")
+	if !slices.Contains([]string{"read", "write", "delete", "create", "update", "*"}, action) {
+		return "", "", "", fmt.Errorf("invalid action: must be read, write, delete, create or update")
 	}
 
 	return resource, scope, action, nil

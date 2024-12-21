@@ -52,8 +52,8 @@ var _ = Describe("Role Model", func() {
 		It("Successfully creates a permission", func() {
 			perm := &models.Permission{
 				Resource:    "users",
-				Scope:       models.All,
-				Action:      "read",
+				Scope:       models.ScopeAll,
+				Action:      models.ActionRead,
 				Description: "Read all users",
 			}
 			status, err := actions.CreatePermission(perm)
@@ -65,8 +65,8 @@ var _ = Describe("Role Model", func() {
 		It("validates resource special characters", func() {
 			perm := &models.Permission{
 				Resource: "users:;",
-				Scope:    models.Own,
-				Action:   "read",
+				Scope:    models.ScopeOwn,
+				Action:   models.ActionRead,
 			}
 			status, err := actions.CreatePermission(perm)
 			Ω(err).To(HaveOccurred())
@@ -76,8 +76,8 @@ var _ = Describe("Role Model", func() {
 		It("validates resource special characters \"", func() {
 			perm := &models.Permission{
 				Resource: "users\"",
-				Scope:    models.Own,
-				Action:   "read",
+				Scope:    models.ScopeOwn,
+				Action:   models.ActionRead,
 			}
 			status, err := actions.CreatePermission(perm)
 			Ω(err).To(HaveOccurred())
@@ -87,7 +87,7 @@ var _ = Describe("Role Model", func() {
 		It("validates permission action field", func() {
 			perm := &models.Permission{
 				Resource:    "users",
-				Scope:       models.All,
+				Scope:       models.ScopeAll,
 				Action:      "invalid_action", // only read,write,delete,update allowed
 				Description: "Invalid action",
 			}
@@ -99,8 +99,8 @@ var _ = Describe("Role Model", func() {
 		It("validates minimum length requirements", func() {
 			perm := &models.Permission{
 				Resource:    "us", // too short, min 3 chars
-				Scope:       models.All,
-				Action:      "read",
+				Scope:       models.ScopeAll,
+				Action:      models.ActionRead,
 				Description: "Short resource name",
 			}
 			status, err := actions.CreatePermission(perm)
@@ -111,8 +111,8 @@ var _ = Describe("Role Model", func() {
 		It("validates unique combination of resource, scope and action", func() {
 			perm1 := &models.Permission{
 				Resource:    "users",
-				Scope:       models.All,
-				Action:      "write",
+				Scope:       models.ScopeAll,
+				Action:      models.ActionWrite,
 				Description: "First permission",
 			}
 			status, err := actions.CreatePermission(perm1)
@@ -121,8 +121,8 @@ var _ = Describe("Role Model", func() {
 
 			perm2 := &models.Permission{
 				Resource:    "users",
-				Scope:       models.All,
-				Action:      "write",
+				Scope:       models.ScopeAll,
+				Action:      models.ActionWrite,
 				Description: "Duplicate permission",
 			}
 			status, err = actions.CreatePermission(perm2)
@@ -134,7 +134,7 @@ var _ = Describe("Role Model", func() {
 			perm := &models.Permission{
 				Resource:    "users",
 				Scope:       "invalid",
-				Action:      "read",
+				Action:      models.ActionWrite,
 				Description: "Invalid scope",
 			}
 			status, err := actions.CreatePermission(perm)
@@ -146,14 +146,14 @@ var _ = Describe("Role Model", func() {
 	Context("Bind Permission to Role", Ordered, func() {
 		It("Successfully binds permission to role", func() {
 			perm_cache := permission_cache.NewPermissionCache(settings.Current)
-			status, err := actions.BindPermission("users", "all", "read", "admin_role", 1, perm_cache)
+			status, err := actions.BindPermission("users", "all", "read", "admin_role", 1, perm_cache, context.Background())
 			Ω(err).To(Succeed())
 			Ω(status).To(Equal(0))
 			Ω(perm_cache.RedisClient.SIsMember(context.Background(), "perm:1:USERS:ALL:READ", "ADMIN_ROLE").Val()).To(BeTrue())
 		})
 
 		It("Fails with non-existent role", func() {
-			status, err := actions.BindPermission("users", "all", "read", "non_existent_role", 1, permission_cache.NewPermissionCache(settings.Current))
+			status, err := actions.BindPermission("users", "all", "read", "non_existent_role", 1, permission_cache.NewPermissionCache(settings.Current), context.Background())
 			Ω(err).To(HaveOccurred())
 			Ω(status).To(Equal(409))
 		})

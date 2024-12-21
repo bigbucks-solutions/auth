@@ -117,7 +117,7 @@ func (usr *User) BeforeUpdate(tx *gorm.DB) (err error) {
 
 // Authenticate => check for valid user credentials
 func Authenticate(username, password string) (success bool, user User) {
-	if err := Dbcon.Where("username = ?", username).First(&user).Error; err == gorm.ErrRecordNotFound {
+	if err := Dbcon.Where("username = ?", username).Preload("Roles").First(&user).Error; err == gorm.ErrRecordNotFound {
 		return
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err == nil {

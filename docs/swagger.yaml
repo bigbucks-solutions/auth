@@ -95,10 +95,12 @@ definitions:
         - write
         - delete
         - update
+        minLength: 3
         type: string
       description:
         type: string
       resource:
+        minLength: 3
         type: string
       roles:
         items:
@@ -111,6 +113,7 @@ definitions:
         - own
         - org
         - all
+        minLength: 3
     required:
     - action
     - scope
@@ -190,11 +193,13 @@ definitions:
     type: object
   types.CheckPermissionBody:
     properties:
+      action:
+        type: string
       orgID:
         type: integer
-      permission:
-        type: string
       resource:
+        type: string
+      scope:
         type: string
     type: object
   types.CreatePermissionBody:
@@ -205,14 +210,17 @@ definitions:
         - write
         - delete
         - update
+        minLength: 3
         type: string
       resource:
+        minLength: 3
         type: string
       scope:
         enum:
         - own
         - org
         - all
+        minLength: 3
         type: string
     required:
     - action
@@ -266,6 +274,18 @@ definitions:
       username:
         type: string
     type: object
+  types.UserRoleBindingBody:
+    properties:
+      org_id:
+        type: integer
+      role_key:
+        type: string
+      user_name:
+        type: string
+    required:
+    - role_key
+    - user_name
+    type: object
 host: localhost:8000
 info:
   contact:
@@ -280,6 +300,81 @@ info:
   title: BigBucks Solutions Auth Engine
   version: 0.0.1
 paths:
+  /master-data/actions:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+      security:
+      - JWTAuth: []
+      - JWTAuth: []
+      summary: Get actions
+      tags:
+      - permissions
+  /master-data/resources:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+      security:
+      - JWTAuth: []
+      - JWTAuth: []
+      summary: Get resources
+      tags:
+      - permissions
+  /master-data/scopes:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+      security:
+      - JWTAuth: []
+      - JWTAuth: []
+      summary: Get scopes
+      tags:
+      - permissions
   /me:
     get:
       consumes:
@@ -430,6 +525,35 @@ paths:
       security:
       - JWTAuth: []
       summary: Bind permission to role
+      tags:
+      - roles
+  /roles/bind-user:
+    post:
+      consumes:
+      - application/json
+      description: Associates a role with a user in an organization
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: User role binding details
+        in: body
+        name: binding
+        required: true
+        schema:
+          $ref: '#/definitions/types.UserRoleBindingBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role bound to user successfully
+          schema:
+            type: string
+      security:
+      - JWTAuth: []
+      summary: Bind role to user
       tags:
       - roles
   /signin:

@@ -1,5 +1,5 @@
 # Docker image to run shell and go utility functions in
-WORKER_IMAGE = golang:1.23.2-alpine3.20
+WORKER_IMAGE = golang:1.23.4-alpine3.21
 # Docker image to generate OAS3 specs
 OAS3_GENERATOR_DOCKER_IMAGE = openapitools/openapi-generator-cli:latest-release
 
@@ -7,7 +7,7 @@ MKDOCS_IMAGE = jamshi/mk-docs-gh:latest
 
 .PHONY: ci-swaggen2
 ci-swaggen2:
-	@docker run --rm -v $(PWD):/work $(WORKER_IMAGE) \	  sh -c "apk update && apk add --no-cache git && export PATH=$PATH:$(go env GOPATH)/bin && go install github.com/swaggo/swag/cmd/swag@latest && cd /work && swag init -g ./rest-api/routes.go"
+	@docker run --rm -v $(PWD):/work $(WORKER_IMAGE) sh -c "apk update && apk add --no-cache git && go install github.com/swaggo/swag/cmd/swag@latest && cd /work && swag init -g ./rest-api/routes.go"
 
 # Generate OAS3 from swaggo/swag output since that project doesn't support it
 # TODO: Remove this if V3 spec is ever returned from that project

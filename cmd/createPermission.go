@@ -31,7 +31,7 @@ var (
 var createPermissionCmd = &cobra.Command{
 	Use:   "create-permission",
 	Short: "Creates a permission object to database",
-	Long: `Create a permission object which can be binded to role, 
+	Long: `Create a permission object which can be binded to role,
 This binded permissions are checked against role during authorizations
 For example:
 	auth create-permission ACCNT_ALL --description "all account permission" --resource "accounts"
@@ -39,7 +39,7 @@ For example:
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		_, err := actions.CreatePermission(&models.Permission{Description: description,
-			Resource: resource, Scope: models.Scope(scope), Action: action})
+			Resource: resource, Scope: models.Scope(scope), Action: models.Action(action)})
 		if err != nil {
 			fmt.Println(err)
 		}

@@ -31,3 +31,9 @@ type RolePermissionBindingBody struct {
 	ActionName   string `json:"action_name"`
 	RoleKey      string `json:"role_key"`
 }
+
+type UserRoleBindingBody struct {
+	RoleKey  string `json:"role_key" validate:"required"`
+	UserName string `json:"user_name" validate:"required"`
+	OrgID    int    `json:"org_id"`
+}

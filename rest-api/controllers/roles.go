@@ -106,7 +106,7 @@ func CreatePermission(w http.ResponseWriter, r *http.Request, ctx *request_conte
 		return http.StatusBadRequest, err
 	}
 
-	code, err := actions.CreatePermission(&models.Permission{Resource: permission.Resource, Scope: models.Scope(permission.Scope), Action: permission.Action})
+	code, err := actions.CreatePermission(&models.Permission{Resource: permission.Resource, Scope: models.Scope(permission.Scope), Action: models.Action(permission.Action)})
 	if err != nil {
 		return code, err
 	}
@@ -143,6 +143,7 @@ func BindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request_c
 		binding.RoleKey,
 		ctx.Auth.User.Roles[0].OrgID,
 		ctx.PermCache,
+		ctx.Context,
 	)
 	if err != nil {
 		return code, err
@@ -150,6 +151,42 @@ func BindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request_c
 
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(map[string]string{"message": "Permission bound successfully"})
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return 0, nil
+}
+
+// @Summary Bind role to user
+// @Description Associates a role with a user in an organization
+// @Tags roles
+// @Accept json
+// @Produce json
+// @Param        X-Auth header string true "Authorization"
+// @Security     JWTAuth
+// @Param binding body types.UserRoleBindingBody true "User role binding details"
+// @Success 200 {string} string "Role bound to user successfully"
+// @Router /roles/bind-user [post]
+func BindRoleToUser(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
+	var binding types.UserRoleBindingBody
+	if err := json.NewDecoder(r.Body).Decode(&binding); err != nil {
+		return http.StatusBadRequest, err
+	}
+	// if binding.OrgID == 0 {
+	// 	binding.OrgID = ctx.Auth.User.Roles[0].OrgID
+	// }
+
+	code, err := actions.BindUserRole(
+		binding.UserName,
+		binding.RoleKey,
+		binding.OrgID,
+	)
+	if err != nil {
+		return code, err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(map[string]string{"message": "Role bound to user successfully"})
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}

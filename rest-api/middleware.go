@@ -80,22 +80,25 @@ func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, pe
 		ctx := &request_context.Context{}
 		ctx.Settings = setting
 		ctx.Context = context.TODO()
+		ctx.PermCache = perm_cache
 		if config.auth {
 			success, authToken, _ := Authenticate(w, r, setting)
-			loging.Logger.Debugln(success, zap.String("Authenticated User", authToken.User.Username))
+			loging.Logger.Debugln("Authenticated User: ", zap.String("User", authToken.ID))
 			if !success {
 				http.Error(w, strconv.Itoa(http.StatusUnauthorized)+" "+http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 				return
 			}
 			ctx.Auth = &authToken
+
+			if config.resource != "" && config.scope != "" && config.action != "" {
+				hasPermission, err := perm_cache.CheckPermission(&ctx.Context, config.resource, config.scope, config.action, &ctx.Auth.User)
+				if err != nil || !hasPermission {
+					http.Error(w, "Forbidden", http.StatusForbidden)
+					return
+				}
+			}
 		}
-		// if config.resource != "" && config.scope != "" && config.action != "" {
-		// 	hasPermission, err := perm_cache.PermCache.CheckPermission(config.resource, config.scope, config.action, &ctx.Auth.User)
-		// 	if err != nil || !hasPermission {
-		// 		http.Error(w, "Forbidden", http.StatusForbidden)
-		// 		return
-		// 	}
-		// }
+
 		start := time.Now()
 		status, err := fn(_responseLogger, r, ctx)
 

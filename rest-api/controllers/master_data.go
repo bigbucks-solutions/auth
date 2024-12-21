@@ -2,9 +2,12 @@ package controllers
 
 import (
 	"bigbucks/solution/auth/loging"
+	"bigbucks/solution/auth/models"
+	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/request_context"
 	"encoding/json"
 	"net/http"
+	"slices"
 )
 
 // @Summary Get resources
@@ -15,13 +18,13 @@ import (
 // @Security 	 JWTAuth
 // @Success 200 {object} []string
 // @Security 	 JWTAuth
-// @Router /resources [get]
+// @Router /master-data/resources [get]
 func GetResources(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
+	loging.Logger.Debugln(ctx.Context.Value(permission_cache.UserPerm("userPerm")))
 	loging.Logger.Debugln("GetResources")
 
-	resources := []string{"users", "roles", "permissions", "organizations"}
 	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(resources)
+	err := json.NewEncoder(w).Encode(models.Resources)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
@@ -36,10 +39,16 @@ func GetResources(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 // @Security 	 JWTAuth
 // @Success 200 {object} []string
 // @Security 	 JWTAuth
-// @Router /scopes [get]
+// @Router /master-data/scopes [get]
 func GetScopes(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	loging.Logger.Debugln("GetScopes")
-	scopes := []string{"own", "org", "all"}
+	currentScope, _ := ctx.GetCurrentScope()
+	scopes := models.Scopes
+	if *currentScope != models.ScopeAll {
+		scopes = slices.DeleteFunc(scopes, func(s models.Scope) bool {
+			return s == models.ScopeAll
+		})
+	}
 	w.Header().Set("Content-Type", "application/json")
 	err := json.NewEncoder(w).Encode(scopes)
 	if err != nil {
@@ -56,12 +65,11 @@ func GetScopes(w http.ResponseWriter, r *http.Request, ctx *request_context.Cont
 // @Security 	 JWTAuth
 // @Success 200 {object} []string
 // @Security 	 JWTAuth
-// @Router /actions [get]
+// @Router /master-data/actions [get]
 func GetActions(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	loging.Logger.Debugln("GetActions")
-	actions := []string{"write", "update", "delete", "create", "read"}
 	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(actions)
+	err := json.NewEncoder(w).Encode(models.Actions)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}

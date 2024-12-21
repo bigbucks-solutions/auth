@@ -43,13 +43,13 @@ var (
 var _ = BeforeSuite(func() {
 	// setup *gorm.Db with docker
 	models.Dbcon, cleanupDocker = setupGormWithDocker()
-
+	models.Migrate()
 	err := models.Dbcon.SetupJoinTable(&models.Organization{}, "Users", &models.UserOrgRole{})
 	if err != nil {
 		fmt.Println("Error setting up join table:", err)
 	}
 	err = models.Dbcon.SetupJoinTable(&models.User{}, "Roles", &models.UserOrgRole{})
-	models.Migrate()
+
 	GinkgoWriter.Println("Migration complete", err)
 
 	priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -71,6 +71,7 @@ var _ = BeforeSuite(func() {
 	settings.Current = &settings.Settings{Alg: "ES256", PrivateKey: "ec_private.pem", PublicKey: "ec_public.pem"}
 	// settings.Current.LoadKeys()
 	handler, err := router.NewHandler(settings.Current, permission_cache.NewPermissionCache((settings.Current)))
+
 	Ω(err).Should(Succeed())
 	s = httptest.NewServer(handler)
 	c = s.Client()

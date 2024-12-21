@@ -5,6 +5,7 @@ go 1.22.0
 toolchain go1.23.1
 
 require (
+	ariga.io/atlas-provider-gorm v0.5.0
 	github.com/dchest/authcookie v0.0.0-20190824115100-f900d2294c8e
 	github.com/futurenda/google-auth-id-token-verifier v0.0.0-20170311140316-2a5b89f28b7e
 	github.com/go-playground/locales v0.14.0
@@ -19,13 +20,14 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/onsi/ginkgo/v2 v2.21.0
 	github.com/onsi/gomega v1.34.2
+	github.com/redis/go-redis/v9 v9.7.0
 	github.com/rs/cors v1.8.2
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.13.0
 	github.com/swaggo/http-swagger v1.3.3
 	github.com/swaggo/swag v1.8.5
 	go.uber.org/zap v1.23.0
-	golang.org/x/crypto v0.30.0
+	golang.org/x/crypto v0.31.0
 	golang.org/x/sync v0.10.0
 	google.golang.org/grpc v1.47.0
 	google.golang.org/protobuf v1.34.1
@@ -35,13 +37,11 @@ require (
 )
 
 require (
-	ariga.io/atlas-go-sdk v0.6.4 // indirect
-	ariga.io/atlas-provider-gorm v0.5.0 // indirect
+	ariga.io/atlas-go-sdk v0.2.3 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
-	github.com/alecthomas/kong v1.5.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/containerd/continuity v0.3.0 // indirect
@@ -61,20 +61,17 @@ require (
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/jackc/pgx/v5 v5.7.1 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
-	github.com/microsoft/go-mssqldb v1.7.2 // indirect
+	github.com/microsoft/go-mssqldb v1.8.0 // indirect
 	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/opencontainers/runc v1.1.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/redis/go-redis/v9 v9.7.0 // indirect
-	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
-	golang.org/x/mod v0.22.0 // indirect
-	gorm.io/driver/sqlite v1.5.6 // indirect
+	gorm.io/driver/sqlite v1.5.7 // indirect
 	gorm.io/driver/sqlserver v1.5.4 // indirect
 )
 
@@ -113,11 +110,11 @@ require (
 	github.com/swaggo/files v0.0.0-20220728132757-551d4a08d97a // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	golang.org/x/net v0.31.0 // indirect
+	golang.org/x/net v0.32.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
-	golang.org/x/tools v0.27.0 // indirect
+	golang.org/x/tools v0.28.0 // indirect
 	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
