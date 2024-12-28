@@ -72,8 +72,10 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 
 	api.Handle("/roles", makeHandler(ctr.ListRoles, WithAuth(true))).Methods("GET")
 	api.Handle("/roles", makeHandler(ctr.CreateRole, WithAuth(true))).Methods("POST")
+
 	api.Handle("/permissions", makeHandler(ctr.CreatePermission, WithAuth(true))).Methods("POST")
 	api.Handle("/roles/bind-permission", makeHandler(ctr.BindPermissionToRole, WithAuth(true))).Methods("POST")
+	api.Handle("/roles/unbind-permission", makeHandler(ctr.UnBindPermissionToRole, WithAuth(true))).Methods("POST")
 	api.Handle("/roles/bind-user", makeHandler(ctr.BindRoleToUser, WithAuth(true))).Methods("POST")
 	// Master data
 	api.Handle("/master-data/resources",

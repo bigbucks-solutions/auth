@@ -157,6 +157,43 @@ func BindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request_c
 	return 0, nil
 }
 
+// @Summary UnBind permission to role
+// @Description Removes a permission with a role
+// @Tags roles
+// @Accept json
+// @Produce json
+// @Param 		 X-Auth header string true "Authorization"
+// @Security 	 JWTAuth
+// @Param rolepermission body types.RolePermissionBindingBody true "UnBinding details"
+// @Success 200 {string} string "Permission unbound successfully"
+// @Router /roles/unbind-permission [post]
+func UnBindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
+	var binding types.RolePermissionBindingBody
+	if err := json.NewDecoder(r.Body).Decode(&binding); err != nil {
+		return http.StatusBadRequest, err
+	}
+
+	code, err := actions.UnBindPermission(
+		binding.ResourceName,
+		binding.Scope,
+		binding.ActionName,
+		binding.RoleKey,
+		ctx.Auth.User.Roles[0].OrgID,
+		ctx.PermCache,
+		ctx.Context,
+	)
+	if err != nil {
+		return code, err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(map[string]string{"message": "Permission unbound successfully"})
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return 0, nil
+}
+
 // @Summary Bind role to user
 // @Description Associates a role with a user in an organization
 // @Tags roles
