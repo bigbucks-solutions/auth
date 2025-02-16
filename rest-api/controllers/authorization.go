@@ -5,6 +5,7 @@ import (
 	"bigbucks/solution/auth/rest-api/controllers/types"
 	"encoding/json"
 	"net/http"
+	"strconv"
 )
 
 // Authorization godoc
@@ -25,7 +26,7 @@ func Authorize(w http.ResponseWriter, r *http.Request, ctx *request_context.Cont
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
-	status, _ := ctx.PermCache.CheckPermission(&ctx.Context, body.Resource, body.Scope, body.Action, &ctx.Auth.User)
+	status, _ := ctx.PermCache.CheckPermission(&ctx.Context, body.Resource, body.Scope, body.Action, strconv.Itoa(body.OrgID), &ctx.Auth.User)
 	err = json.NewEncoder(w).Encode(&types.AuthorizeResponse{Status: status})
 	if err != nil {
 		return http.StatusInternalServerError, err

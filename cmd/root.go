@@ -44,6 +44,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var (
@@ -80,7 +81,7 @@ var rootCmd = &cobra.Command{
 
 		// dsn := "user=bigbucks password=bigbucks DB.name=bigbucks port=5432 host=localhost sslmode=disable"
 		dsn := fmt.Sprintf("host=%s user=%s password=%s DB.name=%s port=%s sslmode=disable", settings.Current.DBHost, settings.Current.DBUsername, settings.Current.DBPassword, settings.Current.DBName, settings.Current.DBPort)
-		models.Dbcon, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		models.Dbcon, err = gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
 		if err != nil {
 			panic("failed to connect database")
 		}

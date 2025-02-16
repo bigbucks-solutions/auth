@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"bigbucks/solution/auth/actions"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/request_context"
 	"encoding/json"
@@ -29,6 +30,6 @@ func CreateOrg(w http.ResponseWriter, r *http.Request, ctx *request_context.Cont
 		return http.StatusBadRequest, err
 	}
 
-	code, err := models.CreateOrganization(&org)
+	code, err := actions.CreateOrganization(&org)
 	return code, err
 }

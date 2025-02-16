@@ -1,8 +1,8 @@
 package controllers
 
 import (
+	"bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/loging"
-	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/request_context"
 	"encoding/json"
@@ -20,11 +20,11 @@ import (
 // @Security 	 JWTAuth
 // @Router /master-data/resources [get]
 func GetResources(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
-	loging.Logger.Debugln(ctx.Context.Value(permission_cache.UserPerm("userPerm")))
+	loging.Logger.Debugln(ctx.Context.Value(permission_cache.UserPerm))
 	loging.Logger.Debugln("GetResources")
 
 	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(models.Resources)
+	err := json.NewEncoder(w).Encode(constants.Resources)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
@@ -43,10 +43,10 @@ func GetResources(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 func GetScopes(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	loging.Logger.Debugln("GetScopes")
 	currentScope, _ := ctx.GetCurrentScope()
-	scopes := models.Scopes
-	if *currentScope != models.ScopeAll {
-		scopes = slices.DeleteFunc(scopes, func(s models.Scope) bool {
-			return s == models.ScopeAll
+	scopes := constants.Scopes
+	if *currentScope != constants.ScopeAll {
+		scopes = slices.DeleteFunc(scopes, func(s constants.Scope) bool {
+			return s == constants.ScopeAll
 		})
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -69,7 +69,7 @@ func GetScopes(w http.ResponseWriter, r *http.Request, ctx *request_context.Cont
 func GetActions(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	loging.Logger.Debugln("GetActions")
 	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(models.Actions)
+	err := json.NewEncoder(w).Encode(constants.Actions)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}

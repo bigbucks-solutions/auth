@@ -13,9 +13,9 @@ type CheckPermissionBody struct {
 }
 
 type CreatePermissionBody struct {
-	Resource string `validate:"required,alphanum_,min=3"`
-	Scope    string `validate:"required,oneof=own org all,alphanum_,min=3"`
-	Action   string ` validate:"required,oneof=read write delete update,alphanum_,min=3"`
+	Resource string `validate:"required,valid_resources,alphanum_,min=3"`
+	Scope    string `validate:"required,valid_scopes,alphanum_,min=3"`
+	Action   string ` validate:"required,valid_actions,alphanum_,min=3"`
 }
 
 type SignupRequestBody struct {
@@ -26,10 +26,10 @@ type SignupRequestBody struct {
 }
 
 type RolePermissionBindingBody struct {
-	ResourceName string `json:"resource_name"`
-	Scope        string `json:"scope"`
-	ActionName   string `json:"action_name"`
-	RoleKey      string `json:"role_key"`
+	Resource string `json:"resource"`
+	Scope    string `json:"scope"`
+	Action   string `json:"action"`
+	RoleId   string `json:"roleId"`
 }
 
 type UserRoleBindingBody struct {

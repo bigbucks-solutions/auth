@@ -2,6 +2,7 @@ package auth_test
 
 import (
 	"bigbucks/solution/auth/actions"
+	"bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/settings"
@@ -51,6 +52,7 @@ var _ = Describe("Master Data API Tests", func() {
 			request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/master-data/scopes", s.URL), nil)
 			request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			request.Header.Set("X-Auth", jwt)
+			request.Header.Set("X-Organization-Id", "0")
 
 			response, err := c.Do(request)
 			Ω(err).Should(BeNil())
@@ -68,6 +70,7 @@ var _ = Describe("Master Data API Tests", func() {
 			request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/master-data/scopes", s.URL), nil)
 			request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			request.Header.Set("X-Auth", jwt)
+			request.Header.Set("X-Organization-Id", "0")
 			response, err := c.Do(request)
 			Ω(err).Should(BeNil())
 
@@ -86,7 +89,7 @@ var _ = Describe("Master Data API Tests", func() {
 			request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/master-data/resources", s.URL), nil)
 			request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			request.Header.Set("X-Auth", jwt)
-
+			request.Header.Set("X-Organization-Id", "0")
 			response, err := c.Do(request)
 			Ω(err).Should(BeNil())
 
@@ -95,7 +98,7 @@ var _ = Describe("Master Data API Tests", func() {
 			_ = json.Unmarshal(bodyBytes, &resources)
 
 			Ω(response.StatusCode).Should(Equal(200))
-			Ω(resources).Should(Equal(models.Resources))
+			Ω(resources).Should(Equal(constants.Resources))
 		})
 
 	})
@@ -105,7 +108,7 @@ var _ = Describe("Master Data API Tests", func() {
 			request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/master-data/actions", s.URL), nil)
 			request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			request.Header.Set("X-Auth", jwt)
-
+			request.Header.Set("X-Organization-Id", "0")
 			response, err := c.Do(request)
 			Ω(err).Should(BeNil())
 
@@ -125,7 +128,7 @@ var _ = Describe("Master Data API Tests", func() {
 			for _, endpoint := range endpoints {
 				request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/master-data/%s", s.URL, endpoint), nil)
 				request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
+				request.Header.Set("X-Organization-Id", "0")
 				response, err := c.Do(request)
 				Ω(err).Should(BeNil())
 				Ω(response.StatusCode).Should(Equal(401))

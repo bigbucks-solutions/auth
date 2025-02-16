@@ -1,18 +1,13 @@
 package actions
 
-import "bigbucks/solution/auth/models"
+import (
+	"bigbucks/solution/auth/actions/types"
+	"bigbucks/solution/auth/models"
+)
 
 // ListRoles returns paginated list of roles with user count and filtering
-func ListRoles(page, pageSize int, roleName string, orgID int) ([]struct {
-	Name        string
-	Description string
-	UserCount   int64
-}, int64, error) {
-	var roles []struct {
-		Name        string
-		Description string
-		UserCount   int64
-	}
+func ListRoles(page, pageSize int, roleName string, orgID int) ([]types.ListRoleResponse, int64, error) {
+	var roles []types.ListRoleResponse
 	var total int64
 
 	offset := (page - 1) * pageSize
@@ -20,7 +15,7 @@ func ListRoles(page, pageSize int, roleName string, orgID int) ([]struct {
 
 	// Apply filters if provided
 	if roleName != "" {
-		query = query.Where("LOWER(name) LIKE LOWER(?)", "%"+roleName+"%")
+		query = query.Where("LOWER(name) LIKE LOWER(?)", roleName+"%")
 	}
 	if orgID > 0 {
 		query = query.Where("roles.org_id = ?", orgID)
@@ -33,7 +28,7 @@ func ListRoles(page, pageSize int, roleName string, orgID int) ([]struct {
 
 	// Get roles with user count
 	err := query.
-		Select("roles.name, roles.description, COUNT(DISTINCT user_org_roles.user_id) as user_count").
+		Select("roles.id as id, roles.name, roles.description, COUNT(DISTINCT user_org_roles.user_id) as user_count").
 		Joins("LEFT JOIN user_org_roles ON user_org_roles.role_id = roles.id").
 		Group("roles.id").
 		Offset(offset).

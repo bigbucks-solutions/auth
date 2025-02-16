@@ -2,6 +2,7 @@ package auth_test
 
 import (
 	"bigbucks/solution/auth/actions"
+	"bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/settings"
@@ -52,8 +53,8 @@ var _ = Describe("Role Model", func() {
 		It("Successfully creates a permission", func() {
 			perm := &models.Permission{
 				Resource:    "users",
-				Scope:       models.ScopeAll,
-				Action:      models.ActionRead,
+				Scope:       constants.ScopeAll,
+				Action:      constants.ActionRead,
 				Description: "Read all users",
 			}
 			status, err := actions.CreatePermission(perm)
@@ -65,8 +66,8 @@ var _ = Describe("Role Model", func() {
 		It("validates resource special characters", func() {
 			perm := &models.Permission{
 				Resource: "users:;",
-				Scope:    models.ScopeOwn,
-				Action:   models.ActionRead,
+				Scope:    constants.ScopeOwn,
+				Action:   constants.ActionRead,
 			}
 			status, err := actions.CreatePermission(perm)
 			Ω(err).To(HaveOccurred())
@@ -76,8 +77,8 @@ var _ = Describe("Role Model", func() {
 		It("validates resource special characters \"", func() {
 			perm := &models.Permission{
 				Resource: "users\"",
-				Scope:    models.ScopeOwn,
-				Action:   models.ActionRead,
+				Scope:    constants.ScopeOwn,
+				Action:   constants.ActionRead,
 			}
 			status, err := actions.CreatePermission(perm)
 			Ω(err).To(HaveOccurred())
@@ -87,7 +88,7 @@ var _ = Describe("Role Model", func() {
 		It("validates permission action field", func() {
 			perm := &models.Permission{
 				Resource:    "users",
-				Scope:       models.ScopeAll,
+				Scope:       constants.ScopeAll,
 				Action:      "invalid_action", // only read,write,delete,update allowed
 				Description: "Invalid action",
 			}
@@ -99,8 +100,8 @@ var _ = Describe("Role Model", func() {
 		It("validates minimum length requirements", func() {
 			perm := &models.Permission{
 				Resource:    "us", // too short, min 3 chars
-				Scope:       models.ScopeAll,
-				Action:      models.ActionRead,
+				Scope:       constants.ScopeAll,
+				Action:      constants.ActionRead,
 				Description: "Short resource name",
 			}
 			status, err := actions.CreatePermission(perm)
@@ -110,9 +111,9 @@ var _ = Describe("Role Model", func() {
 
 		It("validates unique combination of resource, scope and action", func() {
 			perm1 := &models.Permission{
-				Resource:    "users",
-				Scope:       models.ScopeAll,
-				Action:      models.ActionWrite,
+				Resource:    "some_resource",
+				Scope:       constants.ScopeAll,
+				Action:      constants.ActionWrite,
 				Description: "First permission",
 			}
 			status, err := actions.CreatePermission(perm1)
@@ -120,9 +121,9 @@ var _ = Describe("Role Model", func() {
 			Ω(status).To(Equal(0))
 
 			perm2 := &models.Permission{
-				Resource:    "users",
-				Scope:       models.ScopeAll,
-				Action:      models.ActionWrite,
+				Resource:    "some_resource",
+				Scope:       constants.ScopeAll,
+				Action:      constants.ActionWrite,
 				Description: "Duplicate permission",
 			}
 			status, err = actions.CreatePermission(perm2)
@@ -134,7 +135,7 @@ var _ = Describe("Role Model", func() {
 			perm := &models.Permission{
 				Resource:    "users",
 				Scope:       "invalid",
-				Action:      models.ActionWrite,
+				Action:      constants.ActionWrite,
 				Description: "Invalid scope",
 			}
 			status, err := actions.CreatePermission(perm)

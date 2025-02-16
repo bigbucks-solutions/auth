@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"bigbucks/solution/auth/constants"
 	"fmt"
 	"slices"
 	"strings"
@@ -50,14 +51,19 @@ func parsePermissionString(permStr string) (resource, scope, action string, err 
 	action = strings.TrimSpace(parts[2])
 
 	// Validate scope
-	if !slices.Contains([]string{"own", "org", "all", "*"}, scope) {
+	validScopes := []constants.Scope{"*"}
+	validScopes = append(validScopes, constants.Scopes...)
+	if !slices.Contains(validScopes, constants.Scope(scope)) {
 		return "", "", "", fmt.Errorf("invalid scope: must be own, org or all")
 	}
 
 	// Validate action
-	if !slices.Contains([]string{"read", "write", "delete", "create", "update", "*"}, action) {
-		return "", "", "", fmt.Errorf("invalid action: must be read, write, delete, create or update")
+	validActions := []constants.Action{"*"}
+	validActions = append(validActions, constants.Actions...)
+	if !slices.Contains(validActions, constants.Action(action)) {
+		return "", "", "", fmt.Errorf("invalid action: must be one of: %s", validActions)
 	}
 
 	return resource, scope, action, nil
+
 }

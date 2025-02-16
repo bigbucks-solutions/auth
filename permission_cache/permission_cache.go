@@ -1,12 +1,12 @@
 package permission_cache
 
 import (
+	"bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/settings"
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -23,7 +23,11 @@ type PermissionCache struct {
 	validScopes     map[string]struct{}
 }
 
-type UserPerm string
+// Define a custom type for the context key
+type contextKey string
+
+// Define the constant using the custom type
+const UserPerm contextKey = "userPerm"
 
 func NewPermissionCache(settings *settings.Settings) *PermissionCache {
 	return &PermissionCache{
@@ -41,10 +45,10 @@ func NewPermissionCache(settings *settings.Settings) *PermissionCache {
 			"CREATE": {"WRITE"},
 		},
 		validScopes: map[string]struct{}{
-			string(models.ScopeAll):        {},
-			string(models.ScopeOrg):        {},
-			string(models.ScopeAssociated): {},
-			string(models.ScopeOwn):        {},
+			string(constants.ScopeAll):        {},
+			string(constants.ScopeOrg):        {},
+			string(constants.ScopeAssociated): {},
+			string(constants.ScopeOwn):        {},
 		},
 	}
 }
@@ -94,14 +98,13 @@ func (pc *PermissionCache) getTransientActions(action string) []string {
 	return []string{action}
 }
 
-func (pc *PermissionCache) CheckPermission(ctx *context.Context, resource, scope, action string, userInfo *settings.UserInfo) (bool, error) {
+func (pc *PermissionCache) CheckPermission(ctx *context.Context, resource, scope, action, orgID string, userInfo *settings.UserInfo) (bool, error) {
 	resource = strings.ToUpper(strings.TrimSpace(resource))
 	scopes := pc.expandScope(scope)
 	actions := pc.getTransientActions(strings.ToUpper(action))
 	if len(userInfo.Roles) == 0 {
 		return false, nil
 	}
-	orgID := strconv.Itoa(userInfo.Roles[0].OrgID)
 	for _, scp := range scopes {
 		for _, act := range actions {
 			// Check each action-scope combination against all user roles
@@ -109,11 +112,11 @@ func (pc *PermissionCache) CheckPermission(ctx *context.Context, resource, scope
 				key := fmt.Sprintf("perm:%s:%s:%s:%s", orgID, resource, scp, act)
 
 				role_ := strings.ToUpper(role.Role)
-				loging.Logger.Debug("Checking permission", zap.String("role", role_), zap.String("resource", resource), zap.String("scope", scp), zap.String("action", act))
+				loging.Logger.Desugar().Info("Checking permission", zap.String("role", role_), zap.String("resource", resource), zap.String("scope", scp), zap.String("action", act))
 
 				isMember, err := pc.RedisClient.SIsMember(*ctx, key, role_).Result()
 				if err == nil && isMember {
-					*ctx = context.WithValue(*ctx, UserPerm("userPerm"), map[string]interface{}{"role": role.Role, "resource": resource, "scope": models.Scope(strings.ToLower(scp)), "action": models.Action(strings.ToLower(act))})
+					*ctx = context.WithValue(*ctx, UserPerm, map[string]interface{}{"role": role.Role, "resource": resource, "scope": constants.Scope(strings.ToLower(scp)), "action": constants.Action(strings.ToLower(act))})
 					return true, nil
 				}
 
@@ -149,7 +152,7 @@ func (pc *PermissionCache) CheckPermission(ctx *context.Context, resource, scope
 					return false, err
 				}
 				if allowed {
-					*ctx = context.WithValue(*ctx, UserPerm("userPerm"), map[string]interface{}{"role": role.Role, "resource": resource, "scope": models.Scope(strings.ToLower(scp)), "action": models.Action(strings.ToLower(act))})
+					*ctx = context.WithValue(*ctx, UserPerm, map[string]interface{}{"role": role.Role, "resource": resource, "scope": constants.Scope(strings.ToLower(scp)), "action": constants.Action(strings.ToLower(act))})
 					return true, nil
 				}
 			}

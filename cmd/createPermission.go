@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"bigbucks/solution/auth/actions"
+	"bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/models"
 	"fmt"
 
@@ -39,7 +40,7 @@ For example:
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		_, err := actions.CreatePermission(&models.Permission{Description: description,
-			Resource: resource, Scope: models.Scope(scope), Action: models.Action(action)})
+			Resource: resource, Scope: constants.Scope(scope), Action: constants.Action(action)})
 		if err != nil {
 			fmt.Println(err)
 		}

@@ -70,13 +70,28 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	api.Handle("/user/changepassword/{token:[a-z0-9]+}", makeHandler(ctr.ChangePassword)).Methods("POST")
 	api.Handle("/user/authorize", makeHandler(ctr.Authorize, WithAuth(true))).Methods("POST")
 
-	api.Handle("/roles", makeHandler(ctr.ListRoles, WithAuth(true))).Methods("GET")
-	api.Handle("/roles", makeHandler(ctr.CreateRole, WithAuth(true))).Methods("POST")
+	api.Handle("/roles",
+		makeHandler(ctr.ListRoles, WithAuth(true), WithPermission("role:*:read")),
+	).Methods("GET")
+	api.Handle("/roles",
+		makeHandler(ctr.CreateRole, WithAuth(true), WithPermission("role:*:write")),
+	).Methods("POST")
+	api.Handle("/roles/{role_id}/permissions",
+		makeHandler(ctr.ListPermissionsOfRole, WithAuth(true), WithPermission("role:*:write")),
+	).Methods("GET")
 
-	api.Handle("/permissions", makeHandler(ctr.CreatePermission, WithAuth(true))).Methods("POST")
-	api.Handle("/roles/bind-permission", makeHandler(ctr.BindPermissionToRole, WithAuth(true))).Methods("POST")
-	api.Handle("/roles/unbind-permission", makeHandler(ctr.UnBindPermissionToRole, WithAuth(true))).Methods("POST")
-	api.Handle("/roles/bind-user", makeHandler(ctr.BindRoleToUser, WithAuth(true))).Methods("POST")
+	api.Handle("/permissions",
+		makeHandler(ctr.CreatePermission, WithAuth(true), WithPermission("permission:all:write")),
+	).Methods("POST")
+	api.Handle("/roles/bind-permission",
+		makeHandler(ctr.BindPermissionToRole, WithAuth(true), WithPermission("role:*:write")),
+	).Methods("POST")
+	api.Handle("/roles/unbind-permission",
+		makeHandler(ctr.UnBindPermissionToRole, WithAuth(true), WithPermission("role:*:write")),
+	).Methods("POST")
+	api.Handle("/roles/bind-user",
+		makeHandler(ctr.BindRoleToUser, WithAuth(true), WithPermission("user:*:update")),
+	).Methods("POST")
 	// Master data
 	api.Handle("/master-data/resources",
 		makeHandler(ctr.GetResources, WithAuth(true), WithPermission("masterdata:*:read")),

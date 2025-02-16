@@ -83,15 +83,25 @@ func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, pe
 		ctx.PermCache = perm_cache
 		if config.auth {
 			success, authToken, _ := Authenticate(w, r, setting)
-			loging.Logger.Debugln("Authenticated User: ", zap.String("User", authToken.ID))
+			loging.Logger.Debugw("Authenticated User: ", zap.String("User", authToken.ID))
 			if !success {
 				http.Error(w, strconv.Itoa(http.StatusUnauthorized)+" "+http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 				return
 			}
 			ctx.Auth = &authToken
+			orgID := r.Header.Get("X-Organization-Id")
+			if orgID == "" {
+				orgID = r.PathValue("org_id")
+			}
+			ctx.CurrentOrgID = orgID
 
 			if config.resource != "" && config.scope != "" && config.action != "" {
-				hasPermission, err := perm_cache.CheckPermission(&ctx.Context, config.resource, config.scope, config.action, &ctx.Auth.User)
+				if ctx.CurrentOrgID == "" {
+					loging.Logger.Warn("No org_id found in request")
+					http.Error(w, "Forbidden", http.StatusForbidden)
+					return
+				}
+				hasPermission, err := perm_cache.CheckPermission(&ctx.Context, config.resource, config.scope, config.action, orgID, &ctx.Auth.User)
 				if err != nil || !hasPermission {
 					http.Error(w, "Forbidden", http.StatusForbidden)
 					return

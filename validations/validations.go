@@ -1,9 +1,12 @@
 package validations
 
 import (
+	"bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/loging"
 	"encoding/json"
 	"fmt"
+	"slices"
+	"strings"
 	"unicode"
 
 	"github.com/go-playground/locales/en"
@@ -75,6 +78,29 @@ func InitializeValidations() {
 			}
 		}
 		return true
+	})
+	if err != nil {
+		loging.Logger.Error(err)
+	}
+
+	err = Validate.RegisterValidation("valid_resources", func(fl validator.FieldLevel) bool {
+		value := fl.Field().String()
+		return slices.Contains(constants.Resources, value)
+	})
+	if err != nil {
+		loging.Logger.Error(err)
+	}
+	err = Validate.RegisterValidation("valid_actions", func(fl validator.FieldLevel) bool {
+		value := fl.Field().String()
+		return slices.Contains(constants.Actions, constants.Action(strings.ToLower(value)))
+	})
+	if err != nil {
+		loging.Logger.Error(err)
+	}
+
+	err = Validate.RegisterValidation("valid_scopes", func(fl validator.FieldLevel) bool {
+		value := fl.Field().String()
+		return slices.Contains(constants.Scopes, constants.Scope(strings.ToLower(value)))
 	})
 	if err != nil {
 		loging.Logger.Error(err)

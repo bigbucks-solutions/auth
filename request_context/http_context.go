@@ -1,6 +1,7 @@
 package request_context
 
 import (
+	"bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
@@ -12,18 +13,19 @@ import (
 
 // Context :: Http Context Object
 type Context struct {
-	Context   context.Context
-	Auth      *settings.AuthToken               `json:"user"`
-	Settings  *settings.Settings                `json:"settings"`
-	PermCache *permission_cache.PermissionCache `json:"-"`
+	Context      context.Context
+	Auth         *settings.AuthToken               `json:"user"`
+	Settings     *settings.Settings                `json:"settings"`
+	PermCache    *permission_cache.PermissionCache `json:"-"`
+	CurrentOrgID string                            `json:"current_org_id"`
 }
 
-func (c *Context) GetCurrentScope() (scope *models.Scope, err error) {
-	permCheckValue := c.Context.Value(permission_cache.UserPerm("userPerm"))
+func (c *Context) GetCurrentScope() (scope *constants.Scope, err error) {
+	permCheckValue := c.Context.Value(permission_cache.UserPerm)
 	if permCheckValue == nil {
 		return nil, nil
 	}
-	scopeValue, ok := permCheckValue.(map[string]interface{})["scope"].(models.Scope)
+	scopeValue, ok := permCheckValue.(map[string]interface{})["scope"].(constants.Scope)
 	if !ok {
 		return nil, nil
 	}

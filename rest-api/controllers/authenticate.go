@@ -103,7 +103,7 @@ func printToken(w http.ResponseWriter, _ *http.Request, user *models.User, _ *se
 		return http.StatusInternalServerError, err
 	}
 	w.WriteHeader(http.StatusAccepted)
-	w.Header().Set("Content-Type", "cty")
+	w.Header().Set("Content-Type", "text")
 	_, err = w.Write([]byte(signed))
 	if err != nil {
 		loging.Logger.Error("Error writing to response on token print", err)

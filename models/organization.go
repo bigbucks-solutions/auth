@@ -1,13 +1,6 @@
 package models
 
 import (
-	"errors"
-	"fmt"
-	"net/http"
-
-	"bigbucks/solution/auth/loging"
-	valids "bigbucks/solution/auth/validations"
-
 	"gorm.io/gorm"
 )
 
@@ -27,45 +20,4 @@ func GetOrganization(OrgID int) (Organization, int, error) {
 	var org Organization
 	Dbcon.Preload("Users").Preload("Users.Roles").First(&org, OrgID)
 	return org, 0, nil
-}
-
-// CreateOrganization : Create new Organization with a super user attached
-func CreateOrganization(org *Organization) (int, error) {
-	err := valids.Validate.Struct(org)
-	loging.Logger.Debugln(err)
-	customerr := valids.NewErrorDict()
-	if err != nil {
-		customerr.GetErrorTranslations(err)
-		return http.StatusBadRequest, customerr
-	}
-	var SuperUserRole Role
-	Dbcon.Find(&SuperUserRole, Role{Name: "SuperUser"})
-	err = Dbcon.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Omit("Users").Create(org).Error; err != nil {
-			fmt.Println(err)
-			return err
-		}
-		for _, usr := range org.Users {
-			usr.Profile = Profile{
-				Email: usr.Username,
-			}
-		}
-		if err := tx.Create(org.Users).Error; err != nil {
-			if nerr := ParseError(err); errors.Is(nerr, ErrDuplicateKey) {
-				customerr.Errors["username"] = "Username already exists"
-				return nerr
-			}
-			return err
-		}
-		if err := tx.Create(&UserOrgRole{OrgID: int(org.ID),
-			UserID: int(org.Users[0].ID),
-			RoleID: int(SuperUserRole.ID)}).Error; err != nil {
-			return err
-		}
-		return nil
-	})
-	if err != nil {
-		return http.StatusConflict, customerr
-	}
-	return 0, nil
 }

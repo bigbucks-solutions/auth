@@ -2,12 +2,15 @@ package controllers
 
 import (
 	"bigbucks/solution/auth/actions"
+	"bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/request_context"
 	"bigbucks/solution/auth/rest-api/controllers/types"
 	"encoding/json"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 // @Summary List roles
@@ -72,6 +75,7 @@ func CreateRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Con
 	var role types.Role
 	err := json.NewDecoder(r.Body).Decode(&role)
 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		return http.StatusBadRequest, err
 	}
 
@@ -103,10 +107,11 @@ func CreatePermission(w http.ResponseWriter, r *http.Request, ctx *request_conte
 	var permission types.CreatePermissionBody
 	err := json.NewDecoder(r.Body).Decode(&permission)
 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		return http.StatusBadRequest, err
 	}
 
-	code, err := actions.CreatePermission(&models.Permission{Resource: permission.Resource, Scope: models.Scope(permission.Scope), Action: models.Action(permission.Action)})
+	code, err := actions.CreatePermission(&models.Permission{Resource: permission.Resource, Scope: constants.Scope(permission.Scope), Action: constants.Action(permission.Action)})
 	if err != nil {
 		return code, err
 	}
@@ -133,15 +138,16 @@ func CreatePermission(w http.ResponseWriter, r *http.Request, ctx *request_conte
 func BindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var binding types.RolePermissionBindingBody
 	if err := json.NewDecoder(r.Body).Decode(&binding); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		return http.StatusBadRequest, err
 	}
-
+	org_id, _ := strconv.Atoi(ctx.CurrentOrgID)
 	code, err := actions.BindPermission(
-		binding.ResourceName,
+		binding.Resource,
 		binding.Scope,
-		binding.ActionName,
-		binding.RoleKey,
-		ctx.Auth.User.Roles[0].OrgID,
+		binding.Action,
+		binding.RoleId,
+		org_id,
 		ctx.PermCache,
 		ctx.Context,
 	)
@@ -170,25 +176,28 @@ func BindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request_c
 func UnBindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var binding types.RolePermissionBindingBody
 	if err := json.NewDecoder(r.Body).Decode(&binding); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		return http.StatusBadRequest, err
 	}
-
+	org_id, _ := strconv.Atoi(ctx.CurrentOrgID)
 	code, err := actions.UnBindPermission(
-		binding.ResourceName,
+		binding.Resource,
 		binding.Scope,
-		binding.ActionName,
-		binding.RoleKey,
-		ctx.Auth.User.Roles[0].OrgID,
+		binding.Action,
+		binding.RoleId,
+		org_id,
 		ctx.PermCache,
 		ctx.Context,
 	)
 	if err != nil {
+		w.WriteHeader(code)
 		return code, err
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(map[string]string{"message": "Permission unbound successfully"})
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		return http.StatusInternalServerError, err
 	}
 	return 0, nil
@@ -207,6 +216,7 @@ func UnBindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request
 func BindRoleToUser(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var binding types.UserRoleBindingBody
 	if err := json.NewDecoder(r.Body).Decode(&binding); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		return http.StatusBadRequest, err
 	}
 	// if binding.OrgID == 0 {
@@ -224,6 +234,30 @@ func BindRoleToUser(w http.ResponseWriter, r *http.Request, ctx *request_context
 
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(map[string]string{"message": "Role bound to user successfully"})
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return 0, nil
+}
+
+// @Summary List permission of a role
+// @Description Lists permissions of a role
+// @Tags roles
+// @Accept json
+// @Produce json
+// @Param        X-Auth header string true "Authorization"
+// @Security     JWTAuth
+// @Success 200 {array} types.ListRolePermission
+// @Router /roles/:role_id/permissions [post]
+func ListPermissionsOfRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
+	role_id := mux.Vars(r)["role_id"]
+	org_id, _ := strconv.Atoi(ctx.CurrentOrgID)
+	permissions, code, err := actions.ListRolePermission(role_id, org_id, ctx.Context)
+	if err != nil {
+		return code, err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(permissions)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}

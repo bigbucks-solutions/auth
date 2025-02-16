@@ -54,7 +54,7 @@ var _ = Describe("Permission Cache Advanced Tests", func() {
 				Roles: []settings.UserOrgRole{{Role: "EDITOR", OrgID: 2}},
 			}
 
-			allowed, err := permCache.CheckPermission(&ctx, "articles", "own", "read", userInfo)
+			allowed, err := permCache.CheckPermission(&ctx, "articles", "own", "read", "2", userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeTrue())
 		})
@@ -64,7 +64,7 @@ var _ = Describe("Permission Cache Advanced Tests", func() {
 				Roles: []settings.UserOrgRole{{Role: "MANAGER", OrgID: 2}},
 			}
 
-			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "read", userInfo)
+			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "read", "2", userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeTrue())
 		})
@@ -79,7 +79,7 @@ var _ = Describe("Permission Cache Advanced Tests", func() {
 				},
 			}
 
-			allowed, err := permCache.CheckPermission(&ctx, "articles", "own", "write", userInfo)
+			allowed, err := permCache.CheckPermission(&ctx, "articles", "own", "write", "2", userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeTrue())
 		})
@@ -91,7 +91,7 @@ var _ = Describe("Permission Cache Advanced Tests", func() {
 				Roles: []settings.UserOrgRole{},
 			}
 
-			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "read", userInfo)
+			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "read", "2", userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeFalse())
 		})
@@ -101,7 +101,7 @@ var _ = Describe("Permission Cache Advanced Tests", func() {
 				Roles: []settings.UserOrgRole{{Role: "NONEXISTENT", OrgID: 2}},
 			}
 
-			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "read", userInfo)
+			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "read", "2", userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeFalse())
 		})
@@ -122,7 +122,7 @@ var _ = Describe("Permission Cache Advanced Tests", func() {
 				Roles: []settings.UserOrgRole{{Role: "ADMIN", OrgID: 2}},
 			}
 
-			allowed, err := permCache.CheckPermission(&ctx, "documents", "*", "write", userInfo)
+			allowed, err := permCache.CheckPermission(&ctx, "documents", "*", "write", "2", userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeTrue())
 		})
@@ -132,7 +132,7 @@ var _ = Describe("Permission Cache Advanced Tests", func() {
 				Roles: []settings.UserOrgRole{{Role: "ADMIN", OrgID: 2}},
 			}
 
-			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "*", userInfo)
+			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "*", "2", userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeTrue())
 		})
@@ -142,7 +142,7 @@ var _ = Describe("Permission Cache Advanced Tests", func() {
 				Roles: []settings.UserOrgRole{{Role: "ADMIN", OrgID: 2}},
 			}
 
-			allowed, err := permCache.CheckPermission(&ctx, "documents", "*", "*", userInfo)
+			allowed, err := permCache.CheckPermission(&ctx, "documents", "*", "*", "2", userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeTrue())
 		})

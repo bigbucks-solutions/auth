@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"bigbucks/solution/auth/actions/types"
+	"bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
@@ -56,16 +58,44 @@ func CreatePermission(perm *models.Permission) (int, error) {
 	return 0, nil
 }
 
+// ListRolePermission: Returns all the permissions bound to the role
+func ListRolePermission(roleKey string, orgID int, ctx context.Context) ([]types.ListRolePermission, int, error) {
+	var role models.Role
+	var permissions []models.Permission
+	customerr := valids.NewErrorDict()
+	if err := models.Dbcon.First(&role, "id = ? and org_id = ?", roleKey, orgID).Error; err != nil {
+		loging.Logger.Error(err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			customerr.Errors["role"] = "Role not found"
+			return nil, http.StatusNotFound, customerr
+		}
+		return nil, http.StatusInternalServerError, err
+	}
+	if err := models.Dbcon.Model(&role).Association("Permissions").Find(&permissions); err != nil {
+		loging.Logger.Error(err)
+		return nil, http.StatusInternalServerError, err
+	}
+	var rolePermissions []types.ListRolePermission
+	for _, perm := range permissions {
+		rolePermissions = append(rolePermissions, types.ListRolePermission{
+			Resource: perm.Resource,
+			Scope:    string(perm.Scope),
+			Action:   string(perm.Action),
+		})
+	}
+	return rolePermissions, 0, nil
+}
+
 // BindPermission : Binds the permission to the role specified
 func BindPermission(resource, scope, action, roleKey string, orgID int, perm_cache *permission_cache.PermissionCache, ctx context.Context) (int, error) {
 	var role models.Role
 	var perm models.Permission
 	customerr := valids.NewErrorDict()
 	err := models.Dbcon.Transaction(func(tx *gorm.DB) error {
-		if err := tx.First(&role, "name = ? and org_id = ?", roleKey, orgID).Error; err != nil {
+		if err := tx.First(&role, "id = ? and org_id = ?", roleKey, orgID).Error; err != nil {
 			return err
 		}
-		tx.Where(&models.Permission{Resource: resource, Scope: models.Scope(scope), Action: models.Action(action)}).FirstOrCreate(&perm)
+		tx.Where(&models.Permission{Resource: resource, Scope: constants.Scope(scope), Action: constants.Action(action)}).FirstOrCreate(&perm)
 
 		if err := tx.Model(&role).Association("Permissions").Append(&perm); err != nil {
 			return err
@@ -90,10 +120,10 @@ func UnBindPermission(resource, scope, action, roleKey string, orgID int, perm_c
 	var perm models.Permission
 	customerr := valids.NewErrorDict()
 	err := models.Dbcon.Transaction(func(tx *gorm.DB) error {
-		if err := tx.First(&role, "name = ? and org_id = ?", roleKey, orgID).Error; err != nil {
+		if err := tx.First(&role, "id = ? and org_id = ?", roleKey, orgID).Error; err != nil {
 			return err
 		}
-		tx.Where(&models.Permission{Resource: resource, Scope: models.Scope(scope), Action: models.Action(action)}).First(&perm)
+		tx.Where(&models.Permission{Resource: resource, Scope: constants.Scope(scope), Action: constants.Action(action)}).First(&perm)
 		if err := tx.Model(&role).Association("Permissions").Delete(&perm); err != nil {
 			return err
 		}
