@@ -10,12 +10,12 @@ import (
 
 // Role model
 type Role struct {
-	gorm.Model  `swaggerignore:"true"`
-	OrgID       int    `gorm:"index:,unique,composite:name_org"`
-	Name        string `gorm:"index:,unique,composite:name_org;not null" validate:"required,min=4"`
-	Description string
-	Permissions []*Permission `gorm:"many2many:role_permissions;"`
-	Users       []*User       `gorm:"many2many:UserOrgRole;JoinForeignKey:RoleID;JoinReferences:UserID;"`
+	constants.BaseModel `swaggerignore:"true"`
+	OrgID               string `gorm:"index:,unique,composite:name_org"`
+	Name                string `gorm:"index:,unique,composite:name_org;not null" validate:"required,min=4"`
+	Description         string
+	Permissions         []*Permission `gorm:"many2many:role_permissions;"`
+	Users               []*User       `gorm:"many2many:UserOrgRole;JoinForeignKey:RoleID;JoinReferences:UserID;"`
 }
 
 // Permission model
@@ -31,9 +31,9 @@ type Permission struct {
 
 // UserOrgRole many to many relation table
 type UserOrgRole struct {
-	OrgID  int `gorm:"not null"`
-	UserID int `gorm:"not null"`
-	RoleID int `gorm:"not null"`
+	OrgID  string `gorm:"not null"`
+	UserID string `gorm:"not null"`
+	RoleID string `gorm:"not null"`
 }
 
 // MarshalJSON Json Dump override method

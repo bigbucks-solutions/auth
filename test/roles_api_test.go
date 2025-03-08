@@ -2,6 +2,7 @@ package auth_test
 
 import (
 	"bigbucks/solution/auth/actions"
+	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/settings"
@@ -18,28 +19,31 @@ import (
 
 var _ = Describe("Roles API Tests", func() {
 	var jwt string
-
+	var roleID string
 	BeforeEach(func() {
 		// Login to get JWT token
 		var jsonData = []byte(`{
 			"username": "john@x.com",
 			"password": "john123"
 		}`)
-		_, _ = actions.CreateRole(&models.Role{Name: "test_role_admin", Description: "admin role", OrgID: 0})
+		id, status, _ := actions.CreateRole(&models.Role{Name: "test_role_admin", Description: "admin role", OrgID: models.SuperOrganization})
+		if status == 0 {
+			roleID = id
+		}
 
-		code, err := actions.BindPermission("user", "all", "write", "test_role_admin", 0, permission_cache.NewPermissionCache(settings.Current), context.Background())
+		code, err := actions.BindPermission("user", "all", "write", roleID, models.SuperOrganization, permission_cache.NewPermissionCache(settings.Current), context.Background())
 
 		Ω(code).Should(Equal(0))
 		Ω(err).Should(BeNil())
 
-		code, err = actions.BindPermission("role", "all", "write", "test_role_admin", 0, permission_cache.NewPermissionCache(settings.Current), context.Background())
+		code, err = actions.BindPermission("role", "all", "write", roleID, models.SuperOrganization, permission_cache.NewPermissionCache(settings.Current), context.Background())
 		Ω(code).Should(Equal(0))
 		Ω(err).Should(BeNil())
 
-		code, err = actions.BindPermission("permission", "all", "write", "test_role_admin", 0, permission_cache.NewPermissionCache(settings.Current), context.Background())
+		code, err = actions.BindPermission("permission", "all", "write", roleID, models.SuperOrganization, permission_cache.NewPermissionCache(settings.Current), context.Background())
 		Ω(code).Should(Equal(0))
 		Ω(err).Should(BeNil())
-		code, err = actions.BindUserRole("john@x.com", "test_role_admin", 0)
+		code, err = actions.BindUserRole("john@x.com", roleID, models.SuperOrganization)
 		Ω(code).Should(Equal(0))
 		Ω(err).Should(BeNil())
 		request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/signin", s.URL), bytes.NewBuffer(jsonData))
@@ -55,7 +59,7 @@ var _ = Describe("Roles API Tests", func() {
 			request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/roles", s.URL), nil)
 			request.Header.Set("Content-Type", "application/json")
 			request.Header.Set("X-Auth", jwt)
-			request.Header.Set("X-Organization-Id", "0")
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
 			response, _ := c.Do(request)
 
 			Ω(response.StatusCode).Should(Equal(200))
@@ -80,7 +84,7 @@ var _ = Describe("Roles API Tests", func() {
 			request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/roles", s.URL), bytes.NewBuffer(roleData))
 			request.Header.Set("Content-Type", "application/json")
 			request.Header.Set("X-Auth", jwt)
-			request.Header.Set("X-Organization-Id", "0")
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
 			response, _ := c.Do(request)
 
 			Ω(response.StatusCode).Should(Equal(201))
@@ -97,7 +101,7 @@ var _ = Describe("Roles API Tests", func() {
 			request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/permissions", s.URL), bytes.NewBuffer(permData))
 			request.Header.Set("Content-Type", "application/json")
 			request.Header.Set("X-Auth", jwt)
-			request.Header.Set("X-Organization-Id", "0")
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
 			response, _ := c.Do(request)
 
 			Ω(response.StatusCode).Should(Equal(201))
@@ -106,16 +110,16 @@ var _ = Describe("Roles API Tests", func() {
 
 	Context("Bind Permission to Role", func() {
 		It("Should bind permission to role successfully", func() {
-			bindData := []byte(`{
-				"resource_name": "test_resource",
+			bindData := []byte(fmt.Sprintf(`{
+				"resource": "test_resource",
 				"scope": "org",
-				"action_name": "read",
-				"role_key": "test_role"
-			}`)
-			request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/roles/bind-permission/", s.URL), bytes.NewBuffer(bindData))
+				"action": "read",
+				"role_id": "%s"
+			}`, roleID))
+			request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/roles/bind-permission", s.URL), bytes.NewBuffer(bindData))
 			request.Header.Set("Content-Type", "application/json")
 			request.Header.Set("X-Auth", jwt)
-			request.Header.Set("X-Organization-Id", "0")
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
 			response, _ := c.Do(request)
 
 			Ω(response.StatusCode).Should(Equal(200))
@@ -130,15 +134,16 @@ var _ = Describe("Roles API Tests", func() {
 
 	Context("Bind Role to User", func() {
 		It("Should bind role to user successfully", func() {
-			bindData := []byte(`{
+			bindData := []byte(fmt.Sprintf(`{
 				"user_name": "john@x.com",
-				"role_key": "test_role",
-				"org_id": 0
-			}`)
+				"role_id": "%s",
+				"org_id": "%s"
+			}`, roleID, models.SuperOrganization))
+			loging.Logger.Debug("bindData", string(bindData))
 			request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/roles/bind-user", s.URL), bytes.NewBuffer(bindData))
 			request.Header.Set("Content-Type", "application/json")
 			request.Header.Set("X-Auth", jwt)
-			request.Header.Set("X-Organization-Id", "0")
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
 			response, _ := c.Do(request)
 
 			Ω(response.StatusCode).Should(Equal(200))
@@ -152,16 +157,16 @@ var _ = Describe("Roles API Tests", func() {
 	})
 	Context("UnBind Permission", func() {
 		It("Should unbind permission from role successfully", func() {
-			unbindData := []byte(`{
-				"resource_name": "test_resource",
+			unbindData := []byte(fmt.Sprintf(`{
+				"resource": "test_resource",
 				"scope": "org",
-				"action_name": "read",
-				"role_key": "test_role"
-			}`)
+				"action": "read",
+				"role_id": "%s"
+			}`, roleID))
 			request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/roles/unbind-permission", s.URL), bytes.NewBuffer(unbindData))
 			request.Header.Set("Content-Type", "application/json")
 			request.Header.Set("X-Auth", jwt)
-			request.Header.Set("X-Organization-Id", "0")
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
 			response, _ := c.Do(request)
 
 			Ω(response.StatusCode).Should(Equal(200))
@@ -181,7 +186,7 @@ var _ = Describe("Roles API Tests", func() {
 			request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/roles/unbind-permission", s.URL), bytes.NewBuffer(unbindData))
 			request.Header.Set("Content-Type", "application/json")
 			request.Header.Set("X-Auth", jwt)
-			request.Header.Set("X-Organization-Id", "0")
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
 			response, _ := c.Do(request)
 
 			Ω(response.StatusCode).Should(Equal(409))

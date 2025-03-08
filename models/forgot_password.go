@@ -9,7 +9,7 @@ import (
 // ForgotPassword : GORM model to track password reset token
 type ForgotPassword struct {
 	gorm.Model `json:"-"`
-	UserID     int
+	UserID     string
 	ResetToken string
 	Expiry     time.Time
 }

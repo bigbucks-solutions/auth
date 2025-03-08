@@ -11,30 +11,29 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"gorm.io/gorm"
 )
 
 // CreateRole : Creates new Role
-func CreateRole(role *models.Role) (int, error) {
+func CreateRole(role *models.Role) (string, int, error) {
 	err := valids.Validate.Struct(role)
 	loging.Logger.Debug(role, err)
 	customerr := valids.NewErrorDict()
 	if err != nil {
 		customerr.GetErrorTranslations(err)
-		return http.StatusBadRequest, customerr
+		return "", http.StatusBadRequest, customerr
 	}
 	loging.Logger.Info(fmt.Sprintf("Creating Role %s", role.Name))
 	if err := models.Dbcon.Create(role).Error; err != nil {
 		loging.Logger.Error(err)
 		if nerr := models.ParseError(err); errors.Is(nerr, models.ErrDuplicateKey) {
 			customerr.Errors["name"] = "Role with same name already exists"
-			return http.StatusConflict, customerr
+			return "", http.StatusConflict, customerr
 		}
-		return http.StatusConflict, err
+		return "", http.StatusConflict, err
 	}
-	return 0, nil
+	return role.ID, 0, nil
 }
 
 // CreatePermission : Creates new Permission object
@@ -59,7 +58,7 @@ func CreatePermission(perm *models.Permission) (int, error) {
 }
 
 // ListRolePermission: Returns all the permissions bound to the role
-func ListRolePermission(roleKey string, orgID int, ctx context.Context) ([]types.ListRolePermission, int, error) {
+func ListRolePermission(roleKey string, orgID string, ctx context.Context) ([]types.ListRolePermission, int, error) {
 	var role models.Role
 	var permissions []models.Permission
 	customerr := valids.NewErrorDict()
@@ -87,12 +86,12 @@ func ListRolePermission(roleKey string, orgID int, ctx context.Context) ([]types
 }
 
 // BindPermission : Binds the permission to the role specified
-func BindPermission(resource, scope, action, roleKey string, orgID int, perm_cache *permission_cache.PermissionCache, ctx context.Context) (int, error) {
+func BindPermission(resource, scope, action, roleID string, orgID string, perm_cache *permission_cache.PermissionCache, ctx context.Context) (int, error) {
 	var role models.Role
 	var perm models.Permission
 	customerr := valids.NewErrorDict()
 	err := models.Dbcon.Transaction(func(tx *gorm.DB) error {
-		if err := tx.First(&role, "id = ? and org_id = ?", roleKey, orgID).Error; err != nil {
+		if err := tx.First(&role, "id = ? and org_id = ?", roleID, orgID).Error; err != nil {
 			return err
 		}
 		tx.Where(&models.Permission{Resource: resource, Scope: constants.Scope(scope), Action: constants.Action(action)}).FirstOrCreate(&perm)
@@ -101,7 +100,7 @@ func BindPermission(resource, scope, action, roleKey string, orgID int, perm_cac
 			return err
 		}
 
-		err := perm_cache.AddRoleToPermKey(ctx, strconv.Itoa(orgID), role.Name, resource, scope, action)
+		err := perm_cache.AddRoleToPermKey(ctx, orgID, role.Name, resource, scope, action)
 		if err != nil {
 			return err
 		}
@@ -115,19 +114,19 @@ func BindPermission(resource, scope, action, roleKey string, orgID int, perm_cac
 	return 0, nil
 }
 
-func UnBindPermission(resource, scope, action, roleKey string, orgID int, perm_cache *permission_cache.PermissionCache, ctx context.Context) (int, error) {
+func UnBindPermission(resource, scope, action, roleID string, orgID string, perm_cache *permission_cache.PermissionCache, ctx context.Context) (int, error) {
 	var role models.Role
 	var perm models.Permission
 	customerr := valids.NewErrorDict()
 	err := models.Dbcon.Transaction(func(tx *gorm.DB) error {
-		if err := tx.First(&role, "id = ? and org_id = ?", roleKey, orgID).Error; err != nil {
+		if err := tx.First(&role, "id = ? and org_id = ?", roleID, orgID).Error; err != nil {
 			return err
 		}
 		tx.Where(&models.Permission{Resource: resource, Scope: constants.Scope(scope), Action: constants.Action(action)}).First(&perm)
 		if err := tx.Model(&role).Association("Permissions").Delete(&perm); err != nil {
 			return err
 		}
-		err := perm_cache.RemoveRoleFromPermKey(ctx, strconv.Itoa(orgID), role.Name, resource, scope, action)
+		err := perm_cache.RemoveRoleFromPermKey(ctx, orgID, role.Name, resource, scope, action)
 		if err != nil {
 			return err
 		}
@@ -142,7 +141,7 @@ func UnBindPermission(resource, scope, action, roleKey string, orgID int, perm_c
 }
 
 // BindUserRole binds a role to a user for a specific organization
-func BindUserRole(userName string, roleKey string, orgID int) (int, error) {
+func BindUserRole(userName string, roleID string, orgID string) (int, error) {
 	var role models.Role
 	var userOrgRole models.UserOrgRole
 
@@ -155,14 +154,14 @@ func BindUserRole(userName string, roleKey string, orgID int) (int, error) {
 			return err
 		}
 		// Find the role
-		if err := tx.First(&role, "name = ? AND org_id = ?", roleKey, orgID).Error; err != nil {
+		if err := tx.First(&role, "id = ? AND org_id = ?", roleID, orgID).Error; err != nil {
 			return err
 		}
 
 		// Create user-org-role binding
 		userOrgRole = models.UserOrgRole{
-			UserID: int(user.ID),
-			RoleID: int(role.ID),
+			UserID: user.ID,
+			RoleID: role.ID,
 			OrgID:  orgID,
 		}
 

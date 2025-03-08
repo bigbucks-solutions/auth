@@ -1,6 +1,7 @@
 package models
 
 import (
+	"bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models/types"
 	"bigbucks/solution/auth/passwordreset"
@@ -25,19 +26,20 @@ import (
 
 // User : User credential model
 type User struct {
-	gorm.Model     `json:"-"`
-	Username       string          `gorm:"unique;not null" validate:"required,email"`
-	Password       string          `gorm:"column:hashed_password" validate:"required,min=8"`
-	Organizations  []*Organization `gorm:"many2many:UserOrgRole;JoinForeignKey:UserID;JoinReferences:OrgID;"`
-	Roles          []*Role         `gorm:"many2many:UserOrgRole;JoinForeignKey:UserID;JoinReferences:RoleID;"`
-	Profile        Profile         `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	ForgotPassword ForgotPassword  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	OAuthClient    OAuthClient     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" validate:"structonly,omitempty"`
+	constants.BaseModel `json:"-"`
+	Username            string          `gorm:"unique;not null" validate:"required,email"`
+	Password            string          `gorm:"column:hashed_password" validate:"required,min=8"`
+	Organizations       []*Organization `gorm:"many2many:UserOrgRole;JoinForeignKey:UserID;JoinReferences:OrgID;"`
+	Roles               []*Role         `gorm:"many2many:UserOrgRole;JoinForeignKey:UserID;JoinReferences:RoleID;"`
+	Profile             Profile         `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	ForgotPassword      ForgotPassword  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	OAuthClient         OAuthClient     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" validate:"structonly,omitempty"`
 }
 
 // MarshalJSON Json Dump override method
 func (usr User) MarshalJSON() ([]byte, error) {
 	var tmp = &types.User{}
+	tmp.ID = usr.ID
 	tmp.Username = usr.Username
 	tmp.Roles = usr.Roles
 	err := Dbcon.Model(&usr).Association("Profile").Find(&usr.Profile)
@@ -66,7 +68,7 @@ func (usr User) GenerateResetToken() (string, error) {
 	fg.ResetToken = fmt.Sprintf("%x", b)
 	fg.Expiry = time.Now().Add(5 * time.Hour)
 	if fg.ID == 0 {
-		fg.UserID = int(usr.ID)
+		fg.UserID = usr.ID
 		Dbcon.Model(&fg).Create(&fg)
 	} else {
 		Dbcon.Model(&fg).Save(&fg)
@@ -98,6 +100,12 @@ func (usr User) ChangePassword(token, password string) (int, error) {
 
 // BeforeCreate GORM hook hash the password
 func (usr *User) BeforeCreate(tx *gorm.DB) (err error) {
+	// Call the parent BeforeCreate to generate ULID
+	if err = usr.BaseModel.BeforeCreate(tx); err != nil {
+		return err
+	}
+
+	// Hash password
 	if pw, err := bcrypt.GenerateFromPassword([]byte(usr.Password), 0); err == nil {
 		usr.Password = string(pw)
 	}

@@ -20,7 +20,7 @@ import (
 
 var _ = Describe("Master Data API Tests", func() {
 	var jwt string
-
+	var roleID string
 	BeforeEach(func() {
 		// Login to get JWT token
 		jsonData := []byte(`{
@@ -28,12 +28,15 @@ var _ = Describe("Master Data API Tests", func() {
 			"password": "john123"
 		}`)
 
-		_, _ = actions.CreateRole(&models.Role{Name: "admin", Description: "admin role", OrgID: 0})
+		id, status, _ := actions.CreateRole(&models.Role{Name: "admin", Description: "admin role", OrgID: models.SuperOrganization})
+		if status == 0 {
+			roleID = id
+		}
 
-		code, err := actions.BindPermission("masterdata", "all", "read", "admin", 0, permission_cache.NewPermissionCache(settings.Current), context.Background())
+		code, err := actions.BindPermission("masterdata", "all", "read", roleID, models.SuperOrganization, permission_cache.NewPermissionCache(settings.Current), context.Background())
 		Ω(code).Should(Equal(0))
 		Ω(err).Should(BeNil())
-		code, err = actions.BindUserRole("john@x.com", "admin", 0)
+		code, err = actions.BindUserRole("john@x.com", roleID, models.SuperOrganization)
 		Ω(code).Should(Equal(0))
 		Ω(err).Should(BeNil())
 		request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/signin", s.URL), bytes.NewBuffer(jsonData))
@@ -52,7 +55,7 @@ var _ = Describe("Master Data API Tests", func() {
 			request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/master-data/scopes", s.URL), nil)
 			request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			request.Header.Set("X-Auth", jwt)
-			request.Header.Set("X-Organization-Id", "0")
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
 
 			response, err := c.Do(request)
 			Ω(err).Should(BeNil())
@@ -65,12 +68,12 @@ var _ = Describe("Master Data API Tests", func() {
 			Ω(scopes).Should(ContainElements("own", "org", "all"))
 		})
 		It("Omits All from list of scopes", func() {
-			_, _ = actions.UnBindPermission("masterdata", "all", "read", "admin", 0, permission_cache.NewPermissionCache(settings.Current), context.Background())
-			_, _ = actions.BindPermission("masterdata", "org", "read", "admin", 0, permission_cache.NewPermissionCache(settings.Current), context.Background())
+			_, _ = actions.UnBindPermission("masterdata", "all", "read", roleID, models.SuperOrganization, permission_cache.NewPermissionCache(settings.Current), context.Background())
+			_, _ = actions.BindPermission("masterdata", "org", "read", roleID, models.SuperOrganization, permission_cache.NewPermissionCache(settings.Current), context.Background())
 			request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/master-data/scopes", s.URL), nil)
 			request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			request.Header.Set("X-Auth", jwt)
-			request.Header.Set("X-Organization-Id", "0")
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
 			response, err := c.Do(request)
 			Ω(err).Should(BeNil())
 
@@ -89,7 +92,7 @@ var _ = Describe("Master Data API Tests", func() {
 			request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/master-data/resources", s.URL), nil)
 			request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			request.Header.Set("X-Auth", jwt)
-			request.Header.Set("X-Organization-Id", "0")
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
 			response, err := c.Do(request)
 			Ω(err).Should(BeNil())
 
@@ -108,7 +111,7 @@ var _ = Describe("Master Data API Tests", func() {
 			request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/master-data/actions", s.URL), nil)
 			request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 			request.Header.Set("X-Auth", jwt)
-			request.Header.Set("X-Organization-Id", "0")
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
 			response, err := c.Do(request)
 			Ω(err).Should(BeNil())
 
@@ -128,7 +131,7 @@ var _ = Describe("Master Data API Tests", func() {
 			for _, endpoint := range endpoints {
 				request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/master-data/%s", s.URL, endpoint), nil)
 				request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-				request.Header.Set("X-Organization-Id", "0")
+				request.Header.Set("X-Organization-Id", models.SuperOrganization)
 				response, err := c.Do(request)
 				Ω(err).Should(BeNil())
 				Ω(response.StatusCode).Should(Equal(401))

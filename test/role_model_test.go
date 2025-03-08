@@ -7,43 +7,51 @@ import (
 	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/settings"
 	"context"
+	"fmt"
 
+	"github.com/oklog/ulid/v2"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
+var testORG = ulid.Make().String()
+var roleID string
 var _ = Describe("Role Model", func() {
 	Context("Create Role", Ordered, func() {
 		It("Successfully creates a role", func() {
 			role := &models.Role{
 				Name:        "admin_role",
 				Description: "Administrator role",
-				OrgID:       1,
+				OrgID:       testORG,
 			}
-			status, err := actions.CreateRole(role)
+			id, status, err := actions.CreateRole(role)
+			if status == 0 {
+				roleID = id
+			}
 			Ω(err).To(Succeed())
 			Ω(status).To(Equal(0))
-			Ω(role.ID).To(BeNumerically(">", 0))
+
+			Ω(len(role.ID)).Should(Equal(26))
 		})
 
 		It("Fails with duplicate role name", func() {
 			role := &models.Role{
 				Name:        "admin_role",
 				Description: "Duplicate role",
-				OrgID:       1,
+				OrgID:       testORG,
 			}
-			status, err := actions.CreateRole(role)
+			_, status, err := actions.CreateRole(role)
 			Ω(err).To(HaveOccurred())
 			Ω(status).To(Equal(409))
 		})
 
 		It("Fails with invalid role name", func() {
 			role := &models.Role{
-				Name:        "adm", // too short, minimum 4 chars
+				Name:        "adm",
 				Description: "Invalid role",
-				OrgID:       1,
+				OrgID:       testORG,
 			}
-			status, err := actions.CreateRole(role)
+			_, status, err := actions.CreateRole(role)
 			Ω(err).To(HaveOccurred())
 			Ω(status).To(Equal(400))
 		})
@@ -89,7 +97,7 @@ var _ = Describe("Role Model", func() {
 			perm := &models.Permission{
 				Resource:    "users",
 				Scope:       constants.ScopeAll,
-				Action:      "invalid_action", // only read,write,delete,update allowed
+				Action:      "invalid_action",
 				Description: "Invalid action",
 			}
 			status, err := actions.CreatePermission(perm)
@@ -99,7 +107,7 @@ var _ = Describe("Role Model", func() {
 
 		It("validates minimum length requirements", func() {
 			perm := &models.Permission{
-				Resource:    "us", // too short, min 3 chars
+				Resource:    "us",
 				Scope:       constants.ScopeAll,
 				Action:      constants.ActionRead,
 				Description: "Short resource name",
@@ -147,14 +155,14 @@ var _ = Describe("Role Model", func() {
 	Context("Bind Permission to Role", Ordered, func() {
 		It("Successfully binds permission to role", func() {
 			perm_cache := permission_cache.NewPermissionCache(settings.Current)
-			status, err := actions.BindPermission("users", "all", "read", "admin_role", 1, perm_cache, context.Background())
+			status, err := actions.BindPermission("users", "all", "read", roleID, testORG, perm_cache, context.Background())
 			Ω(err).To(Succeed())
 			Ω(status).To(Equal(0))
-			Ω(perm_cache.RedisClient.SIsMember(context.Background(), "perm:1:USERS:ALL:READ", "ADMIN_ROLE").Val()).To(BeTrue())
+			Ω(perm_cache.RedisClient.SIsMember(context.Background(), fmt.Sprintf("perm:%s:USERS:ALL:READ", testORG), "ADMIN_ROLE").Val()).To(BeTrue())
 		})
 
 		It("Fails with non-existent role", func() {
-			status, err := actions.BindPermission("users", "all", "read", "non_existent_role", 1, permission_cache.NewPermissionCache(settings.Current), context.Background())
+			status, err := actions.BindPermission("users", "all", "read", "non_existent_role", testORG, permission_cache.NewPermissionCache(settings.Current), context.Background())
 			Ω(err).To(HaveOccurred())
 			Ω(status).To(Equal(409))
 		})
@@ -162,14 +170,14 @@ var _ = Describe("Role Model", func() {
 
 	Context("List Roles", Ordered, func() {
 		It("Successfully lists roles with pagination", func() {
-			roles, total, err := actions.ListRoles(1, 10, "", 1)
+			roles, total, err := actions.ListRoles(1, 10, "", testORG)
 			Ω(err).To(Succeed())
 			Ω(total).To(BeNumerically(">", 0))
 			Ω(roles).NotTo(BeEmpty())
 		})
 
 		It("Successfully filters roles by name", func() {
-			roles, total, err := actions.ListRoles(1, 10, "admin", 1)
+			roles, total, err := actions.ListRoles(1, 10, "admin", testORG)
 			Ω(err).To(Succeed())
 			Ω(total).To(BeNumerically(">", 0))
 			Ω(roles[0].Name).To(ContainSubstring("admin"))

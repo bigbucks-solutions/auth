@@ -39,7 +39,7 @@ var (
 
 type UserOrgRole struct {
 	Role  string `json:"role"`
-	OrgID int    `json:"orgID"`
+	OrgID string `json:"orgID"`
 }
 
 type UserInfo struct {

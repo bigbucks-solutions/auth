@@ -6,9 +6,13 @@ import (
 	"bigbucks/solution/auth/settings"
 	"context"
 
+	"github.com/oklog/ulid/v2"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+// create a const ulid for the
+var TestORG = ulid.Make().String()
 
 var _ = Describe("Permission Cache Advanced Tests", func() {
 	var (
@@ -25,8 +29,8 @@ var _ = Describe("Permission Cache Advanced Tests", func() {
 		}
 		permCache = pc.NewPermissionCache(settings)
 
-		role1 := &models.Role{Name: "MANAGER", OrgID: 2}
-		role2 := &models.Role{Name: "EDITOR", OrgID: 2}
+		role1 := &models.Role{Name: "MANAGER", OrgID: TestORG}
+		role2 := &models.Role{Name: "EDITOR", OrgID: TestORG}
 		models.Dbcon.Create(role1)
 		models.Dbcon.Create(role2)
 
@@ -51,20 +55,20 @@ var _ = Describe("Permission Cache Advanced Tests", func() {
 	Context("Action Hierarchy Tests", func() {
 		It("should allow read access when write permission is granted", func() {
 			userInfo := &settings.UserInfo{
-				Roles: []settings.UserOrgRole{{Role: "EDITOR", OrgID: 2}},
+				Roles: []settings.UserOrgRole{{Role: "EDITOR", OrgID: TestORG}},
 			}
 
-			allowed, err := permCache.CheckPermission(&ctx, "articles", "own", "read", "2", userInfo)
+			allowed, err := permCache.CheckPermission(&ctx, "articles", "own", "read", TestORG, userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeTrue())
 		})
 
 		It("should handle manage permission hierarchy correctly", func() {
 			userInfo := &settings.UserInfo{
-				Roles: []settings.UserOrgRole{{Role: "MANAGER", OrgID: 2}},
+				Roles: []settings.UserOrgRole{{Role: "MANAGER", OrgID: TestORG}},
 			}
 
-			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "read", "2", userInfo)
+			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "read", TestORG, userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeTrue())
 		})
@@ -74,12 +78,12 @@ var _ = Describe("Permission Cache Advanced Tests", func() {
 		It("should handle permissions across multiple roles", func() {
 			userInfo := &settings.UserInfo{
 				Roles: []settings.UserOrgRole{
-					{Role: "EDITOR", OrgID: 2},
-					{Role: "MANAGER", OrgID: 2},
+					{Role: "EDITOR", OrgID: TestORG},
+					{Role: "MANAGER", OrgID: TestORG},
 				},
 			}
 
-			allowed, err := permCache.CheckPermission(&ctx, "articles", "own", "write", "2", userInfo)
+			allowed, err := permCache.CheckPermission(&ctx, "articles", "own", "write", TestORG, userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeTrue())
 		})
@@ -91,17 +95,17 @@ var _ = Describe("Permission Cache Advanced Tests", func() {
 				Roles: []settings.UserOrgRole{},
 			}
 
-			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "read", "2", userInfo)
+			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "read", TestORG, userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeFalse())
 		})
 
 		It("should handle non-existent roles", func() {
 			userInfo := &settings.UserInfo{
-				Roles: []settings.UserOrgRole{{Role: "NONEXISTENT", OrgID: 2}},
+				Roles: []settings.UserOrgRole{{Role: "NONEXISTENT", OrgID: TestORG}},
 			}
 
-			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "read", "2", userInfo)
+			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "read", TestORG, userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeFalse())
 		})
@@ -109,7 +113,7 @@ var _ = Describe("Permission Cache Advanced Tests", func() {
 
 	Context("Wildcard Tests", func() {
 		BeforeEach(func() {
-			role := &models.Role{Name: "ADMIN", OrgID: 2}
+			role := &models.Role{Name: "ADMIN", OrgID: TestORG}
 			models.Dbcon.Create(role)
 
 			perm := &models.Permission{Resource: "documents", Scope: "org", Action: "write"}
@@ -119,30 +123,30 @@ var _ = Describe("Permission Cache Advanced Tests", func() {
 
 		It("should handle wildcard scope correctly", func() {
 			userInfo := &settings.UserInfo{
-				Roles: []settings.UserOrgRole{{Role: "ADMIN", OrgID: 2}},
+				Roles: []settings.UserOrgRole{{Role: "ADMIN", OrgID: TestORG}},
 			}
 
-			allowed, err := permCache.CheckPermission(&ctx, "documents", "*", "write", "2", userInfo)
+			allowed, err := permCache.CheckPermission(&ctx, "documents", "*", "write", TestORG, userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeTrue())
 		})
 
 		It("should handle wildcard action correctly", func() {
 			userInfo := &settings.UserInfo{
-				Roles: []settings.UserOrgRole{{Role: "ADMIN", OrgID: 2}},
+				Roles: []settings.UserOrgRole{{Role: "ADMIN", OrgID: TestORG}},
 			}
 
-			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "*", "2", userInfo)
+			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "*", TestORG, userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeTrue())
 		})
 
 		It("should handle both wildcard scope and action", func() {
 			userInfo := &settings.UserInfo{
-				Roles: []settings.UserOrgRole{{Role: "ADMIN", OrgID: 2}},
+				Roles: []settings.UserOrgRole{{Role: "ADMIN", OrgID: TestORG}},
 			}
 
-			allowed, err := permCache.CheckPermission(&ctx, "documents", "*", "*", "2", userInfo)
+			allowed, err := permCache.CheckPermission(&ctx, "documents", "*", "*", TestORG, userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeTrue())
 		})

@@ -20,8 +20,6 @@ import (
 	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/settings"
 	"context"
-	"fmt"
-	"strconv"
 
 	"github.com/spf13/cobra"
 )
@@ -39,11 +37,8 @@ var bindPermissionCmd = &cobra.Command{
 For example:
 	auth role bind-permission ROLE_NAME PERM_NAME`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		orgID, err := strconv.Atoi(org_id)
-		if err != nil {
-			return fmt.Errorf("invalid org_id: %v", err)
-		}
-		_, err = actions.BindPermission(resource, scope, action, role_key, orgID, permission_cache.NewPermissionCache(settings.Current), context.Background())
+
+		_, err := actions.BindPermission(resource, scope, action, role_key, org_id, permission_cache.NewPermissionCache(settings.Current), context.Background())
 		return err
 	},
 }

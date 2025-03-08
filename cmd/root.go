@@ -60,13 +60,8 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "auth",
 	Short: "A brief description of your application",
-
-	Run: func(cmd *cobra.Command, args []string) {
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		var err error
-		// models.Dbcon, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
-
-		// defer models.Dbcon.Close()
-
 		settings.Current = &settings.Settings{}
 
 		err = viper.Unmarshal(&settings.Current)
@@ -74,10 +69,6 @@ var rootCmd = &cobra.Command{
 			loging.Logger.Fatalln(err)
 		}
 		settings.Current.LoadKeys()
-		var g *errgroup.Group
-		ctx = context.Background()
-		ctx, cancel = context.WithCancel(ctx)
-		g, ctx = errgroup.WithContext(ctx)
 
 		// dsn := "user=bigbucks password=bigbucks DB.name=bigbucks port=5432 host=localhost sslmode=disable"
 		dsn := fmt.Sprintf("host=%s user=%s password=%s DB.name=%s port=%s sslmode=disable", settings.Current.DBHost, settings.Current.DBUsername, settings.Current.DBPassword, settings.Current.DBName, settings.Current.DBPort)
@@ -96,6 +87,16 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			fmt.Println("Error setting up join table:", err)
 		}
+	},
+
+	Run: func(cmd *cobra.Command, args []string) {
+		var g *errgroup.Group
+		ctx = context.Background()
+		ctx, cancel = context.WithCancel(ctx)
+		g, ctx = errgroup.WithContext(ctx)
+		// models.Dbcon, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+
+		// defer models.Dbcon.Close()
 
 		g.Go(func() error { return startGrpcServer(settings.Current) })
 		g.Go(func() error { return startHttpServer(settings.Current) })

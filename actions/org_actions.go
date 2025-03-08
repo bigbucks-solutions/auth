@@ -20,8 +20,8 @@ func CreateOrganization(org *Organization) (int, error) {
 		customerr.GetErrorTranslations(err)
 		return http.StatusBadRequest, customerr
 	}
-	var SuperUserRole Role
-	Dbcon.Find(&SuperUserRole, Role{Name: "SuperUser"})
+	var SuperUserRole Role = Role{Name: "SuperUser"}
+	Dbcon.FirstOrCreate(&SuperUserRole, "name = ?", "SuperUser")
 	err = Dbcon.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Omit("Users").Create(org).Error; err != nil {
 			fmt.Println(err)
@@ -32,17 +32,19 @@ func CreateOrganization(org *Organization) (int, error) {
 				Email: usr.Username,
 			}
 		}
-		if err := tx.Create(org.Users).Error; err != nil {
-			if nerr := ParseError(err); errors.Is(nerr, ErrDuplicateKey) {
-				customerr.Errors["username"] = "Username already exists"
-				return nerr
+		if len(org.Users) > 0 {
+			if err := tx.Create(org.Users).Error; err != nil {
+				if nerr := ParseError(err); errors.Is(nerr, ErrDuplicateKey) {
+					customerr.Errors["username"] = "Username already exists"
+					return nerr
+				}
+				return err
 			}
-			return err
-		}
-		if err := tx.Create(&UserOrgRole{OrgID: int(org.ID),
-			UserID: int(org.Users[0].ID),
-			RoleID: int(SuperUserRole.ID)}).Error; err != nil {
-			return err
+			if err := tx.Create(&UserOrgRole{OrgID: org.ID,
+				UserID: org.Users[0].ID,
+				RoleID: SuperUserRole.ID}).Error; err != nil {
+				return err
+			}
 		}
 		return nil
 	})

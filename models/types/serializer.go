@@ -1,6 +1,7 @@
 package types
 
 type User struct {
+	ID       string      `json:"id"`
 	Username string      `json:"username"`
 	Roles    interface{} `json:"roles,omitempty"`
 	Profile  interface{} `json:"profile,omitempty"`

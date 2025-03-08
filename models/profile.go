@@ -11,7 +11,7 @@ import (
 // Profile : GORM model User profile
 type Profile struct {
 	gorm.Model    `json:"-"`
-	UserID        int `json:"-"`
+	UserID        string `json:"-"`
 	FirstName     string
 	LastName      string
 	ContactNumber string `json:"phone"`

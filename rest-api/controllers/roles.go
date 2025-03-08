@@ -39,7 +39,7 @@ func ListRoles(w http.ResponseWriter, r *http.Request, ctx *request_context.Cont
 	}
 
 	roleName := r.URL.Query().Get("role_name")
-	orgID, _ := strconv.Atoi(r.URL.Query().Get("org_id"))
+	orgID := r.URL.Query().Get("org_id")
 
 	roles, total, err := actions.ListRoles(page, pageSize, roleName, orgID)
 	if err != nil {
@@ -79,7 +79,7 @@ func CreateRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Con
 		return http.StatusBadRequest, err
 	}
 
-	code, err := actions.CreateRole(&models.Role{Name: role.Name, Description: role.Description})
+	_, code, err := actions.CreateRole(&models.Role{Name: role.Name, Description: role.Description})
 	if err != nil {
 		return code, err
 	}
@@ -141,13 +141,12 @@ func BindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request_c
 		w.WriteHeader(http.StatusBadRequest)
 		return http.StatusBadRequest, err
 	}
-	org_id, _ := strconv.Atoi(ctx.CurrentOrgID)
 	code, err := actions.BindPermission(
 		binding.Resource,
 		binding.Scope,
 		binding.Action,
 		binding.RoleId,
-		org_id,
+		ctx.CurrentOrgID,
 		ctx.PermCache,
 		ctx.Context,
 	)
@@ -179,13 +178,12 @@ func UnBindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request
 		w.WriteHeader(http.StatusBadRequest)
 		return http.StatusBadRequest, err
 	}
-	org_id, _ := strconv.Atoi(ctx.CurrentOrgID)
 	code, err := actions.UnBindPermission(
 		binding.Resource,
 		binding.Scope,
 		binding.Action,
 		binding.RoleId,
-		org_id,
+		ctx.CurrentOrgID,
 		ctx.PermCache,
 		ctx.Context,
 	)
@@ -225,7 +223,7 @@ func BindRoleToUser(w http.ResponseWriter, r *http.Request, ctx *request_context
 
 	code, err := actions.BindUserRole(
 		binding.UserName,
-		binding.RoleKey,
+		binding.RoleID,
 		binding.OrgID,
 	)
 	if err != nil {
@@ -251,8 +249,7 @@ func BindRoleToUser(w http.ResponseWriter, r *http.Request, ctx *request_context
 // @Router /roles/:role_id/permissions [post]
 func ListPermissionsOfRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	role_id := mux.Vars(r)["role_id"]
-	org_id, _ := strconv.Atoi(ctx.CurrentOrgID)
-	permissions, code, err := actions.ListRolePermission(role_id, org_id, ctx.Context)
+	permissions, code, err := actions.ListRolePermission(role_id, ctx.CurrentOrgID, ctx.Context)
 	if err != nil {
 		return code, err
 	}

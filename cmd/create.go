@@ -35,7 +35,7 @@ var createCmd = &cobra.Command{
 auth role create accounts`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		_, err := actions.CreateRole(&models.Role{Name: role})
+		_, _, err := actions.CreateRole(&models.Role{Name: role})
 		return err
 	},
 }

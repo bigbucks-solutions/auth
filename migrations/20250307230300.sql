@@ -1,6 +1,6 @@
 -- Create "organizations" table
 CREATE TABLE "organizations" (
-  "id" bigserial NOT NULL,
+  "id" character(26) NOT NULL,
   "created_at" timestamptz NULL,
   "updated_at" timestamptz NULL,
   "deleted_at" timestamptz NULL,
@@ -10,24 +10,21 @@ CREATE TABLE "organizations" (
   "contact_number" text NULL,
   PRIMARY KEY ("id")
 );
+-- Create index "idx_organizations_created_at" to table: "organizations"
+CREATE INDEX "idx_organizations_created_at" ON "organizations" ("created_at");
 -- Create index "idx_organizations_deleted_at" to table: "organizations"
 CREATE INDEX "idx_organizations_deleted_at" ON "organizations" ("deleted_at");
+-- Create index "idx_organizations_updated_at" to table: "organizations"
+CREATE INDEX "idx_organizations_updated_at" ON "organizations" ("updated_at");
 -- Create "user_org_roles" table
 CREATE TABLE "user_org_roles" (
-  "id" bigserial NOT NULL,
-  "created_at" timestamptz NULL,
-  "updated_at" timestamptz NULL,
-  "deleted_at" timestamptz NULL,
-  "org_id" bigint NOT NULL,
-  "user_id" bigint NOT NULL,
-  "role_id" bigint NOT NULL,
-  PRIMARY KEY ("id")
+  "org_id" text NOT NULL,
+  "user_id" text NOT NULL,
+  "role_id" text NOT NULL
 );
--- Create index "idx_user_org_roles_deleted_at" to table: "user_org_roles"
-CREATE INDEX "idx_user_org_roles_deleted_at" ON "user_org_roles" ("deleted_at");
 -- Create "users" table
 CREATE TABLE "users" (
-  "id" bigserial NOT NULL,
+  "id" character(26) NOT NULL,
   "created_at" timestamptz NULL,
   "updated_at" timestamptz NULL,
   "deleted_at" timestamptz NULL,
@@ -36,15 +33,19 @@ CREATE TABLE "users" (
   PRIMARY KEY ("id"),
   CONSTRAINT "uni_users_username" UNIQUE ("username")
 );
+-- Create index "idx_users_created_at" to table: "users"
+CREATE INDEX "idx_users_created_at" ON "users" ("created_at");
 -- Create index "idx_users_deleted_at" to table: "users"
 CREATE INDEX "idx_users_deleted_at" ON "users" ("deleted_at");
+-- Create index "idx_users_updated_at" to table: "users"
+CREATE INDEX "idx_users_updated_at" ON "users" ("updated_at");
 -- Create "forgot_passwords" table
 CREATE TABLE "forgot_passwords" (
   "id" bigserial NOT NULL,
   "created_at" timestamptz NULL,
   "updated_at" timestamptz NULL,
   "deleted_at" timestamptz NULL,
-  "user_id" bigint NULL,
+  "user_id" character(26) NULL,
   "reset_token" text NULL,
   "expiry" timestamptz NULL,
   PRIMARY KEY ("id"),
@@ -58,7 +59,7 @@ CREATE TABLE "o_auth_clients" (
   "created_at" timestamptz NULL,
   "updated_at" timestamptz NULL,
   "deleted_at" timestamptz NULL,
-  "user_id" bigint NULL,
+  "user_id" character(26) NULL,
   "source" text NOT NULL,
   "details" jsonb NULL,
   PRIMARY KEY ("id"),
@@ -72,7 +73,7 @@ CREATE TABLE "profiles" (
   "created_at" timestamptz NULL,
   "updated_at" timestamptz NULL,
   "deleted_at" timestamptz NULL,
-  "user_id" bigint NULL,
+  "user_id" character(26) NULL,
   "first_name" text NULL,
   "last_name" text NULL,
   "contact_number" text NULL,
@@ -89,30 +90,41 @@ CREATE TABLE "permissions" (
   "created_at" timestamptz NULL,
   "updated_at" timestamptz NULL,
   "deleted_at" timestamptz NULL,
-  "code" text NOT NULL,
+  "resource" text NOT NULL,
+  "scope" text NOT NULL,
+  "action" text NOT NULL,
   "description" text NULL,
-  "resource" text NULL,
   PRIMARY KEY ("id"),
-  CONSTRAINT "uni_permissions_code" UNIQUE ("code")
+  CONSTRAINT "chk_permissions_action" CHECK (action = ANY (ARRAY['read'::text, 'write'::text, 'delete'::text, 'update'::text, 'create'::text]))
 );
 -- Create index "idx_permissions_deleted_at" to table: "permissions"
 CREATE INDEX "idx_permissions_deleted_at" ON "permissions" ("deleted_at");
+-- Create index "idx_res_scope_action" to table: "permissions"
+CREATE UNIQUE INDEX "idx_res_scope_action" ON "permissions" ("resource", "scope", "action");
+-- Create index "idx_resource" to table: "permissions"
+CREATE INDEX "idx_resource" ON "permissions" ("resource");
 -- Create "roles" table
 CREATE TABLE "roles" (
-  "id" bigserial NOT NULL,
+  "id" character(26) NOT NULL,
   "created_at" timestamptz NULL,
   "updated_at" timestamptz NULL,
   "deleted_at" timestamptz NULL,
+  "org_id" text NULL,
   "name" text NOT NULL,
   "description" text NULL,
-  PRIMARY KEY ("id"),
-  CONSTRAINT "uni_roles_name" UNIQUE ("name")
+  PRIMARY KEY ("id")
 );
+-- Create index "idx_roles_created_at" to table: "roles"
+CREATE INDEX "idx_roles_created_at" ON "roles" ("created_at");
 -- Create index "idx_roles_deleted_at" to table: "roles"
 CREATE INDEX "idx_roles_deleted_at" ON "roles" ("deleted_at");
+-- Create index "idx_roles_name_org" to table: "roles"
+CREATE UNIQUE INDEX "idx_roles_name_org" ON "roles" ("org_id", "name");
+-- Create index "idx_roles_updated_at" to table: "roles"
+CREATE INDEX "idx_roles_updated_at" ON "roles" ("updated_at");
 -- Create "role_permissions" table
 CREATE TABLE "role_permissions" (
-  "role_id" bigint NOT NULL,
+  "role_id" character(26) NOT NULL,
   "permission_id" bigint NOT NULL,
   PRIMARY KEY ("role_id", "permission_id"),
   CONSTRAINT "fk_role_permissions_permission" FOREIGN KEY ("permission_id") REFERENCES "permissions" ("id") ON UPDATE NO ACTION ON DELETE NO ACTION,

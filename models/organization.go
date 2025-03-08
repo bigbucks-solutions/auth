@@ -1,16 +1,18 @@
 package models
 
-import (
-	"gorm.io/gorm"
+import "bigbucks/solution/auth/constants"
+
+const (
+	SuperOrganization = "00000000000000000000000000"
 )
 
 // Organization : GORM model for organization/company (MAIN)
 type Organization struct {
-	gorm.Model    `json:"-"`
-	Name          string `gorm:"not null" validate:"required,min=4"`
-	Address       string
-	ContactEmail  string `validate:"required,email"`
-	ContactNumber string `validate:"omitempty,min=8,numeric"`
+	constants.BaseModel `json:"-" gorm:"embedded"`
+	Name                string `gorm:"not null" validate:"required,min=4"`
+	Address             string
+	ContactEmail        string `validate:"required,email"`
+	ContactNumber       string `validate:"omitempty,min=8,numeric"`
 	// Branches      []OrganizationBranch `gorm:"foreignkey:ParentOrg;"`
 	Users []*User `gorm:"many2many:UserOrgRole;JoinForeignKey:OrgID;JoinReferences:UserID;" validate:"required,len=1,dive"`
 }

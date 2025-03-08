@@ -179,7 +179,7 @@ func (pc *PermissionCache) RemoveRoleFromPermKey(ctx context.Context, orgID stri
 	return err
 }
 
-func (pc *PermissionCache) checkPermissionInDB(ctx context.Context, orgID int, roleName, resource, scope, action string) (bool, error) {
+func (pc *PermissionCache) checkPermissionInDB(ctx context.Context, orgID string, roleName, resource, scope, action string) (bool, error) {
 	var count int64
 	err := models.Dbcon.WithContext(ctx).Model(&models.Permission{}).
 		Joins("INNER JOIN role_permissions rp ON rp.permission_id = permissions.id").

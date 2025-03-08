@@ -6,7 +6,7 @@ import (
 )
 
 // ListRoles returns paginated list of roles with user count and filtering
-func ListRoles(page, pageSize int, roleName string, orgID int) ([]types.ListRoleResponse, int64, error) {
+func ListRoles(page, pageSize int, roleName string, orgID string) ([]types.ListRoleResponse, int64, error) {
 	var roles []types.ListRoleResponse
 	var total int64
 
@@ -17,7 +17,7 @@ func ListRoles(page, pageSize int, roleName string, orgID int) ([]types.ListRole
 	if roleName != "" {
 		query = query.Where("LOWER(name) LIKE LOWER(?)", roleName+"%")
 	}
-	if orgID > 0 {
+	if orgID != models.SuperOrganization {
 		query = query.Where("roles.org_id = ?", orgID)
 	}
 
