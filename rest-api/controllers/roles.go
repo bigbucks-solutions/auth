@@ -39,7 +39,7 @@ func ListRoles(w http.ResponseWriter, r *http.Request, ctx *request_context.Cont
 	}
 
 	roleName := r.URL.Query().Get("role_name")
-	orgID := r.URL.Query().Get("org_id")
+	orgID := ctx.CurrentOrgID
 
 	roles, total, err := actions.ListRoles(page, pageSize, roleName, orgID)
 	if err != nil {
@@ -79,7 +79,7 @@ func CreateRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Con
 		return http.StatusBadRequest, err
 	}
 
-	_, code, err := actions.CreateRole(&models.Role{Name: role.Name, Description: role.Description})
+	_, code, err := actions.CreateRole(&models.Role{Name: role.Name, Description: role.Description, OrgID: ctx.CurrentOrgID, ExtraAttrs: role.ExtraAttrs})
 	if err != nil {
 		return code, err
 	}

@@ -28,7 +28,7 @@ func ListRoles(page, pageSize int, roleName string, orgID string) ([]types.ListR
 
 	// Get roles with user count
 	err := query.
-		Select("roles.id as id, roles.name, roles.description, COUNT(DISTINCT user_org_roles.user_id) as user_count").
+		Select("roles.id as id, roles.name, roles.description, COUNT(DISTINCT user_org_roles.user_id) as user_count, roles.extra_attrs").
 		Joins("LEFT JOIN user_org_roles ON user_org_roles.role_id = roles.id").
 		Group("roles.id").
 		Offset(offset).

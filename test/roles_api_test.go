@@ -79,7 +79,10 @@ var _ = Describe("Roles API Tests", func() {
 		It("Should create role successfully", func() {
 			roleData := []byte(`{
 				"name": "test_role",
-				"description": "Test role description"
+				"description": "Test role description",
+				"extraAttrs": {
+					"test": "test"
+				}
 			}`)
 			request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/roles", s.URL), bytes.NewBuffer(roleData))
 			request.Header.Set("Content-Type", "application/json")
@@ -88,6 +91,14 @@ var _ = Describe("Roles API Tests", func() {
 			response, _ := c.Do(request)
 
 			Ω(response.StatusCode).Should(Equal(201))
+			var role models.Role
+			models.Dbcon.Find(&role, "name = ?", "test_role")
+			Ω(role.Name).Should(Equal("test_role"))
+			Ω(role.Description).Should(Equal("Test role description"))
+			var actual map[string]interface{}
+			_ = json.Unmarshal([]byte(role.ExtraAttrs), &actual)
+			Ω(actual).Should(HaveKey("test"))
+
 		})
 	})
 

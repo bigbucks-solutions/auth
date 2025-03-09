@@ -14,8 +14,9 @@ type Role struct {
 	OrgID               string `gorm:"index:,unique,composite:name_org"`
 	Name                string `gorm:"index:,unique,composite:name_org;not null" validate:"required,min=4"`
 	Description         string
-	Permissions         []*Permission `gorm:"many2many:role_permissions;"`
-	Users               []*User       `gorm:"many2many:UserOrgRole;JoinForeignKey:RoleID;JoinReferences:UserID;"`
+	ExtraAttrs          json.RawMessage `gorm:"type:jsonb"`
+	Permissions         []*Permission   `gorm:"many2many:role_permissions;"`
+	Users               []*User         `gorm:"many2many:UserOrgRole;JoinForeignKey:RoleID;JoinReferences:UserID;"`
 }
 
 // Permission model
