@@ -23,7 +23,6 @@ import (
 // @Param page query int false "Page number" default(1)
 // @Param page_size query int false "Page size" default(10)
 // @Param role_name query string false "Filter by role name"
-// @Param org_id query int false "Filter by organization ID"
 // @Success 200 {object} []models.Role
 // @Security 	 JWTAuth
 // @Router /roles [get]
@@ -222,7 +221,7 @@ func BindRoleToUser(w http.ResponseWriter, r *http.Request, ctx *request_context
 	// }
 
 	code, err := actions.BindUserRole(
-		binding.UserName,
+		binding.UserID,
 		binding.RoleID,
 		binding.OrgID,
 	)
@@ -232,6 +231,38 @@ func BindRoleToUser(w http.ResponseWriter, r *http.Request, ctx *request_context
 
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(map[string]string{"message": "Role bound to user successfully"})
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return 0, nil
+}
+
+// @Summary UnBind role to user
+// @Description Removes a role with a user in an organization
+// @Tags roles
+// @Accept json
+// @Produce json
+// @Param        X-Auth header string true "Authorization"
+// @Security     JWTAuth
+// @Param binding body types.UserRoleBindingBody true "User role binding details"
+// @Success 200 {string} string "Role bound to user successfully"
+// @Router /roles/unbind-user [post]
+func UnBindRoleToUser(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
+	var binding types.UserRoleBindingBody
+	if err := json.NewDecoder(r.Body).Decode(&binding); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return http.StatusBadRequest, err
+	}
+	code, err := actions.UnBindUserRole(
+		binding.UserID,
+		binding.RoleID,
+		binding.OrgID,
+	)
+	if err != nil {
+		return code, err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(map[string]string{"message": "Role unbound to user successfully"})
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}

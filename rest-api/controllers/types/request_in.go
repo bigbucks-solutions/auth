@@ -36,7 +36,7 @@ type RolePermissionBindingBody struct {
 }
 
 type UserRoleBindingBody struct {
-	RoleID   string `json:"role_id" validate:"required"`
-	UserName string `json:"user_name" validate:"required"`
-	OrgID    string `json:"org_id"`
+	RoleID string `json:"roleId" validate:"required"`
+	UserID string `json:"userId" validate:"required"`
+	OrgID  string `json:"orgId" validate:"required"`
 }

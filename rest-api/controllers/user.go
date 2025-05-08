@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"bigbucks/solution/auth/actions"
+	"bigbucks/solution/auth/constants"
 	. "bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/request_context"
@@ -9,6 +11,8 @@ import (
 	"errors"
 	"mime/multipart"
 	"net/http"
+	"slices"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
@@ -174,6 +178,48 @@ func Signup(w http.ResponseWriter, r *http.Request, ctx *request_context.Context
 	err := json.NewEncoder(w).Encode(&types.SimpleResponse{
 		Message: "User registered successfully",
 	})
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return 0, nil
+}
+
+// GetUsers godoc
+// @Summary      Lists the users
+// @Description  Lists the users for an organization
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param 		 X-Auth header string true "Authorization"
+// @Security 	 JWTAuth
+// @Param page query int false "Page number" default(1)
+// @Param page_size query int false "Page size" default(10)
+// @Param role_id query string false "Filter by role name"
+// @Param org_id query int false "Filter by organization ID"
+// @Success 200 {object} []models.Role
+// @Security 	 JWTAuth
+// @Router /users [get]
+func GetUsers(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+
+	pageSize, _ := strconv.Atoi(r.URL.Query().Get("page_size"))
+
+	searchPrefix := r.URL.Query().Get("search_prefix")
+	roleID := r.URL.Query().Get("role_id")
+	userStatus := constants.UserStatus(r.URL.Query().Get("user_status"))
+	var userStatusPtr *constants.UserStatus
+	if !slices.Contains(constants.UserStatuses, userStatus) {
+		userStatusPtr = nil
+	} else {
+		userStatusPtr = &userStatus
+	}
+
+	users, code, err := actions.ListUsersForOrg(ctx.CurrentOrgID, page, pageSize, userStatusPtr, &roleID, &searchPrefix)
+	if err != nil {
+		return code, err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(users)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}

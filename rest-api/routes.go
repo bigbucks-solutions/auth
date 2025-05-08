@@ -64,6 +64,10 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	api.Handle("/get-org/{id:[0-9]+}", makeHandler(ctr.GetOrg)).Methods("GET")
 	api.Handle("/create-org", makeHandler(ctr.CreateOrg)).Methods("POST")
 
+	api.Handle("/users",
+		makeHandler(ctr.GetUsers, WithAuth(true), WithPermission("user:*:read")),
+	).Methods("GET")
+
 	api.Handle("/me", makeHandler(ctr.GetMeDetails, WithAuth(true))).Methods("GET")
 	api.Handle("/user/reset", makeHandler(ctr.SendResetToken)).Methods("POST")
 	api.Handle("/user/updateprofile", makeHandler(ctr.UpdateProfile, WithAuth(true))).Methods("POST")
@@ -91,6 +95,9 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	).Methods("POST")
 	api.Handle("/roles/bind-user",
 		makeHandler(ctr.BindRoleToUser, WithAuth(true), WithPermission("user:*:update")),
+	).Methods("POST")
+	api.Handle("/roles/unbind-user",
+		makeHandler(ctr.UnBindRoleToUser, WithAuth(true), WithPermission("user:*:update")),
 	).Methods("POST")
 	// Master data
 	api.Handle("/master-data/resources",

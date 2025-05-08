@@ -141,7 +141,7 @@ func UnBindPermission(resource, scope, action, roleID string, orgID string, perm
 }
 
 // BindUserRole binds a role to a user for a specific organization
-func BindUserRole(userName string, roleID string, orgID string) (int, error) {
+func BindUserRole(userID string, roleID string, orgID string) (int, error) {
 	var role models.Role
 	var userOrgRole models.UserOrgRole
 
@@ -150,12 +150,16 @@ func BindUserRole(userName string, roleID string, orgID string) (int, error) {
 	err := models.Dbcon.Transaction(func(tx *gorm.DB) error {
 		// Find the user
 		var user models.User
-		if err := tx.Where("LOWER(username) = LOWER(?)", userName).First(&user).Error; err != nil {
+		if err := tx.Where("id = ?", userID).First(&user).Error; err != nil {
 			return err
 		}
 		// Find the role
 		if err := tx.First(&role, "id = ? AND org_id = ?", roleID, orgID).Error; err != nil {
 			return err
+		}
+		// Check if the user already has the role
+		if err := tx.Where("user_id = ? AND role_id = ? AND org_id = ?", user.ID, role.ID, orgID).First(&userOrgRole).Error; err == nil {
+			return errors.New("user already has the role")
 		}
 
 		// Create user-org-role binding
@@ -171,7 +175,6 @@ func BindUserRole(userName string, roleID string, orgID string) (int, error) {
 
 		return nil
 	})
-
 	if err != nil {
 		loging.Logger.Error(err)
 		customerr.Errors["Error"] = err.Error()
@@ -179,4 +182,38 @@ func BindUserRole(userName string, roleID string, orgID string) (int, error) {
 	}
 
 	return 0, nil
+}
+
+// UnBindUserRole binds a role to a user for a specific organization
+func UnBindUserRole(userID string, roleID string, orgID string) (int, error) {
+	var role models.Role
+	customerr := valids.NewErrorDict()
+	err := models.Dbcon.Transaction(func(tx *gorm.DB) error {
+		// Find the user
+		var user models.User
+		if err := tx.Where("id = ?", userID).First(&user).Error; err != nil {
+			return err
+		}
+		// Find the role
+		if err := tx.First(&role, "id = ? AND org_id = ?", roleID, orgID).Error; err != nil {
+			return err
+		}
+		// Delete the user-org-role binding with explicit WHERE conditions
+		result := tx.Where("user_id = ? AND role_id = ? AND org_id = ?", user.ID, role.ID, orgID).Delete(&models.UserOrgRole{})
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return errors.New("no user-role binding found to delete")
+		}
+
+		return nil
+	})
+	if err != nil {
+		loging.Logger.Error(err)
+		customerr.Errors["Error"] = err.Error()
+		return http.StatusConflict, customerr
+	}
+	return 0, nil
+
 }

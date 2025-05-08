@@ -8,7 +8,6 @@ data "external_schema" "gorm" {
     "--path", "./models",
     "--dialect", "postgres", // | postgres | sqlite | sqlserver
   ]
-
 }
 
 env "gorm" {
@@ -22,4 +21,5 @@ env "gorm" {
       diff = "{{ sql . \"  \" }}"
     }
   }
+
 }

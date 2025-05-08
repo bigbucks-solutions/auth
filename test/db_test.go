@@ -38,6 +38,7 @@ var (
 	cleanupDocker func()
 	s             *httptest.Server
 	c             *http.Client
+	TestUserID    string
 )
 
 var _ = BeforeSuite(func() {
@@ -68,6 +69,7 @@ var _ = BeforeSuite(func() {
 	}
 	err = models.Dbcon.Create(sampleData).Error
 	Ω(err).To(Succeed())
+	TestUserID = sampleData.ID
 	settings.Current = &settings.Settings{Alg: "ES256", PrivateKey: "ec_private.pem", PublicKey: "ec_public.pem"}
 	// settings.Current.LoadKeys()
 	handler, err := router.NewHandler(settings.Current, permission_cache.NewPermissionCache((settings.Current)))

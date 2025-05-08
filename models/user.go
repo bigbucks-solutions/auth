@@ -27,13 +27,18 @@ import (
 // User : User credential model
 type User struct {
 	constants.BaseModel `json:"-"`
-	Username            string          `gorm:"unique;not null" validate:"required,email"`
-	Password            string          `gorm:"column:hashed_password" validate:"required,min=8"`
-	Organizations       []*Organization `gorm:"many2many:UserOrgRole;JoinForeignKey:UserID;JoinReferences:OrgID;"`
-	Roles               []*Role         `gorm:"many2many:UserOrgRole;JoinForeignKey:UserID;JoinReferences:RoleID;"`
-	Profile             Profile         `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	ForgotPassword      ForgotPassword  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	OAuthClient         OAuthClient     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" validate:"structonly,omitempty"`
+	Username            string               `gorm:"unique;not null" validate:"required,email"`
+	Password            string               `gorm:"column:hashed_password" validate:"required,min=8"`
+	Organizations       []*Organization      `gorm:"many2many:UserOrgRole;JoinForeignKey:UserID;JoinReferences:OrgID;"`
+	Roles               []*Role              `gorm:"many2many:UserOrgRole;JoinForeignKey:UserID;JoinReferences:RoleID;"`
+	Profile             Profile              `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	ForgotPassword      ForgotPassword       `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	OAuthClient         OAuthClient          `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" validate:"structonly,omitempty"`
+	EmailVerified       bool                 `gorm:"default:false"`
+	MobileVerified      bool                 `gorm:"default:false"`
+	Status              constants.UserStatus `gorm:"default:pending"`
+	EmailVerification   EmailVerification
+	MobileVerification  MobileVerification
 }
 
 // MarshalJSON Json Dump override method

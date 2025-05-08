@@ -43,9 +43,7 @@ var _ = Describe("Roles API Tests", func() {
 		code, err = actions.BindPermission("permission", "all", "write", roleID, models.SuperOrganization, permission_cache.NewPermissionCache(settings.Current), context.Background())
 		Ω(code).Should(Equal(0))
 		Ω(err).Should(BeNil())
-		code, err = actions.BindUserRole("john@x.com", roleID, models.SuperOrganization)
-		Ω(code).Should(Equal(0))
-		Ω(err).Should(BeNil())
+		_, _ = actions.BindUserRole(TestUserID, roleID, models.SuperOrganization)
 		request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/signin", s.URL), bytes.NewBuffer(jsonData))
 		request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 		response, _ := c.Do(request)
@@ -145,11 +143,13 @@ var _ = Describe("Roles API Tests", func() {
 
 	Context("Bind Role to User", func() {
 		It("Should bind role to user successfully", func() {
+			id, status, _ := actions.CreateRole(&models.Role{Name: "test_role2", Description: "admin role", OrgID: models.SuperOrganization})
+			Ω(status).Should(Equal(0))
 			bindData := []byte(fmt.Sprintf(`{
-				"user_name": "john@x.com",
-				"role_id": "%s",
-				"org_id": "%s"
-			}`, roleID, models.SuperOrganization))
+				"userId": "%s",
+				"roleId": "%s",
+				"orgId": "%s"
+			}`, TestUserID, id, models.SuperOrganization))
 			loging.Logger.Debug("bindData", string(bindData))
 			request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/roles/bind-user", s.URL), bytes.NewBuffer(bindData))
 			request.Header.Set("Content-Type", "application/json")

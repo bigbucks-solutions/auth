@@ -112,7 +112,7 @@ func (pc *PermissionCache) CheckPermission(ctx *context.Context, resource, scope
 				key := fmt.Sprintf("perm:%s:%s:%s:%s", orgID, resource, scp, act)
 
 				role_ := strings.ToUpper(role.Role)
-				loging.Logger.Desugar().Info("Checking permission", zap.String("role", role_), zap.String("resource", resource), zap.String("scope", scp), zap.String("action", act))
+				loging.Logger.Desugar().Debug("Checking permission", zap.String("role", role_), zap.String("resource", resource), zap.String("scope", scp), zap.String("action", act))
 
 				isMember, err := pc.RedisClient.SIsMember(*ctx, key, role_).Result()
 				if err == nil && isMember {
