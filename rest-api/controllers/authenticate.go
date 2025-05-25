@@ -53,6 +53,9 @@ func Signin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context
 		return http.StatusBadRequest, err
 	}
 	success, user := models.Authenticate(cred.Username, cred.Password)
+	if !success {
+		return http.StatusUnauthorized, nil
+	}
 	userAgent := r.UserAgent()
 	ip := r.RemoteAddr
 	// JWT expiration time (e.g., 24 hours)
@@ -62,9 +65,7 @@ func Signin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-	if !success {
-		return http.StatusUnauthorized, nil
-	}
+
 	return printToken(w, r, &user, sessionId)
 }
 
