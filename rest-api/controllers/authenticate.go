@@ -7,9 +7,9 @@ import (
 	"bigbucks/solution/auth/models"
 	oauth "bigbucks/solution/auth/oauthutils"
 	"bigbucks/solution/auth/request_context"
-	"bigbucks/solution/auth/settings"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	googleAuthIDTokenVerifier "github.com/futurenda/google-auth-id-token-verifier"
 )
@@ -56,7 +56,17 @@ func Signin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context
 	if !success {
 		return http.StatusUnauthorized, nil
 	}
-	return printToken(w, r, &user, ctx.Settings)
+	userAgent := r.UserAgent()
+	ip := r.RemoteAddr
+	// JWT expiration time (e.g., 24 hours)
+	expiresIn := time.Hour * 24
+
+	sessionId, err := ctx.SessionStore.CreateSession(user.ID, user.Username, userAgent, ip, expiresIn)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	return printToken(w, r, &user, sessionId)
 }
 
 func GoogleSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
@@ -69,9 +79,14 @@ func GoogleSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 	if err == nil {
 		success, user, _ := oauth.GoogleAuthenticate(googCred.IdToken, googCred.AccessToken)
 		if !success {
+			w.WriteHeader(http.StatusUnauthorized)
 			return http.StatusUnauthorized, nil
 		}
-		return printToken(w, r, &user, ctx.Settings)
+		sessionId, err := ctx.SessionStore.CreateSession(user.ID, user.Username, r.UserAgent(), r.RemoteAddr, time.Hour*24)
+		if err != nil {
+			return http.StatusInternalServerError, err
+		}
+		return printToken(w, r, &user, sessionId)
 	}
 	return http.StatusBadRequest, err
 	// return printToken(w, r, &user, &ctx.Settings)
@@ -88,17 +103,41 @@ func FbSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.Conte
 	if !success {
 		return http.StatusUnauthorized, nil
 	}
-	return printToken(w, r, &user, ctx.Settings)
+	sessionId, err := ctx.SessionStore.CreateSession(user.ID, user.Username, r.UserAgent(), r.RemoteAddr, time.Hour*24)
+	if err != nil {
+		loging.Logger.Error("Error creating session", err)
+		return http.StatusInternalServerError, err
+	}
+	return printToken(w, r, &user, sessionId)
 	// return printToken(w, r, &user, &ctx.Settings)
+}
+
+func SignOut(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
+	// Get session ID from context (set by middleware)
+	sessionID := ctx.Auth.ID
+
+	// Revoke the session
+	if err := ctx.SessionStore.RevokeSession(sessionID); err != nil {
+		loging.Logger.Error("Error revoking session", err)
+		return 0, nil
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(map[string]string{"message": "Logged out successfully"}); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	return 0, nil
 }
 
 func RenewToken(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	user, _ := ctx.GetCurrentUserModel()
-	return printToken(w, r, user, ctx.Settings)
+
+	return printToken(w, r, user, ctx.Auth.ID)
 }
 
-func printToken(w http.ResponseWriter, _ *http.Request, user *models.User, _ *settings.Settings) (int, error) {
-	signed, err := jwtops.SignJWT(user)
+func printToken(w http.ResponseWriter, _ *http.Request, user *models.User, sessionId string) (int, error) {
+	signed, err := jwtops.SignJWT(user, sessionId)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}

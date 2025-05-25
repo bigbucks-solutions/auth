@@ -109,6 +109,7 @@ func BindPermission(resource, scope, action, roleID string, orgID string, perm_c
 
 	if err != nil {
 		customerr.Errors["Error"] = err.Error()
+		loging.Logger.Error(err)
 		return http.StatusConflict, customerr
 	}
 	return 0, nil

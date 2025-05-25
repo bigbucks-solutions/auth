@@ -18,17 +18,17 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Master Data API Tests", func() {
+var _ = Describe("Master Data API Tests", Ordered, func() {
 	var jwt string
 	var roleID string
-	BeforeEach(func() {
+	BeforeAll(func() {
 		// Login to get JWT token
 		jsonData := []byte(`{
 			"username": "john@x.com",
 			"password": "john123"
 		}`)
 
-		id, status, _ := actions.CreateRole(&models.Role{Name: "admin", Description: "admin role", OrgID: models.SuperOrganization})
+		id, status, _ := actions.CreateRole(&models.Role{Name: "master-admin", Description: "admin role", OrgID: models.SuperOrganization})
 		if status == 0 {
 			roleID = id
 		}
@@ -36,6 +36,7 @@ var _ = Describe("Master Data API Tests", func() {
 		code, err := actions.BindPermission("masterdata", "all", "read", roleID, models.SuperOrganization, permission_cache.NewPermissionCache(settings.Current), context.Background())
 		Ω(code).Should(Equal(0))
 		Ω(err).Should(BeNil())
+
 		_, _ = actions.BindUserRole(TestUserID, roleID, models.SuperOrganization)
 		// Ω(code).Should(Equal(0))
 		// Ω(err).Should(BeNil())
@@ -50,7 +51,7 @@ var _ = Describe("Master Data API Tests", func() {
 		Ω(response.StatusCode).Should(Equal(202))
 	})
 
-	Context("Scopes Endpoint", func() {
+	Context("Scopes Endpoint", Ordered, func() {
 		It("Successfully retrieves scopes list", func() {
 			request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/master-data/scopes", s.URL), nil)
 			request.Header.Set("Content-Type", "application/json; charset=UTF-8")

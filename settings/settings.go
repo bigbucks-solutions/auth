@@ -43,8 +43,9 @@ type UserOrgRole struct {
 }
 
 type UserInfo struct {
-	Username string        `json:"username"`
-	Roles    []UserOrgRole `json:"roles"`
+	Username string `json:"username"`
+
+	Roles []UserOrgRole `json:"roles"`
 }
 
 type AuthToken struct {

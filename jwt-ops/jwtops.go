@@ -41,7 +41,7 @@ func (e Extractor) ExtractToken(r *http.Request) (string, error) {
 	return "", request.ErrNoTokenInRequest
 }
 
-func SignJWT(user *models.User) (signed string, err error) {
+func SignJWT(user *models.User, sessionId string) (signed string, err error) {
 	var userOrgRole []settings.UserOrgRole
 	for _, role := range user.Roles {
 		userOrgRole = append(userOrgRole, settings.UserOrgRole{
@@ -58,6 +58,7 @@ func SignJWT(user *models.User) (signed string, err error) {
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 60)),
 			Issuer:    "BigBucks Auth",
+			ID:        sessionId,
 		},
 	}
 	signingMethod := jwt.GetSigningMethod(settings.Current.Alg)

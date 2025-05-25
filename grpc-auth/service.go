@@ -3,9 +3,12 @@ package grpc_auth
 import (
 	context "context"
 	"log"
+	"time"
 
 	jwtops "bigbucks/solution/auth/jwt-ops"
 	"bigbucks/solution/auth/models"
+	"bigbucks/solution/auth/permission_cache"
+	sessionstore "bigbucks/solution/auth/session_store"
 
 	"bigbucks/solution/auth/settings"
 
@@ -15,11 +18,13 @@ import (
 
 type Server struct {
 	UnimplementedAuthServer
-	settings *settings.Settings
+	settings     *settings.Settings
+	sessionstore sessionstore.SessionStore
+	permcache    permission_cache.PermissionCache
 }
 
-func NewGRPCServer(settings *settings.Settings) (server *Server) {
-	server = &Server{settings: settings}
+func NewGRPCServer(settings *settings.Settings, permCache permission_cache.PermissionCache, sessionStore sessionstore.SessionStore) (server *Server) {
+	server = &Server{settings: settings, permcache: permCache, sessionstore: sessionStore}
 	return
 }
 
@@ -36,7 +41,11 @@ func (s *Server) Authenticate(ctx context.Context, in *AuthenticateRequest) (*Au
 	if !success {
 		return nil, status.Errorf(codes.Unauthenticated, "Authentication failed")
 	}
-	if signed, err := jwtops.SignJWT(&user); err == nil {
+	sessionid, err := s.sessionstore.CreateSession(user.ID, user.Username, "GRPC", "127.0.0.1", 24*time.Hour)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Error creating session")
+	}
+	if signed, err := jwtops.SignJWT(&user, sessionid); err == nil {
 		return &AuthenticateResponse{
 			Token: signed,
 		}, nil

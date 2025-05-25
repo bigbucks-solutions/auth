@@ -31,7 +31,7 @@ var Scopes = []Scope{ScopeAll, ScopeOrg, ScopeAssociated, ScopeOwn}
 
 var Actions = []Action{ActionWrite, ActionCreate, ActionUpdate, ActionDelete, ActionRead}
 
-var Resources = []string{"users", "masterdata", "inventory", "roles", "permissions", "accounts", "transactions"}
+var Resources = []string{"user", "masterdata", "inventory", "role", "permission", "account", "transaction", "session"}
 
 var UserStatuses = []UserStatus{UserStatusActive, UserStatusInactive, UserStatusPending}
 
