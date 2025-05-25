@@ -19,7 +19,7 @@ import (
 // @Failure      400  ""
 // @Failure      404  ""
 // @Failure      500  ""
-// @Router       /sessions [get]
+// @Router       /sessions/users/{user_id} [get]
 func Sessions(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	vars := mux.Vars(r)
 	userId := vars["user_id"]
