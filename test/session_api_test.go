@@ -184,7 +184,7 @@ var _ = Describe("Session API Tests", Ordered, func() {
 
 			response, err := c.Do(request)
 			Ω(err).Should(BeNil())
-			Ω(response.StatusCode).Should(Equal(404)) // Assuming it returns 500 for non-existent sessions
+			Ω(response.StatusCode).Should(Equal(404))
 		})
 	})
 
