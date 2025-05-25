@@ -18,11 +18,11 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("User API Tests", func() {
+var _ = Describe("User API Tests", Ordered, func() {
 	var jwt string
 	var roleID string
 
-	BeforeEach(func() {
+	BeforeAll(func() {
 		// Login to get JWT token
 		var jsonData = []byte(`{
 			"username": "john@x.com",

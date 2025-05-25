@@ -5,6 +5,7 @@ import (
 	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
+	sessionstore "bigbucks/solution/auth/session_store"
 	"bigbucks/solution/auth/settings"
 	"context"
 
@@ -17,6 +18,7 @@ type Context struct {
 	Auth         *settings.AuthToken               `json:"user"`
 	Settings     *settings.Settings                `json:"settings"`
 	PermCache    *permission_cache.PermissionCache `json:"-"`
+	SessionStore *sessionstore.SessionStore        `json:"-"`
 	CurrentOrgID string                            `json:"current_org_id"`
 }
 

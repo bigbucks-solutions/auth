@@ -4,6 +4,7 @@ import (
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
 	router "bigbucks/solution/auth/rest-api"
+	sessionstore "bigbucks/solution/auth/session_store"
 	"bigbucks/solution/auth/settings"
 	"context"
 	"crypto/ecdsa"
@@ -72,7 +73,7 @@ var _ = BeforeSuite(func() {
 	TestUserID = sampleData.ID
 	settings.Current = &settings.Settings{Alg: "ES256", PrivateKey: "ec_private.pem", PublicKey: "ec_public.pem"}
 	// settings.Current.LoadKeys()
-	handler, err := router.NewHandler(settings.Current, permission_cache.NewPermissionCache((settings.Current)))
+	handler, err := router.NewHandler(settings.Current, permission_cache.NewPermissionCache(settings.Current), sessionstore.NewSessionStore(settings.Current))
 
 	Ω(err).Should(Succeed())
 	s = httptest.NewServer(handler)
