@@ -21,6 +21,7 @@ import (
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
 	router "bigbucks/solution/auth/rest-api"
+	sessionstore "bigbucks/solution/auth/session_store"
 	"context"
 	"os/signal"
 	"syscall"
@@ -106,7 +107,8 @@ var rootCmd = &cobra.Command{
 
 func startHttpServer(settings *settings.Settings) (err error) {
 	perm_cache := permission_cache.NewPermissionCache(settings)
-	handler, err := router.NewHandler(settings, perm_cache)
+	session_store := sessionstore.NewSessionStore(settings)
+	handler, err := router.NewHandler(settings, perm_cache, session_store)
 	if err != nil {
 		return
 	}
@@ -130,7 +132,9 @@ func startGrpcServer(settings *settings.Settings) (err error) {
 	if err != nil {
 		panic(err)
 	}
-	var auth_server = grpc_auth.NewGRPCServer(settings)
+	perm_cache := permission_cache.NewPermissionCache(settings)
+	session_store := sessionstore.NewSessionStore(settings)
+	auth_server := grpc_auth.NewGRPCServer(settings, *perm_cache, *session_store)
 	grpcServer = grpc.NewServer(grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 		grpc_zap.UnaryServerInterceptor(loging.Logger.Desugar()),
 		auth_server.JWTInterceptor,

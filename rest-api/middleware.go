@@ -5,6 +5,7 @@ import (
 	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/request_context"
+	sessionstore "bigbucks/solution/auth/session_store"
 	"bigbucks/solution/auth/settings"
 	"context"
 	"encoding/json"
@@ -64,23 +65,38 @@ func Authenticate(w http.ResponseWriter, r *http.Request, settings *settings.Set
 	return true, authToken, err
 
 }
-func JSONError(w http.ResponseWriter, err interface{}, code int) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.WriteHeader(code)
-	err = json.NewEncoder(w).Encode(err)
+func JSONError(responselogger *responseLogger, err interface{}, code int) {
+	responselogger.Header().Set("Content-Type", "application/json; charset=utf-8")
+	responselogger.Header().Set("X-Content-Type-Options", "nosniff")
+	responselogger.WriteHeader(code)
+	err = json.NewEncoder(responselogger.w).Encode(err)
 	if err != nil {
 		loging.Logger.Errorln(err)
 	}
 }
 
-func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, perm_cache *permission_cache.PermissionCache) http.Handler {
+func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, perm_cache *permission_cache.PermissionCache, session_store *sessionstore.SessionStore) http.Handler {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		_responseLogger := &responseLogger{w: w, status: http.StatusOK}
+		start := time.Now()
+		defer func() {
+			loging.Logger.Infow("Request:",
+				zap.String("proto", r.Proto),
+				zap.String("method", r.Method),
+				zap.String("endpoint", r.URL.String()),
+				zap.String("user-agent", r.UserAgent()),
+				zap.String("remote-addr", r.RemoteAddr),
+				zap.Int("status", _responseLogger.Status()),
+				zap.String("latency", time.Since(start).String()),
+				zap.Int("size", _responseLogger.Size()),
+			)
+		}()
 		ctx := &request_context.Context{}
 		ctx.Settings = setting
 		ctx.Context = context.TODO()
 		ctx.PermCache = perm_cache
+		ctx.SessionStore = session_store
 		if config.auth {
 			success, authToken, _ := Authenticate(w, r, setting)
 			loging.Logger.Debugw("Authenticated User: ", zap.String("User", authToken.ID))
@@ -96,6 +112,11 @@ func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, pe
 			ctx.CurrentOrgID = orgID
 
 			if config.resource != "" && config.scope != "" && config.action != "" {
+				valid, _, err := session_store.ValidateSession(ctx.Auth.ID)
+				if err != nil || !valid {
+					http.Error(w, "Session expired", http.StatusUnauthorized)
+					return
+				}
 				if ctx.CurrentOrgID == "" {
 					loging.Logger.Warn("No org_id found in request")
 					http.Error(w, "Forbidden", http.StatusForbidden)
@@ -109,23 +130,12 @@ func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, pe
 			}
 		}
 
-		start := time.Now()
 		status, err := fn(_responseLogger, r, ctx)
 
 		if status != 0 {
-			JSONError(w, err, status)
+			JSONError(_responseLogger, err, status)
 		}
-		loging.Logger.Infow("Request:",
-			zap.String("proto", r.Proto),
-			zap.String("method", r.Method),
-			zap.String("endpoint", r.URL.String()),
-			zap.String("user-agent", r.UserAgent()),
-			zap.String("remote-addr", r.RemoteAddr),
-			zap.Int("status", _responseLogger.Status()),
-			zap.String("latency", time.Since(start).String()),
-			zap.Int("size", _responseLogger.Size()),
-		)
-	})
 
+	})
 	return http.StripPrefix(config.prefix, handler)
 }
