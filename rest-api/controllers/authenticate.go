@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"bigbucks/solution/auth/constants"
 	cnst "bigbucks/solution/auth/constants"
 	jwtops "bigbucks/solution/auth/jwt-ops"
 	"bigbucks/solution/auth/loging"
@@ -9,7 +10,6 @@ import (
 	"bigbucks/solution/auth/request_context"
 	"encoding/json"
 	"net/http"
-	"time"
 
 	googleAuthIDTokenVerifier "github.com/futurenda/google-auth-id-token-verifier"
 )
@@ -57,14 +57,20 @@ func Signin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context
 		return http.StatusUnauthorized, nil
 	}
 	userAgent := r.UserAgent()
-	ip := r.RemoteAddr
+	ip := r.Header.Get("X-Forwarded-For")
+	if ip == "" {
+		ip = r.RemoteAddr
+	}
 	// JWT expiration time (e.g., 24 hours)
-	expiresIn := time.Hour * 24
 
-	sessionId, err := ctx.SessionStore.CreateSession(user.ID, user.Username, userAgent, ip, expiresIn)
+	sessionId, err := ctx.SessionStore.CreateSession(user.ID, user.Username, userAgent, ip, constants.SESSION_EXPIRY)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
+	go user.LogLoginActivity(map[string]interface{}{
+		"ip":         ip,
+		"user_agent": userAgent,
+	})
 
 	return printToken(w, r, &user, sessionId)
 }
@@ -82,7 +88,7 @@ func GoogleSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 			w.WriteHeader(http.StatusUnauthorized)
 			return http.StatusUnauthorized, nil
 		}
-		sessionId, err := ctx.SessionStore.CreateSession(user.ID, user.Username, r.UserAgent(), r.RemoteAddr, time.Hour*24)
+		sessionId, err := ctx.SessionStore.CreateSession(user.ID, user.Username, r.UserAgent(), r.RemoteAddr, constants.SESSION_EXPIRY)
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
@@ -103,7 +109,7 @@ func FbSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.Conte
 	if !success {
 		return http.StatusUnauthorized, nil
 	}
-	sessionId, err := ctx.SessionStore.CreateSession(user.ID, user.Username, r.UserAgent(), r.RemoteAddr, time.Hour*24)
+	sessionId, err := ctx.SessionStore.CreateSession(user.ID, user.Username, r.UserAgent(), r.RemoteAddr, constants.SESSION_EXPIRY)
 	if err != nil {
 		loging.Logger.Error("Error creating session", err)
 		return http.StatusInternalServerError, err

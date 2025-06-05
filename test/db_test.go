@@ -51,6 +51,13 @@ var _ = BeforeSuite(func() {
 		fmt.Println("Error setting up join table:", err)
 	}
 	err = models.Dbcon.SetupJoinTable(&models.User{}, "Roles", &models.UserOrgRole{})
+	if err != nil {
+		fmt.Println("Error setting up join table:", err)
+	}
+	err = models.Dbcon.SetupJoinTable(&models.Role{}, "Permissions", &models.RolePermission{})
+	if err != nil {
+		fmt.Println("Error setting up join table:", err)
+	}
 
 	GinkgoWriter.Println("Migration complete", err)
 

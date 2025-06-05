@@ -9,9 +9,11 @@ import (
 	"net/http"
 
 	jwtops "bigbucks/solution/auth/jwt-ops"
+	"bigbucks/solution/auth/models"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"gorm.io/gorm"
 )
 
 var _ = Describe("REST API TESTS", func() {
@@ -41,6 +43,12 @@ var _ = Describe("REST API TESTS", func() {
 			Ω(err).Should(BeNil())
 
 			Ω(claim.User.Username).To(Equal("john@x.com"))
+
+			var user models.User
+			models.Dbcon.Preload("LastLogin", func(db *gorm.DB) *gorm.DB {
+				return db.Order("login_at DESC").Limit(1)
+			}).First(&user, "username = ?", "john@x.com")
+			Ω(user.LastLogin.LoginAt.IsZero()).Should(BeFalse())
 
 		})
 

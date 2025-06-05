@@ -3,6 +3,7 @@ package controllers
 import (
 	"bigbucks/solution/auth/actions"
 	"bigbucks/solution/auth/constants"
+	"bigbucks/solution/auth/loging"
 	. "bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/request_context"
@@ -214,13 +215,14 @@ func GetUsers(w http.ResponseWriter, r *http.Request, ctx *request_context.Conte
 		userStatusPtr = &userStatus
 	}
 
-	users, code, err := actions.ListUsersForOrg(ctx.CurrentOrgID, page, pageSize, userStatusPtr, &roleID, &searchPrefix)
+	users, code, err := actions.ListUsersForOrg(ctx.CurrentOrgID, page, pageSize, userStatusPtr, &roleID, &searchPrefix, ctx.SessionStore)
 	if err != nil {
 		return code, err
 	}
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(users)
 	if err != nil {
+		loging.Logger.Error("Error encoding users", err)
 		return http.StatusInternalServerError, err
 	}
 	return 0, nil
