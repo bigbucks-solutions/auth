@@ -67,10 +67,14 @@ func Signin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-	go user.LogLoginActivity(map[string]interface{}{
-		"ip":         ip,
-		"user_agent": userAgent,
-	})
+	go func() {
+		if err := user.LogLoginActivity(map[string]interface{}{
+			"ip":         ip,
+			"user_agent": userAgent,
+		}); err != nil {
+			loging.Logger.Error("Error logging login activity", err)
+		}
+	}()
 
 	return printToken(w, r, &user, sessionId)
 }

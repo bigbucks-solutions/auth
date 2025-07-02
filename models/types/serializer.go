@@ -17,8 +17,9 @@ type Profile struct {
 }
 
 type Role struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	IsSystemRole bool   `json:"isSystemRole"`
 }
 
 type Permission struct {

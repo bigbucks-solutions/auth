@@ -174,7 +174,6 @@ func BindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request_c
 func UnBindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var binding types.RolePermissionBindingBody
 	if err := json.NewDecoder(r.Body).Decode(&binding); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
 		return http.StatusBadRequest, err
 	}
 	code, err := actions.UnBindPermission(
@@ -187,14 +186,12 @@ func UnBindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request
 		ctx.Context,
 	)
 	if err != nil {
-		w.WriteHeader(code)
 		return code, err
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(map[string]string{"message": "Permission unbound successfully"})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
 		return http.StatusInternalServerError, err
 	}
 	return 0, nil
