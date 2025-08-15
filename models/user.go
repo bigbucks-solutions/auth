@@ -39,6 +39,7 @@ type User struct {
 	Status              constants.UserStatus `gorm:"default:pending"`
 	EmailVerification   EmailVerification
 	MobileVerification  MobileVerification
+	LastLogin           AuthLog
 }
 
 // MarshalJSON Json Dump override method
@@ -136,7 +137,18 @@ func Authenticate(username, password string) (success bool, user User) {
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err == nil {
 		success = true
 	}
+
 	return
+}
+
+func (usr User) LogLoginActivity(attrs map[string]interface{}) error {
+	jsonAttrs, _ := json.Marshal(attrs)
+	Dbcon.Create(&AuthLog{
+		UserID:  usr.ID,
+		LoginAt: time.Now().UTC(),
+		Attrs:   jsonAttrs,
+	})
+	return nil
 }
 
 // UpdateUserProfile Update user profile data from map<string, dynamic> datastructure

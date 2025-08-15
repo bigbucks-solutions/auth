@@ -88,6 +88,10 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			fmt.Println("Error setting up join table:", err)
 		}
+		err = models.Dbcon.SetupJoinTable(&models.Role{}, "Permissions", &models.RolePermission{})
+		if err != nil {
+			fmt.Println("Error setting up join table:", err)
+		}
 	},
 
 	Run: func(cmd *cobra.Command, args []string) {

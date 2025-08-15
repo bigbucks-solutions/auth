@@ -12,10 +12,11 @@ var (
 
 // Migrate function
 func Migrate() {
-
+	_ = Dbcon.AutoMigrate(&RolePermission{})
 	_ = Dbcon.AutoMigrate(&UserOrgRole{})
+
 	_ = Dbcon.AutoMigrate(&User{}, &Profile{}, &OAuthClient{}, &Organization{},
-		&Role{}, &Permission{}, &UserOrgRole{}, &ForgotPassword{})
+		&Role{}, &Permission{}, &UserOrgRole{}, &RolePermission{}, &ForgotPassword{}, &AuthLog{}, &EmailVerification{}, &MobileVerification{})
 
 	// Create
 	// results := Dbcon.Create(&User{Username: "L1212", Password: "jamsheed"})

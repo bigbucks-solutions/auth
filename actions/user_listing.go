@@ -3,10 +3,13 @@ package actions
 import (
 	"bigbucks/solution/auth/actions/types"
 	"bigbucks/solution/auth/constants"
+	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
+	sessionstore "bigbucks/solution/auth/session_store"
 	valids "bigbucks/solution/auth/validations"
 	"net/http"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -43,6 +46,10 @@ func ListUsers(params ListUsersParams) ([]models.User, int64, int, error) {
 		Preload("Profile").
 		Preload("Roles", func(db *gorm.DB) *gorm.DB {
 			return db.Where("org_id = ?", params.OrgID)
+		}).
+		// Add preload for LastLogin
+		Preload("LastLogin", func(db *gorm.DB) *gorm.DB {
+			return db.Order("login_at DESC").Limit(1)
 		})
 
 	// Apply status filter if provided
@@ -77,6 +84,7 @@ func ListUsers(params ListUsersParams) ([]models.User, int64, int, error) {
 		Order("users.created_at DESC").
 		Find(&users).Error; err != nil {
 		customerr.Errors["Database"] = "Error fetching users: " + err.Error()
+		loging.Logger.Error("Error fetching users", err)
 		return nil, 0, http.StatusInternalServerError, customerr
 	}
 
@@ -92,7 +100,7 @@ type UserListResponse struct {
 }
 
 // ListUsersForOrg is a controller-friendly wrapper around ListUsers
-func ListUsersForOrg(orgID string, page, pageSize int, status *constants.UserStatus, roleID, searchPrefix *string) (*UserListResponse, int, error) {
+func ListUsersForOrg(orgID string, page, pageSize int, status *constants.UserStatus, roleID, searchPrefix *string, sessionStore *sessionstore.SessionStore) (*UserListResponse, int, error) {
 	params := ListUsersParams{
 		OrgID:        orgID,
 		Page:         page,
@@ -116,16 +124,18 @@ func ListUsersForOrg(orgID string, page, pageSize int, status *constants.UserSta
 			roleNames[j].Name = role.Name
 			roleNames[j].ID = role.ID
 		}
-
+		sess_count, _ := sessionStore.GetUserSessionCount(user.ID)
 		// Map user data to response format
 		userResponses[i] = types.ListUserResponse{
-			ID:        user.ID,
-			Username:  user.Username,
-			Roles:     roleNames,
-			Status:    user.Status,
-			Firstname: user.Profile.FirstName,
-			Lastname:  user.Profile.LastName,
-			Email:     user.Profile.Email,
+			ID:             user.ID,
+			Username:       user.Username,
+			LastLogin:      user.LastLogin.LoginAt.UTC().Format(time.RFC3339),
+			ActiveSessions: sess_count,
+			Roles:          roleNames,
+			Status:         user.Status,
+			Firstname:      user.Profile.FirstName,
+			Lastname:       user.Profile.LastName,
+			Email:          user.Profile.Email,
 		}
 	}
 

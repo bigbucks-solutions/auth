@@ -45,7 +45,7 @@ var setupSuperOrgCmd = &cobra.Command{
 				return err
 			}
 			// Create the organization without users
-			err = tx.Create(org).Error
+			err = tx.FirstOrCreate(org).Error
 			if err != nil {
 				return err
 			}
@@ -54,7 +54,7 @@ var setupSuperOrgCmd = &cobra.Command{
 				Password: "Jamsheed",
 				Profile:  models.Profile{FirstName: "Jamsheed", Email: "jamshi.onnet@gmail.com"},
 			}
-			err = tx.Create(user).Error
+			err = tx.FirstOrCreate(user).Error
 			if err != nil {
 				return err
 			}
@@ -71,9 +71,10 @@ var setupSuperOrgCmd = &cobra.Command{
 		if err != nil {
 			loging.Logger.Error(err)
 		}
-		_, _ = actions.BindPermission("masterdata", "all", "read", role.ID, models.SuperOrganization, permission_cache.NewPermissionCache(settings.Current), context.Background())
-		_, _ = actions.BindPermission("role", "all", "write", role.ID, models.SuperOrganization, permission_cache.NewPermissionCache(settings.Current), context.Background())
-		_, _ = actions.BindPermission("user", "all", "write", role.ID, models.SuperOrganization, permission_cache.NewPermissionCache(settings.Current), context.Background())
+		_ = actions.AssignSystemPermissionToRole(role.ID, models.SuperOrganization, "session", "all", "write", false, permission_cache.NewPermissionCache(settings.Current), context.Background())
+		_ = actions.AssignSystemPermissionToRole(role.ID, models.SuperOrganization, "user", "all", "write", false, permission_cache.NewPermissionCache(settings.Current), context.Background())
+		_ = actions.AssignSystemPermissionToRole(role.ID, models.SuperOrganization, "role", "all", "write", false, permission_cache.NewPermissionCache(settings.Current), context.Background())
+		_ = actions.AssignSystemPermissionToRole(role.ID, models.SuperOrganization, "masterdata", "all", "write", false, permission_cache.NewPermissionCache(settings.Current), context.Background())
 		return err
 
 	}}

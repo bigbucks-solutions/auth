@@ -272,6 +272,7 @@ func (s *SessionStore) ListUserSessions(userID string) ([]map[string]interface{}
 		if err != nil {
 			return nil, err
 		}
+		//TODO Extract device and os from userAgent
 
 		// Create session info with ID and expiration
 		sessionInfo := map[string]interface{}{
@@ -288,6 +289,19 @@ func (s *SessionStore) ListUserSessions(userID string) ([]map[string]interface{}
 	}
 
 	return sessions, nil
+}
+
+// Get Usersession count
+func (s *SessionStore) GetUserSessionCount(userID string) (int64, error) {
+	userSessionsKey := fmt.Sprintf("%s%s", UserSessionsPrefix, userID)
+
+	// Get the count of sessions for the user
+	count, err := s.client.ZCard(s.ctx, userSessionsKey).Result()
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }
 
 // Close closes the Redis client connection
