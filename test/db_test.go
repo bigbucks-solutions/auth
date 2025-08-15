@@ -120,7 +120,7 @@ func setupGormWithDocker() (*gorm.DB, func()) {
 		config.AutoRemove = true
 		config.RestartPolicy = docker.NeverRestart()
 		config.PortBindings = map[docker.Port][]docker.PortBinding{
-			"5432/tcp": {{HostIP: "", HostPort: "6432"}},
+			"5432/tcp": {{HostIP: "", HostPort: "7432"}},
 		}
 	})
 	chk(err)
@@ -147,7 +147,7 @@ func setupGormWithDocker() (*gorm.DB, func()) {
 	}
 
 	conStr := fmt.Sprintf("host=localhost port=%s user=postgres dbname=%s password=%s sslmode=disable",
-		"6432",
+		"7432",
 		dbName,
 		passwd,
 	)
