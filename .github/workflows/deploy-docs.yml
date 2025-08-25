@@ -3,8 +3,8 @@ name: Deploy Documentation
 on:
   push:
     branches:
-      - main  # or your default branch
-  workflow_dispatch:  # Allows manual triggering
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,14 +12,19 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    defaults:
-        run:
-            working-directory: ./auth/
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
+      - name: Debug directory structure
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
+          echo "Repository root contents:"
+          ls -R
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -40,4 +45,8 @@ jobs:
 
       - name: Deploy documentation
         run: |
-          mkdocs gh-deploy --force
+          echo "Contents of current directory:"
+          ls -la
+          echo "Checking for mkdocs.yml:"
+          find . -name mkdocs.yml
+          mkdocs gh-deploy --force --config-file ./mkdocs.yml
