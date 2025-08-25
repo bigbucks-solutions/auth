@@ -1,0 +1,1085 @@
+openapi: 3.0.1
+info:
+  contact:
+    email: jamsheed@nsmail.dev
+    name: Jamsheed
+    url: http://www.swagger.io/support
+  description: This is REST api definitions.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: BigBucks Solutions Auth Engine
+  version: 0.0.1
+servers:
+- url: //localhost:8000/api/v1
+paths:
+  /master-data/actions:
+    get:
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+          description: OK
+      security:
+      - JWTAuth: []
+      - JWTAuth: []
+      summary: Get actions
+      tags:
+      - permissions
+  /master-data/resources:
+    get:
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+          description: OK
+      security:
+      - JWTAuth: []
+      - JWTAuth: []
+      summary: Get resources
+      tags:
+      - permissions
+  /master-data/scopes:
+    get:
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+          description: OK
+      security:
+      - JWTAuth: []
+      - JWTAuth: []
+      summary: Get scopes
+      tags:
+      - permissions
+  /me:
+    get:
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/types.UserInfo'
+          description: User details
+        "400":
+          content: {}
+          description: ""
+        "500":
+          content: {}
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get logged in user profile information
+      tags:
+      - auth
+  /permissions:
+    post:
+      description: Create a new permission in the system
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/types.CreatePermissionBody'
+        description: Permission object
+        required: true
+      responses:
+        "201":
+          content: {}
+          description: Created
+      security:
+      - JWTAuth: []
+      summary: Create new permission
+      tags:
+      - permissions
+      x-codegen-request-body-name: permission
+  /roles:
+    get:
+      description: Get paginated list of roles with user count
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      - description: Page number
+        in: query
+        name: page
+        schema:
+          default: 1
+          type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        schema:
+          default: 10
+          type: integer
+      - description: Filter by role name
+        in: query
+        name: role_name
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/types.ListRolesPagedResponse'
+          description: OK
+      security:
+      - JWTAuth: []
+      summary: List roles
+      tags:
+      - roles
+    post:
+      description: Create a new role in the system
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/bigbucks_solution_auth_rest-api_controllers_types.Role'
+        description: Role object
+        required: true
+      responses:
+        "201":
+          content: {}
+          description: Created
+      security:
+      - JWTAuth: []
+      summary: Create new role
+      tags:
+      - roles
+      x-codegen-request-body-name: role
+  /roles/:role_id/permissions:
+    post:
+      description: Lists permissions of a role
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/types.ListRolePermission'
+                type: array
+          description: OK
+      security:
+      - JWTAuth: []
+      summary: List permission of a role
+      tags:
+      - roles
+  /roles/bind-permission:
+    post:
+      description: Associates a permission with a role
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/types.RolePermissionBindingBody'
+        description: Binding details
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: Permission bound successfully
+      security:
+      - JWTAuth: []
+      summary: Bind permission to role
+      tags:
+      - roles
+      x-codegen-request-body-name: rolepermission
+  /roles/bind-user:
+    post:
+      description: Associates a role with a user in an organization
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/types.UserRoleBindingBody'
+        description: User role binding details
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: Role bound to user successfully
+      security:
+      - JWTAuth: []
+      summary: Bind role to user
+      tags:
+      - roles
+      x-codegen-request-body-name: binding
+  /roles/unbind-permission:
+    post:
+      description: Removes a permission with a role
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/types.RolePermissionBindingBody'
+        description: UnBinding details
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: Permission unbound successfully
+      security:
+      - JWTAuth: []
+      summary: UnBind permission to role
+      tags:
+      - roles
+      x-codegen-request-body-name: rolepermission
+  /roles/unbind-user:
+    post:
+      description: Removes a role with a user in an organization
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/types.UserRoleBindingBody'
+        description: User role binding details
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: Role bound to user successfully
+      security:
+      - JWTAuth: []
+      summary: UnBind role to user
+      tags:
+      - roles
+      x-codegen-request-body-name: binding
+  /sessions/{session_id}:
+    delete:
+      description: Revokes a specific session by session ID
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      - description: Session ID to revoke
+        in: path
+        name: session_id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+          description: OK
+        "400":
+          content: {}
+          description: ""
+        "404":
+          content: {}
+          description: ""
+        "500":
+          content: {}
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Revoke a specific user session
+      tags:
+      - auth
+  /sessions/users/{user_id}:
+    get:
+      description: List User sessions for provided userId
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  additionalProperties: true
+                  type: object
+                type: array
+          description: list of user sessions
+        "400":
+          content: {}
+          description: ""
+        "404":
+          content: {}
+          description: ""
+        "500":
+          content: {}
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: List User session for provided userId
+      tags:
+      - auth
+  /signin:
+    post:
+      description: Authenticate user with password and issue jwt token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/controllers.JsonCred'
+        description: request body
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: JWT token
+        "400":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Bad request
+        "404":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Not found
+        "500":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Internal server error
+      summary: Authenticate with username and pssword
+      tags:
+      - auth
+      x-codegen-request-body-name: request
+  /signup:
+    post:
+      description: Create a new user account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/types.SignupRequestBody'
+        description: User signup details
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/types.SimpleResponse'
+          description: Success message
+        "400":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Bad request
+        "404":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Not found
+        "500":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Internal server error
+      summary: Register a new user
+      tags:
+      - auth
+      x-codegen-request-body-name: request
+  /user/authorize:
+    post:
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/types.CheckPermissionBody'
+        description: request body
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/types.AuthorizeResponse'
+          description: OK
+        "400":
+          content: {}
+          description: ""
+        "500":
+          content: {}
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Check user have permission
+      tags:
+      - auth
+      x-codegen-request-body-name: request
+  /user/changepassword/{token}:
+    post:
+      description: Reset the password with the password reset token sent to email
+      parameters:
+      - description: token
+        in: path
+        name: token
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/controllers.ResetPassword'
+        description: request body
+        required: true
+      responses:
+        "200":
+          content: {}
+          description: ""
+        "400":
+          content: {}
+          description: ""
+        "404":
+          content: {}
+          description: ""
+        "500":
+          content: {}
+          description: ""
+      summary: Reset the password with the password reset token sent
+      tags:
+      - auth
+      x-codegen-request-body-name: request
+  /user/reset:
+    post:
+      description: Get password reset token to email
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/controllers.RequestPasswordResetToken'
+        description: request body
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/types.SimpleResponse'
+          description: return message
+        "400":
+          content: {}
+          description: ""
+        "404":
+          content: {}
+          description: ""
+        "500":
+          content: {}
+          description: ""
+      summary: Send the password reset token
+      tags:
+      - auth
+      x-codegen-request-body-name: request
+  /user/updateprofile:
+    post:
+      description: Update user profile details
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/_user_updateprofile_post_request'
+        required: true
+      responses:
+        "200":
+          content: {}
+          description: ""
+        "400":
+          content: {}
+          description: ""
+        "404":
+          content: {}
+          description: ""
+        "500":
+          content: {}
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Update User profile details
+      tags:
+      - auth
+  /users:
+    get:
+      description: Lists the users for an organization
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      - description: Page number
+        in: query
+        name: page
+        schema:
+          default: 1
+          type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        schema:
+          default: 10
+          type: integer
+      - description: Filter by role name
+        in: query
+        name: role_id
+        schema:
+          type: string
+      - description: Filter by organization ID
+        in: query
+        name: org_id
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/actions.UserListResponse'
+          description: OK
+      security:
+      - JWTAuth: []
+      - JWTAuth: []
+      summary: Lists the users
+      tags:
+      - auth
+  /users/{user_id}/sessions:
+    delete:
+      description: Revokes all sessions for a user except the current session
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+          description: OK
+        "400":
+          content: {}
+          description: ""
+        "404":
+          content: {}
+          description: ""
+        "500":
+          content: {}
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Revoke all user sessions except current
+      tags:
+      - auth
+components:
+  schemas:
+    actions.UserListResponse:
+      example:
+        total: 1
+        page: 0
+        users:
+        - firstName: firstName
+          lastLogin: lastLogin
+          lastName: lastName
+          activeSessions: 5
+          roles:
+          - name: name
+            id: id
+          - name: name
+            id: id
+          id: id
+          email: email
+          status: active
+          username: username
+        - firstName: firstName
+          lastLogin: lastLogin
+          lastName: lastName
+          activeSessions: 5
+          roles:
+          - name: name
+            id: id
+          - name: name
+            id: id
+          id: id
+          email: email
+          status: active
+          username: username
+        page_size: 6
+      properties:
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total:
+          type: integer
+        users:
+          items:
+            $ref: '#/components/schemas/types.ListUserResponse'
+          type: array
+      type: object
+    bigbucks_solution_auth_rest-api_controllers_types.Profile:
+      example:
+        firstName: firstName
+        lastName: lastName
+        phone: phone
+        avatar: avatar
+        email: email
+      properties:
+        avatar:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+      type: object
+    bigbucks_solution_auth_rest-api_controllers_types.Role:
+      example:
+        name: name
+        description: description
+        extraAttrs:
+          key: ""
+      properties:
+        description:
+          type: string
+        extraAttrs:
+          additionalProperties: true
+          type: object
+        name:
+          type: string
+      required:
+      - name
+      type: object
+    constants.UserStatus:
+      enum:
+      - active
+      - inactive
+      - pending
+      type: string
+      x-enum-varnames:
+      - UserStatusActive
+      - UserStatusInactive
+      - UserStatusPending
+    controllers.JsonCred:
+      properties:
+        password:
+          type: string
+        recaptcha:
+          type: string
+        username:
+          type: string
+      type: object
+    controllers.RequestPasswordResetToken:
+      properties:
+        email:
+          example: example@example.com
+          type: string
+      type: object
+    controllers.ResetPassword:
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      type: object
+    types.AuthorizeResponse:
+      example:
+        status: true
+      properties:
+        status:
+          type: boolean
+      type: object
+    types.CheckPermissionBody:
+      properties:
+        action:
+          type: string
+        orgID:
+          type: integer
+        resource:
+          type: string
+        scope:
+          type: string
+      type: object
+    types.CreatePermissionBody:
+      properties:
+        action:
+          minLength: 3
+          type: string
+        resource:
+          minLength: 3
+          type: string
+        scope:
+          minLength: 3
+          type: string
+      required:
+      - action
+      - resource
+      - scope
+      type: object
+    types.ListRolePermission:
+      example:
+        resource: resource
+        isLocked: true
+        scope: scope
+        action: action
+        isHidden: true
+      properties:
+        action:
+          type: string
+        isHidden:
+          type: boolean
+        isLocked:
+          type: boolean
+        resource:
+          type: string
+        scope:
+          type: string
+      type: object
+    types.ListRoleResponse:
+      example:
+        userCount: 6
+        name: name
+        description: description
+        id: id
+        extraAttrs:
+          key: ""
+      properties:
+        description:
+          type: string
+        extraAttrs:
+          additionalProperties: true
+          type: object
+        id:
+          type: string
+        name:
+          type: string
+        userCount:
+          type: integer
+      type: object
+    types.ListRolesPagedResponse:
+      example:
+        total: 5
+        size: 1
+        roles:
+        - userCount: 6
+          name: name
+          description: description
+          id: id
+          extraAttrs:
+            key: ""
+        - userCount: 6
+          name: name
+          description: description
+          id: id
+          extraAttrs:
+            key: ""
+        page: 0
+      properties:
+        page:
+          type: integer
+        roles:
+          items:
+            $ref: '#/components/schemas/types.ListRoleResponse'
+          type: array
+        size:
+          type: integer
+        total:
+          type: integer
+      type: object
+    types.ListUserResponse:
+      example:
+        firstName: firstName
+        lastLogin: lastLogin
+        lastName: lastName
+        activeSessions: 5
+        roles:
+        - name: name
+          id: id
+        - name: name
+          id: id
+        id: id
+        email: email
+        status: active
+        username: username
+      properties:
+        activeSessions:
+          type: integer
+        email:
+          type: string
+        firstName:
+          type: string
+        id:
+          type: string
+        lastLogin:
+          type: string
+        lastName:
+          type: string
+        roles:
+          items:
+            $ref: '#/components/schemas/types.RoleWithId'
+          type: array
+        status:
+          $ref: '#/components/schemas/constants.UserStatus'
+        username:
+          type: string
+      type: object
+    types.RolePermissionBindingBody:
+      properties:
+        action:
+          type: string
+        resource:
+          type: string
+        role_id:
+          type: string
+        scope:
+          type: string
+      type: object
+    types.RoleWithId:
+      example:
+        name: name
+        id: id
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      type: object
+    types.SignupRequestBody:
+      properties:
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        password:
+          minLength: 6
+          type: string
+      required:
+      - email
+      - firstName
+      - lastName
+      - password
+      type: object
+    types.SimpleResponse:
+      example:
+        message: message
+      properties:
+        message:
+          example: message
+          type: string
+      type: object
+    types.UserInfo:
+      example:
+        profile:
+          firstName: firstName
+          lastName: lastName
+          phone: phone
+          avatar: avatar
+          email: email
+        roles:
+        - name: name
+          description: description
+          extraAttrs:
+            key: ""
+        - name: name
+          description: description
+          extraAttrs:
+            key: ""
+        isSocialAccount: true
+        username: username
+      properties:
+        isSocialAccount:
+          type: boolean
+        profile:
+          $ref: '#/components/schemas/bigbucks_solution_auth_rest-api_controllers_types.Profile'
+        roles:
+          items:
+            $ref: '#/components/schemas/bigbucks_solution_auth_rest-api_controllers_types.Role'
+          type: array
+        username:
+          type: string
+      type: object
+    types.UserRoleBindingBody:
+      properties:
+        orgId:
+          type: string
+        roleId:
+          type: string
+        userId:
+          type: string
+      required:
+      - orgId
+      - roleId
+      - userId
+      type: object
+    _user_updateprofile_post_request:
+      properties:
+        request:
+          description: formData
+          format: binary
+          type: string
+      required:
+      - request
+      type: object
+  securitySchemes:
+    JWTAuth:
+      in: header
+      name: X-Auth
+      type: apiKey
+x-original-swagger-version: "2.0"
