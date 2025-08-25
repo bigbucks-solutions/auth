@@ -49,14 +49,6 @@
             "description": "OK"
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          },
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "Get actions",
         "tags": [
           "permissions"
@@ -91,14 +83,6 @@
             "description": "OK"
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          },
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "Get resources",
         "tags": [
           "permissions"
@@ -133,14 +117,6 @@
             "description": "OK"
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          },
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "Get scopes",
         "tags": [
           "permissions"
@@ -180,11 +156,6 @@
             "description": ""
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "Get logged in user profile information",
         "tags": [
           "auth"
@@ -222,11 +193,6 @@
             "description": "Created"
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "Create new permission",
         "tags": [
           "permissions"
@@ -286,11 +252,6 @@
             "description": "OK"
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "List roles",
         "tags": [
           "roles"
@@ -326,11 +287,6 @@
             "description": "Created"
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "Create new role",
         "tags": [
           "roles"
@@ -367,11 +323,6 @@
             "description": "OK"
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "List permission of a role",
         "tags": [
           "roles"
@@ -415,11 +366,6 @@
             "description": "Permission bound successfully"
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "Bind permission to role",
         "tags": [
           "roles"
@@ -464,11 +410,6 @@
             "description": "Role bound to user successfully"
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "Bind role to user",
         "tags": [
           "roles"
@@ -513,11 +454,6 @@
             "description": "Permission unbound successfully"
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "UnBind permission to role",
         "tags": [
           "roles"
@@ -562,11 +498,6 @@
             "description": "Role bound to user successfully"
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "UnBind role to user",
         "tags": [
           "roles"
@@ -625,11 +556,6 @@
             "description": ""
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "List User session for provided userId",
         "tags": [
           "auth"
@@ -686,11 +612,6 @@
             "description": ""
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "Revoke a specific user session",
         "tags": [
           "auth"
@@ -867,11 +788,6 @@
             "description": ""
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "Check user have permission",
         "tags": [
           "auth"
@@ -1016,11 +932,6 @@
             "description": ""
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "Update User profile details",
         "tags": [
           "auth"
@@ -1151,11 +1062,6 @@
             "description": ""
           }
         },
-        "security": [
-          {
-            "JWTAuth": []
-          }
-        ],
         "summary": "Revoke all user sessions except current",
         "tags": [
           "auth"
@@ -1541,6 +1447,7 @@
     },
     "securitySchemes": {
       "JWTAuth": {
+        "description": "JWT token for user authentication (not a simple API key despite the 'apikey' type)",
         "in": "header",
         "name": "X-Auth",
         "type": "apiKey"

@@ -26,14 +26,6 @@ const docTemplate = `{
     "paths": {
         "/master-data/actions": {
             "get": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    },
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -68,14 +60,6 @@ const docTemplate = `{
         },
         "/master-data/resources": {
             "get": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    },
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -110,14 +94,6 @@ const docTemplate = `{
         },
         "/master-data/scopes": {
             "get": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    },
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -152,11 +128,6 @@ const docTemplate = `{
         },
         "/me": {
             "get": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -194,11 +165,6 @@ const docTemplate = `{
         },
         "/permissions": {
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Create a new permission in the system",
                 "consumes": [
                     "application/json"
@@ -237,11 +203,6 @@ const docTemplate = `{
         },
         "/roles": {
             "get": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Get paginated list of roles with user count",
                 "consumes": [
                     "application/json"
@@ -292,11 +253,6 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Create a new role in the system",
                 "consumes": [
                     "application/json"
@@ -335,11 +291,6 @@ const docTemplate = `{
         },
         "/roles/:role_id/permissions": {
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Lists permissions of a role",
                 "consumes": [
                     "application/json"
@@ -375,11 +326,6 @@ const docTemplate = `{
         },
         "/roles/bind-permission": {
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Associates a permission with a role",
                 "consumes": [
                     "application/json"
@@ -421,11 +367,6 @@ const docTemplate = `{
         },
         "/roles/bind-user": {
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Associates a role with a user in an organization",
                 "consumes": [
                     "application/json"
@@ -467,11 +408,6 @@ const docTemplate = `{
         },
         "/roles/unbind-permission": {
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Removes a permission with a role",
                 "consumes": [
                     "application/json"
@@ -513,11 +449,6 @@ const docTemplate = `{
         },
         "/roles/unbind-user": {
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Removes a role with a user in an organization",
                 "consumes": [
                     "application/json"
@@ -559,11 +490,6 @@ const docTemplate = `{
         },
         "/sessions/users/{user_id}": {
             "get": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "List User sessions for provided userId",
                 "consumes": [
                     "application/json"
@@ -616,11 +542,6 @@ const docTemplate = `{
         },
         "/sessions/{session_id}": {
             "delete": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Revokes a specific session by session ID",
                 "consumes": [
                     "application/json"
@@ -764,11 +685,6 @@ const docTemplate = `{
         },
         "/user/authorize": {
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -905,11 +821,6 @@ const docTemplate = `{
         },
         "/user/updateprofile": {
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Update user profile details",
                 "consumes": [
                     "multipart/form-data"
@@ -1021,11 +932,6 @@ const docTemplate = `{
         },
         "/users/{user_id}/sessions": {
             "delete": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Revokes all sessions for a user except the current session",
                 "consumes": [
                     "application/json"
@@ -1428,6 +1334,7 @@ const docTemplate = `{
     },
     "securityDefinitions": {
         "JWTAuth": {
+            "description": "JWT token for user authentication (not a simple API key despite the 'apikey' type)",
             "type": "apiKey",
             "name": "X-Auth",
             "in": "header"

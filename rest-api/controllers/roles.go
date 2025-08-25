@@ -19,7 +19,6 @@ import (
 // @Accept			json
 // @Produce		json
 // @Param			X-Auth	header	string	true	"Authorization"
-// @Security		JWTAuth
 // @Param			page		query		int		false	"Page number"	default(1)
 // @Param			page_size	query		int		false	"Page size"		default(10)
 // @Param			role_name	query		string	false	"Filter by role name"
@@ -64,7 +63,6 @@ func ListRoles(w http.ResponseWriter, r *http.Request, ctx *request_context.Cont
 // @Tags			roles
 // @Accept			json
 // @Param			X-Auth	header	string	true	"Authorization"
-// @Security		JWTAuth
 // @Produce		json
 // @Param			role	body	types.Role	true	"Role object"
 // @Success		201
@@ -96,7 +94,6 @@ func CreateRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Con
 // @Tags			permissions
 // @Accept			json
 // @Param			X-Auth	header	string	true	"Authorization"
-// @Security		JWTAuth
 // @Produce		json
 // @Param			permission	body	types.CreatePermissionBody	true	"Permission object"
 // @Success		201
@@ -129,7 +126,6 @@ func CreatePermission(w http.ResponseWriter, r *http.Request, ctx *request_conte
 // @Accept			json
 // @Produce		json
 // @Param			X-Auth	header	string	true	"Authorization"
-// @Security		JWTAuth
 // @Param			rolepermission	body		types.RolePermissionBindingBody	true	"Binding details"
 // @Success		200				{string}	string							"Permission bound successfully"
 // @Router			/roles/bind-permission [post]
@@ -166,7 +162,6 @@ func BindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request_c
 // @Accept			json
 // @Produce		json
 // @Param			X-Auth	header	string	true	"Authorization"
-// @Security		JWTAuth
 // @Param			rolepermission	body		types.RolePermissionBindingBody	true	"UnBinding details"
 // @Success		200				{string}	string							"Permission unbound successfully"
 // @Router			/roles/unbind-permission [post]
@@ -202,7 +197,6 @@ func UnBindPermissionToRole(w http.ResponseWriter, r *http.Request, ctx *request
 // @Accept			json
 // @Produce		json
 // @Param			X-Auth	header	string	true	"Authorization"
-// @Security		JWTAuth
 // @Param			binding	body		types.UserRoleBindingBody	true	"User role binding details"
 // @Success		200		{string}	string						"Role bound to user successfully"
 // @Router			/roles/bind-user [post]
@@ -239,7 +233,6 @@ func BindRoleToUser(w http.ResponseWriter, r *http.Request, ctx *request_context
 // @Accept			json
 // @Produce		json
 // @Param			X-Auth	header	string	true	"Authorization"
-// @Security		JWTAuth
 // @Param			binding	body		types.UserRoleBindingBody	true	"User role binding details"
 // @Success		200		{string}	string						"Role bound to user successfully"
 // @Router			/roles/unbind-user [post]
@@ -271,7 +264,6 @@ func UnBindRoleToUser(w http.ResponseWriter, r *http.Request, ctx *request_conte
 // @Accept			json
 // @Produce		json
 // @Param			X-Auth	header	string	true	"Authorization"
-// @Security		JWTAuth
 // @Success		200	{array}	types.ListRolePermission
 // @Router			/roles/:role_id/permissions [post]
 func ListPermissionsOfRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {

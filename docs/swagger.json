@@ -20,14 +20,6 @@
     "paths": {
         "/master-data/actions": {
             "get": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    },
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -62,14 +54,6 @@
         },
         "/master-data/resources": {
             "get": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    },
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -104,14 +88,6 @@
         },
         "/master-data/scopes": {
             "get": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    },
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -146,11 +122,6 @@
         },
         "/me": {
             "get": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -188,11 +159,6 @@
         },
         "/permissions": {
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Create a new permission in the system",
                 "consumes": [
                     "application/json"
@@ -231,11 +197,6 @@
         },
         "/roles": {
             "get": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Get paginated list of roles with user count",
                 "consumes": [
                     "application/json"
@@ -286,11 +247,6 @@
                 }
             },
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Create a new role in the system",
                 "consumes": [
                     "application/json"
@@ -329,11 +285,6 @@
         },
         "/roles/:role_id/permissions": {
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Lists permissions of a role",
                 "consumes": [
                     "application/json"
@@ -369,11 +320,6 @@
         },
         "/roles/bind-permission": {
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Associates a permission with a role",
                 "consumes": [
                     "application/json"
@@ -415,11 +361,6 @@
         },
         "/roles/bind-user": {
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Associates a role with a user in an organization",
                 "consumes": [
                     "application/json"
@@ -461,11 +402,6 @@
         },
         "/roles/unbind-permission": {
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Removes a permission with a role",
                 "consumes": [
                     "application/json"
@@ -507,11 +443,6 @@
         },
         "/roles/unbind-user": {
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Removes a role with a user in an organization",
                 "consumes": [
                     "application/json"
@@ -553,11 +484,6 @@
         },
         "/sessions/users/{user_id}": {
             "get": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "List User sessions for provided userId",
                 "consumes": [
                     "application/json"
@@ -610,11 +536,6 @@
         },
         "/sessions/{session_id}": {
             "delete": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Revokes a specific session by session ID",
                 "consumes": [
                     "application/json"
@@ -758,11 +679,6 @@
         },
         "/user/authorize": {
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -899,11 +815,6 @@
         },
         "/user/updateprofile": {
             "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Update user profile details",
                 "consumes": [
                     "multipart/form-data"
@@ -1015,11 +926,6 @@
         },
         "/users/{user_id}/sessions": {
             "delete": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
                 "description": "Revokes all sessions for a user except the current session",
                 "consumes": [
                     "application/json"
@@ -1422,6 +1328,7 @@
     },
     "securityDefinitions": {
         "JWTAuth": {
+            "description": "JWT token for user authentication (not a simple API key despite the 'apikey' type)",
             "type": "apiKey",
             "name": "X-Auth",
             "in": "header"

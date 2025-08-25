@@ -15,7 +15,6 @@ import (
 //	@Accept		json
 //	@Param		request	body	types.CheckPermissionBody	true	"request body"
 //	@Param		X-Auth	header	string						true	"Authorization"
-//	@Security	JWTAuth
 //	@Produce	json
 //	@Success	200	{object}	types.AuthorizeResponse	""
 //	@Failure	400	""

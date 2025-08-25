@@ -265,9 +265,6 @@ paths:
             items:
               type: string
             type: array
-      security:
-      - JWTAuth: []
-      - JWTAuth: []
       summary: Get actions
       tags:
       - permissions
@@ -290,9 +287,6 @@ paths:
             items:
               type: string
             type: array
-      security:
-      - JWTAuth: []
-      - JWTAuth: []
       summary: Get resources
       tags:
       - permissions
@@ -315,9 +309,6 @@ paths:
             items:
               type: string
             type: array
-      security:
-      - JWTAuth: []
-      - JWTAuth: []
       summary: Get scopes
       tags:
       - permissions
@@ -342,8 +333,6 @@ paths:
           description: ""
         "500":
           description: ""
-      security:
-      - JWTAuth: []
       summary: Get logged in user profile information
       tags:
       - auth
@@ -369,8 +358,6 @@ paths:
       responses:
         "201":
           description: Created
-      security:
-      - JWTAuth: []
       summary: Create new permission
       tags:
       - permissions
@@ -406,8 +393,6 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/types.ListRolesPagedResponse'
-      security:
-      - JWTAuth: []
       summary: List roles
       tags:
       - roles
@@ -432,8 +417,6 @@ paths:
       responses:
         "201":
           description: Created
-      security:
-      - JWTAuth: []
       summary: Create new role
       tags:
       - roles
@@ -457,8 +440,6 @@ paths:
             items:
               $ref: '#/definitions/types.ListRolePermission'
             type: array
-      security:
-      - JWTAuth: []
       summary: List permission of a role
       tags:
       - roles
@@ -486,8 +467,6 @@ paths:
           description: Permission bound successfully
           schema:
             type: string
-      security:
-      - JWTAuth: []
       summary: Bind permission to role
       tags:
       - roles
@@ -515,8 +494,6 @@ paths:
           description: Role bound to user successfully
           schema:
             type: string
-      security:
-      - JWTAuth: []
       summary: Bind role to user
       tags:
       - roles
@@ -544,8 +521,6 @@ paths:
           description: Permission unbound successfully
           schema:
             type: string
-      security:
-      - JWTAuth: []
       summary: UnBind permission to role
       tags:
       - roles
@@ -573,8 +548,6 @@ paths:
           description: Role bound to user successfully
           schema:
             type: string
-      security:
-      - JWTAuth: []
       summary: UnBind role to user
       tags:
       - roles
@@ -609,8 +582,6 @@ paths:
           description: ""
         "500":
           description: ""
-      security:
-      - JWTAuth: []
       summary: Revoke a specific user session
       tags:
       - auth
@@ -646,8 +617,6 @@ paths:
           description: ""
         "500":
           description: ""
-      security:
-      - JWTAuth: []
       summary: List User session for provided userId
       tags:
       - auth
@@ -740,8 +709,6 @@ paths:
           description: ""
         "500":
           description: ""
-      security:
-      - JWTAuth: []
       summary: Check user have permission
       tags:
       - auth
@@ -831,8 +798,6 @@ paths:
           description: ""
         "500":
           description: ""
-      security:
-      - JWTAuth: []
       summary: Update User profile details
       tags:
       - auth
@@ -909,13 +874,13 @@ paths:
           description: ""
         "500":
           description: ""
-      security:
-      - JWTAuth: []
       summary: Revoke all user sessions except current
       tags:
       - auth
 securityDefinitions:
   JWTAuth:
+    description: JWT token for user authentication (not a simple API key despite the
+      'apikey' type)
     in: header
     name: X-Auth
     type: apiKey

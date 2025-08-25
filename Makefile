@@ -34,20 +34,6 @@ ci-swaggen: ci-swaggen2
 			chmod +x /usr/local/bin/jq; \
 		apk add bash; cd /work/; .devops/scripts/update_openapi.sh"
 
-.PHONY: gh-deploy
-gh-deploy:
-	@docker run --rm -v $(PWD):/work \
-        -e GIT_USERNAME="$$(git config user.name)" \
-        -e GIT_EMAIL="$$(git config user.email)" \
-        -e GITHUB_TOKEN="$$(cat ${HOME}/.git-credentials | grep 'https' | cut -d'@' -f1 | cut -d':' -f3)" \
-    $(MKDOCS_IMAGE) \
-    bash -c "cd /work && \
-            git config --global user.name \"$$GIT_USERNAME\" && \
-            git config --global user.email \"$$GIT_EMAIL\" && \
-            echo 'https://$$GITHUB_TOKEN:x-oauth-basic@github.com' > /root/.git-credentials && \
-            git config --global credential.helper store && \
-            mkdocs gh-deploy --force"
-
 .PHONY: gen-ecs256-pair
 gen-ecs256-pair:
 	@openssl ecparam -genkey -name prime256v1 -noout -out ec_private.pem && openssl ec -in ec_private.pem -pubout -out ec_public.pem

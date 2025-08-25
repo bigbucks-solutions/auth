@@ -15,9 +15,7 @@ import (
 // @Accept		json
 // @Produce	json
 // @Param		X-Auth	header	string	true	"Authorization"
-// @Security	JWTAuth
 // @Success	200	{object}	[]string
-// @Security	JWTAuth
 // @Router		/master-data/resources [get]
 func GetResources(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	loging.Logger.Debugln(ctx.Context.Value(permission_cache.UserPerm))
@@ -36,9 +34,7 @@ func GetResources(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 // @Accept		json
 // @Produce	json
 // @Param		X-Auth	header	string	true	"Authorization"
-// @Security	JWTAuth
 // @Success	200	{object}	[]string
-// @Security	JWTAuth
 // @Router		/master-data/scopes [get]
 func GetScopes(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	loging.Logger.Debugln("GetScopes")
@@ -62,9 +58,7 @@ func GetScopes(w http.ResponseWriter, r *http.Request, ctx *request_context.Cont
 // @Accept		json
 // @Produce	json
 // @Param		X-Auth	header	string	true	"Authorization"
-// @Security	JWTAuth
 // @Success	200	{object}	[]string
-// @Security	JWTAuth
 // @Router		/master-data/actions [get]
 func GetActions(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	loging.Logger.Debugln("GetActions")

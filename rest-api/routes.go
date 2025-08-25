@@ -35,6 +35,7 @@ type handleFunc func(w http.ResponseWriter, r *http.Request, ctx *request_contex
 //@securityDefinitions.apikey JWTAuth
 //@in header
 //@name X-Auth
+//@description JWT token for user authentication (not a simple API key despite the 'apikey' type)
 
 // NewHandler Provide Http handler
 func NewHandler(settings *settings.Settings, perm_cache *permission_cache.PermissionCache, session_store *sessionstore.SessionStore) (http.Handler, error) {

@@ -105,7 +105,6 @@ func ChangePassword(w http.ResponseWriter, r *http.Request, ctx *request_context
 //	@Description	Update user profile details
 //	@Tags			auth
 //	@Param			X-Auth	header	string	true	"Authorization"
-//	@Security		JWTAuth
 //	@Accept			multipart/form-data
 //	@Produce		json
 //	@Param			request	formData	file	true	"formData"
@@ -133,7 +132,6 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request, ctx *request_context.
 //	@Tags		auth
 //	@Accept		json
 //	@Param		X-Auth	header	string	true	"Authorization"
-//	@Security	JWTAuth
 //	@Produce	json
 //	@Success	200	{object}	types.UserInfo	"User details"
 //	@Failure	400	""

@@ -16,7 +16,6 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Param			X-Auth	header	string	true	"Authorization"
-//	@Security		JWTAuth
 //	@Param			user_id	path	string					true	"User ID"
 //	@Success		200		{array}	map[string]interface{}	"list of user sessions"
 //	@Failure		400		""
@@ -48,7 +47,6 @@ func Sessions(w http.ResponseWriter, r *http.Request, ctx *request_context.Conte
 //	@Accept			json
 //	@Produce		json
 //	@Param			X-Auth	header	string	true	"Authorization"
-//	@Security		JWTAuth
 //	@Param			session_id	path		string	true	"Session ID to revoke"
 //	@Success		200			{object}	map[string]string
 //	@Failure		400			""
@@ -86,7 +84,6 @@ func RevokeSession(w http.ResponseWriter, r *http.Request, ctx *request_context.
 //	@Accept			json
 //	@Produce		json
 //	@Param			X-Auth	header	string	true	"Authorization"
-//	@Security		JWTAuth
 //	@Param			user_id	path		string	true	"User ID"
 //	@Success		200		{object}	map[string]string
 //	@Failure		400		""
