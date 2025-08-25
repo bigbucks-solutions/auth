@@ -12,6 +12,9 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+        run:
+            working-directory: ./auth/
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
