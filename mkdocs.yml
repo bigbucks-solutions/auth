@@ -4,6 +4,7 @@ plugins:
   - search
   - neoteroi.mkdocsoad:
       use_pymdownx: true
+      source_dir: docs
   - exclude:
       glob:
         - v3/*
@@ -16,7 +17,7 @@ markdown_extensions:
       alternate_style: true
 
 # theme:
-  
+
 
 theme:
   features:
@@ -27,14 +28,14 @@ theme:
     - toc.integrate
     - navigation.top
   name: material
-  palette: 
-    
+  palette:
+
 
     # Palette toggle for light mode
     - scheme: default
       primary: 673AB7
       toggle:
-        icon: material/brightness-7 
+        icon: material/brightness-7
         name: Switch to dark mode
 
     # Palette toggle for dark mode

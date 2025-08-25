@@ -3,7 +3,6 @@ profile_pics/*
 .gitconfig
 vendor/
 site/
-docs/v3/
 *.pem
 postgres-data/
 __debug_*
