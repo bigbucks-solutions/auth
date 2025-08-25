@@ -1,5 +1,18 @@
 basePath: /api/v1
 definitions:
+  actions.UserListResponse:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/types.ListUserResponse'
+        type: array
+    type: object
   bigbucks_solution_auth_rest-api_controllers_types.Profile:
     properties:
       avatar:
@@ -17,11 +30,24 @@ definitions:
     properties:
       description:
         type: string
+      extraAttrs:
+        additionalProperties: true
+        type: object
       name:
         type: string
     required:
     - name
     type: object
+  constants.UserStatus:
+    enum:
+    - active
+    - inactive
+    - pending
+    type: string
+    x-enum-varnames:
+    - UserStatusActive
+    - UserStatusInactive
+    - UserStatusPending
   controllers.JsonCred:
     properties:
       password:
@@ -44,148 +70,6 @@ definitions:
       password:
         type: string
     type: object
-  models.ForgotPassword:
-    properties:
-      expiry:
-        type: string
-      resetToken:
-        type: string
-      userID:
-        type: integer
-    type: object
-  models.OAuthClient:
-    properties:
-      source:
-        enum:
-        - google
-        - facebook
-        type: string
-      userID:
-        type: integer
-    required:
-    - source
-    type: object
-  models.Organization:
-    properties:
-      address:
-        type: string
-      contactEmail:
-        type: string
-      contactNumber:
-        minLength: 8
-        type: string
-      name:
-        minLength: 4
-        type: string
-      users:
-        description: Branches      []OrganizationBranch `gorm:"foreignkey:ParentOrg;"`
-        items:
-          $ref: '#/definitions/models.User'
-        type: array
-    required:
-    - contactEmail
-    - name
-    - users
-    type: object
-  models.Permission:
-    properties:
-      action:
-        enum:
-        - read
-        - write
-        - delete
-        - update
-        minLength: 3
-        type: string
-      description:
-        type: string
-      resource:
-        minLength: 3
-        type: string
-      roles:
-        items:
-          $ref: '#/definitions/models.Role'
-        type: array
-      scope:
-        allOf:
-        - $ref: '#/definitions/models.Scope'
-        enum:
-        - own
-        - org
-        - all
-        minLength: 3
-    required:
-    - action
-    - scope
-    type: object
-  models.Profile:
-    properties:
-      email:
-        type: string
-      file:
-        type: string
-      firstName:
-        type: string
-      lastName:
-        type: string
-      phone:
-        type: string
-    type: object
-  models.Role:
-    properties:
-      description:
-        type: string
-      name:
-        minLength: 4
-        type: string
-      orgID:
-        type: integer
-      permissions:
-        items:
-          $ref: '#/definitions/models.Permission'
-        type: array
-      users:
-        items:
-          $ref: '#/definitions/models.User'
-        type: array
-    required:
-    - name
-    type: object
-  models.Scope:
-    enum:
-    - own
-    - org
-    - all
-    type: string
-    x-enum-varnames:
-    - Own
-    - Org
-    - All
-  models.User:
-    properties:
-      forgotPassword:
-        $ref: '#/definitions/models.ForgotPassword'
-      oauthClient:
-        $ref: '#/definitions/models.OAuthClient'
-      organizations:
-        items:
-          $ref: '#/definitions/models.Organization'
-        type: array
-      password:
-        minLength: 8
-        type: string
-      profile:
-        $ref: '#/definitions/models.Profile'
-      roles:
-        items:
-          $ref: '#/definitions/models.Role'
-        type: array
-      username:
-        type: string
-    required:
-    - password
-    - username
-    type: object
   types.AuthorizeResponse:
     properties:
       status:
@@ -205,21 +89,12 @@ definitions:
   types.CreatePermissionBody:
     properties:
       action:
-        enum:
-        - read
-        - write
-        - delete
-        - update
         minLength: 3
         type: string
       resource:
         minLength: 3
         type: string
       scope:
-        enum:
-        - own
-        - org
-        - all
         minLength: 3
         type: string
     required:
@@ -227,15 +102,85 @@ definitions:
     - resource
     - scope
     type: object
-  types.RolePermissionBindingBody:
+  types.ListRolePermission:
     properties:
-      action_name:
+      action:
         type: string
-      resource_name:
-        type: string
-      role_key:
+      isHidden:
+        type: boolean
+      isLocked:
+        type: boolean
+      resource:
         type: string
       scope:
+        type: string
+    type: object
+  types.ListRoleResponse:
+    properties:
+      description:
+        type: string
+      extraAttrs:
+        additionalProperties: true
+        type: object
+      id:
+        type: string
+      name:
+        type: string
+      userCount:
+        type: integer
+    type: object
+  types.ListRolesPagedResponse:
+    properties:
+      page:
+        type: integer
+      roles:
+        items:
+          $ref: '#/definitions/types.ListRoleResponse'
+        type: array
+      size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  types.ListUserResponse:
+    properties:
+      activeSessions:
+        type: integer
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      lastLogin:
+        type: string
+      lastName:
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/types.RoleWithId'
+        type: array
+      status:
+        $ref: '#/definitions/constants.UserStatus'
+      username:
+        type: string
+    type: object
+  types.RolePermissionBindingBody:
+    properties:
+      action:
+        type: string
+      resource:
+        type: string
+      role_id:
+        type: string
+      scope:
+        type: string
+    type: object
+  types.RoleWithId:
+    properties:
+      id:
+        type: string
+      name:
         type: string
     type: object
   types.SignupRequestBody:
@@ -276,15 +221,16 @@ definitions:
     type: object
   types.UserRoleBindingBody:
     properties:
-      org_id:
-        type: integer
-      role_key:
+      orgId:
         type: string
-      user_name:
+      roleId:
+        type: string
+      userId:
         type: string
     required:
-    - role_key
-    - user_name
+    - orgId
+    - roleId
+    - userId
     type: object
 host: localhost:8000
 info:
@@ -389,7 +335,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: User details
           schema:
             $ref: '#/definitions/types.UserInfo'
         "400":
@@ -453,21 +399,14 @@ paths:
         in: query
         name: role_name
         type: string
-      - description: Filter by organization ID
-        in: query
-        name: org_id
-        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.Role'
-            type: array
+            $ref: '#/definitions/types.ListRolesPagedResponse'
       security:
-      - JWTAuth: []
       - JWTAuth: []
       summary: List roles
       tags:
@@ -496,6 +435,31 @@ paths:
       security:
       - JWTAuth: []
       summary: Create new role
+      tags:
+      - roles
+  /roles/:role_id/permissions:
+    post:
+      consumes:
+      - application/json
+      description: Lists permissions of a role
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/types.ListRolePermission'
+            type: array
+      security:
+      - JWTAuth: []
+      summary: List permission of a role
       tags:
       - roles
   /roles/bind-permission:
@@ -556,6 +520,137 @@ paths:
       summary: Bind role to user
       tags:
       - roles
+  /roles/unbind-permission:
+    post:
+      consumes:
+      - application/json
+      description: Removes a permission with a role
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: UnBinding details
+        in: body
+        name: rolepermission
+        required: true
+        schema:
+          $ref: '#/definitions/types.RolePermissionBindingBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permission unbound successfully
+          schema:
+            type: string
+      security:
+      - JWTAuth: []
+      summary: UnBind permission to role
+      tags:
+      - roles
+  /roles/unbind-user:
+    post:
+      consumes:
+      - application/json
+      description: Removes a role with a user in an organization
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: User role binding details
+        in: body
+        name: binding
+        required: true
+        schema:
+          $ref: '#/definitions/types.UserRoleBindingBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role bound to user successfully
+          schema:
+            type: string
+      security:
+      - JWTAuth: []
+      summary: UnBind role to user
+      tags:
+      - roles
+  /sessions/{session_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Revokes a specific session by session ID
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: Session ID to revoke
+        in: path
+        name: session_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: ""
+        "404":
+          description: ""
+        "500":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Revoke a specific user session
+      tags:
+      - auth
+  /sessions/users/{user_id}:
+    get:
+      consumes:
+      - application/json
+      description: List User sessions for provided userId
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: list of user sessions
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "400":
+          description: ""
+        "404":
+          description: ""
+        "500":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: List User session for provided userId
+      tags:
+      - auth
   /signin:
     post:
       consumes:
@@ -572,15 +667,18 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: JWT token
           schema:
             type: string
         "400":
-          description: ""
+          description: Bad request
+          schema: {}
         "404":
-          description: ""
+          description: Not found
+          schema: {}
         "500":
-          description: ""
+          description: Internal server error
+          schema: {}
       summary: Authenticate with username and pssword
       tags:
       - auth
@@ -598,7 +696,20 @@ paths:
           $ref: '#/definitions/types.SignupRequestBody'
       produces:
       - application/json
-      responses: {}
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/types.SimpleResponse'
+        "400":
+          description: Bad request
+          schema: {}
+        "404":
+          description: Not found
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
       summary: Register a new user
       tags:
       - auth
@@ -655,7 +766,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: return
+          description: ""
         "400":
           description: ""
         "404":
@@ -681,7 +792,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: return
+          description: return message
           schema:
             $ref: '#/definitions/types.SimpleResponse'
         "400":
@@ -723,6 +834,84 @@ paths:
       security:
       - JWTAuth: []
       summary: Update User profile details
+      tags:
+      - auth
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Lists the users for an organization
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Filter by role name
+        in: query
+        name: role_id
+        type: string
+      - description: Filter by organization ID
+        in: query
+        name: org_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/actions.UserListResponse'
+      security:
+      - JWTAuth: []
+      - JWTAuth: []
+      summary: Lists the users
+      tags:
+      - auth
+  /users/{user_id}/sessions:
+    delete:
+      consumes:
+      - application/json
+      description: Revokes all sessions for a user except the current session
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: ""
+        "404":
+          description: ""
+        "500":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Revoke all user sessions except current
       tags:
       - auth
 securityDefinitions:

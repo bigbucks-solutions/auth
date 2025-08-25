@@ -8,18 +8,21 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// PasswordReset godoc
-// @Summary      List User session for provided userId
-// @Description  List User sessions for provided userId
-// @Tags         auth
-// @Accept       json
-// @Produce      json
-// @Param        request  body  JsonCred  true  "request body"
-// @Success      200  string  ""
-// @Failure      400  ""
-// @Failure      404  ""
-// @Failure      500  ""
-// @Router       /sessions/users/{user_id} [get]
+// Sessions godoc
+//
+//	@Summary		List User session for provided userId
+//	@Description	List User sessions for provided userId
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			X-Auth	header	string	true	"Authorization"
+//	@Security		JWTAuth
+//	@Param			user_id	path	string					true	"User ID"
+//	@Success		200		{array}	map[string]interface{}	"list of user sessions"
+//	@Failure		400		""
+//	@Failure		404		""
+//	@Failure		500		""
+//	@Router			/sessions/users/{user_id} [get]
 func Sessions(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	vars := mux.Vars(r)
 	userId := vars["user_id"]
@@ -38,17 +41,20 @@ func Sessions(w http.ResponseWriter, r *http.Request, ctx *request_context.Conte
 }
 
 // RevokeSession godoc
-// @Summary      Revoke a specific user session
-// @Description  Revokes a specific session by session ID
-// @Tags         auth
-// @Accept       json
-// @Produce      json
-// @Param        session_id  path  string  true  "Session ID to revoke"
-// @Success      200  {object}  map[string]string
-// @Failure      400  ""
-// @Failure      404  ""
-// @Failure      500  ""
-// @Router       /sessions/{session_id} [delete]
+//
+//	@Summary		Revoke a specific user session
+//	@Description	Revokes a specific session by session ID
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			X-Auth	header	string	true	"Authorization"
+//	@Security		JWTAuth
+//	@Param			session_id	path		string	true	"Session ID to revoke"
+//	@Success		200			{object}	map[string]string
+//	@Failure		400			""
+//	@Failure		404			""
+//	@Failure		500			""
+//	@Router			/sessions/{session_id} [delete]
 func RevokeSession(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	vars := mux.Vars(r)
 	sessionID := vars["session_id"]
@@ -73,17 +79,20 @@ func RevokeSession(w http.ResponseWriter, r *http.Request, ctx *request_context.
 }
 
 // RevokeAllSessions godoc
-// @Summary      Revoke all user sessions except current
-// @Description  Revokes all sessions for a user except the current session
-// @Tags         auth
-// @Accept       json
-// @Produce      json
-// @Param        user_id  path  string  true  "User ID"
-// @Success      200  {object}  map[string]string
-// @Failure      400  ""
-// @Failure      404  ""
-// @Failure      500  ""
-// @Router       /users/{user_id}/sessions [delete]
+//
+//	@Summary		Revoke all user sessions except current
+//	@Description	Revokes all sessions for a user except the current session
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			X-Auth	header	string	true	"Authorization"
+//	@Security		JWTAuth
+//	@Param			user_id	path		string	true	"User ID"
+//	@Success		200		{object}	map[string]string
+//	@Failure		400		""
+//	@Failure		404		""
+//	@Failure		500		""
+//	@Router			/users/{user_id}/sessions [delete]
 func RevokeAllSessions(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	vars := mux.Vars(r)
 	userID := vars["user_id"]

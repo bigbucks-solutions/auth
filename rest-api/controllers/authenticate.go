@@ -33,18 +33,19 @@ func init() {
 	// googleIdTokenver := googleAuthIDTokenVerifier.Verifier{}
 }
 
-// PasswordReset godoc
-// @Summary      Authenticate with username and pssword
-// @Description  Authenticate user with password and issue jwt token
-// @Tags         auth
-// @Accept       json
-// @Produce      json
-// @Param        request  body  JsonCred  true  "request body"
-// @Success      200  string  ""
-// @Failure      400  ""
-// @Failure      404  ""
-// @Failure      500  ""
-// @Router       /signin [post]
+// Signin godoc
+//
+//	@Summary		Authenticate with username and pssword
+//	@Description	Authenticate user with password and issue jwt token
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		JsonCred	true	"request body"
+//	@Success		200		{string}	string		"JWT token"
+//	@Failure		400		{object}	error		"Bad request"
+//	@Failure		404		{object}	error		"Not found"
+//	@Failure		500		{object}	error		"Internal server error"
+//	@Router			/signin [post]
 func Signin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	// time.Sleep(50 * time.Second)
 	var cred JsonCred

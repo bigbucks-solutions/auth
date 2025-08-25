@@ -32,18 +32,19 @@ type UpdateProfileBody struct {
 	File *multipart.FileHeader `json:"file"`
 }
 
-// PasswordReset godoc
-// @Summary      Send the password reset token
-// @Description  Get password reset token to email
-// @Tags         auth
-// @Accept       json
-// @Produce      json
-// @Param        request  body  RequestPasswordResetToken  true  "request body"
-// @Success      200  {object}  types.SimpleResponse  "return"
-// @Failure      400  ""
-// @Failure      404  ""
-// @Failure      500  ""
-// @Router       /user/reset [post]
+// SendResetToken godoc
+//
+//	@Summary		Send the password reset token
+//	@Description	Get password reset token to email
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		RequestPasswordResetToken	true	"request body"
+//	@Success		200		{object}	types.SimpleResponse		"return message"
+//	@Failure		400		""
+//	@Failure		404		""
+//	@Failure		500		""
+//	@Router			/user/reset [post]
 func SendResetToken(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var requestBody RequestPasswordResetToken
 	err := json.NewDecoder(r.Body).Decode(&requestBody)
@@ -65,18 +66,19 @@ func SendResetToken(w http.ResponseWriter, r *http.Request, ctx *request_context
 }
 
 // ChangePassword godoc
-// @Summary      Reset the password with the password reset token sent
-// @Description  Reset the password with the password reset token sent to email
-// @Tags         auth
-// @Accept       json
-// @Produce      json
-// @Param        token  path  string  true  "token"
-// @Param        request  body  ResetPassword  true  "request body"
-// @Success      200  "return"
-// @Failure      400  ""
-// @Failure      404  ""
-// @Failure      500  ""
-// @Router       /user/changepassword/{token} [post]
+//
+//	@Summary		Reset the password with the password reset token sent
+//	@Description	Reset the password with the password reset token sent to email
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			token	path	string			true	"token"
+//	@Param			request	body	ResetPassword	true	"request body"
+//	@Success		200		""
+//	@Failure		400		""
+//	@Failure		404		""
+//	@Failure		500		""
+//	@Router			/user/changepassword/{token} [post]
 func ChangePassword(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var body ResetPassword
 	err := json.NewDecoder(r.Body).Decode(&body)
@@ -98,19 +100,20 @@ func ChangePassword(w http.ResponseWriter, r *http.Request, ctx *request_context
 }
 
 // UpdateProfile godoc
-// @Summary      Update User profile details
-// @Description  Update user profile details
-// @Tags         auth
-// @Param 		 X-Auth header string true "Authorization"
-// @Security 	 JWTAuth
-// @Accept       multipart/form-data
-// @Produce      json
-// @Param        request  formData  file  true  "formData"
-// @Success      200  ""
-// @Failure      400  ""
-// @Failure      404  ""
-// @Failure      500  ""
-// @Router       /user/updateprofile [post]
+//
+//	@Summary		Update User profile details
+//	@Description	Update user profile details
+//	@Tags			auth
+//	@Param			X-Auth	header	string	true	"Authorization"
+//	@Security		JWTAuth
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Param			request	formData	file	true	"formData"
+//	@Success		200		""
+//	@Failure		400		""
+//	@Failure		404		""
+//	@Failure		500		""
+//	@Router			/user/updateprofile [post]
 func UpdateProfile(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	parseErr := r.ParseMultipartForm(32 << 20) // maxMemory 32MB
 	if parseErr != nil {
@@ -124,17 +127,18 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request, ctx *request_context.
 	return num, err
 }
 
-// GetProfileDetails godoc
-// @Summary      Get logged in user profile information
-// @Tags         auth
-// @Accept       json
-// @Param 		 X-Auth header string true "Authorization"
-// @Security 	 JWTAuth
-// @Produce      json
-// @Success      200  {object}  types.UserInfo  ""
-// @Failure      400  ""
-// @Failure      500  ""
-// @Router       /me [get]
+// GetMeDetails godoc
+//
+//	@Summary	Get logged in user profile information
+//	@Tags		auth
+//	@Accept		json
+//	@Param		X-Auth	header	string	true	"Authorization"
+//	@Security	JWTAuth
+//	@Produce	json
+//	@Success	200	{object}	types.UserInfo	"User details"
+//	@Failure	400	""
+//	@Failure	500	""
+//	@Router		/me [get]
 func GetMeDetails(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	user, err := ctx.GetCurrentUserModel()
@@ -149,13 +153,20 @@ func GetMeDetails(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 }
 
 // Signup godoc
-// @Summary      Register a new user
-// @Description  Create a new user account
-// @Tags         auth
-// @Accept       json
-// @Produce      json
-// @Param        request  body  types.SignupRequestBody  true  "User signup details"
-// @Router       /signup [post]
+//
+//	@Summary		Register a new user
+//	@Description	Create a new user account
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		types.SignupRequestBody	true	"User signup details"
+//
+//	@Success		200		{object}	types.SimpleResponse	"Success message"
+//	@Failure		400		{object}	error					"Bad request"
+//	@Failure		404		{object}	error					"Not found"
+//	@Failure		500		{object}	error					"Internal server error"
+//
+//	@Router			/signup [post]
 func Signup(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var signupRequest types.SignupRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&signupRequest); err != nil {
@@ -186,20 +197,21 @@ func Signup(w http.ResponseWriter, r *http.Request, ctx *request_context.Context
 }
 
 // GetUsers godoc
-// @Summary      Lists the users
-// @Description  Lists the users for an organization
-// @Tags         auth
-// @Accept       json
-// @Produce      json
-// @Param 		 X-Auth header string true "Authorization"
-// @Security 	 JWTAuth
-// @Param page query int false "Page number" default(1)
-// @Param page_size query int false "Page size" default(10)
-// @Param role_id query string false "Filter by role name"
-// @Param org_id query int false "Filter by organization ID"
-// @Success 200 {object} []models.Role
-// @Security 	 JWTAuth
-// @Router /users [get]
+//
+//	@Summary		Lists the users
+//	@Description	Lists the users for an organization
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			X-Auth	header	string	true	"Authorization"
+//	@Security		JWTAuth
+//	@Param			page		query		int		false	"Page number"	default(1)
+//	@Param			page_size	query		int		false	"Page size"		default(10)
+//	@Param			role_id		query		string	false	"Filter by role name"
+//	@Param			org_id		query		int		false	"Filter by organization ID"
+//	@Success		200			{object}	actions.UserListResponse
+//	@Security		JWTAuth
+//	@Router			/users [get]
 func GetUsers(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 

@@ -8,7 +8,7 @@
     "dBPassword": "bigbucks",
     "dBName": "bigbucks",
     "dBHost": "localhost",
-    "dBPort": "5432",
+    "dBPort": "6432",
     "dBSSLMode": "true",
     "redisAddress": "localhost:6379",
     "redisPassword": "",

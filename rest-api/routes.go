@@ -17,20 +17,20 @@ import (
 
 type handleFunc func(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error)
 
-// @title           BigBucks Solutions Auth Engine
-// @version         0.0.1
-// @description     This is REST api definitions.
-// @termsOfService  http://swagger.io/terms/
+//	@title			BigBucks Solutions Auth Engine
+//	@version		0.0.1
+//	@description	This is REST api definitions.
+//	@termsOfService	http://swagger.io/terms/
 
-// @contact.name   Jamsheed
-// @contact.url    http://www.swagger.io/support
-// @contact.email  jamsheed@nsmail.dev
+//	@contact.name	Jamsheed
+//	@contact.url	http://www.swagger.io/support
+//	@contact.email	jamsheed@nsmail.dev
 
-// @license.name  Apache 2.0
-// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host      localhost:8000
-// @BasePath  /api/v1
+//	@host		localhost:8000
+//	@BasePath	/api/v1
 
 //@securityDefinitions.apikey JWTAuth
 //@in header

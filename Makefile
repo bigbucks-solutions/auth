@@ -33,14 +33,20 @@ ci-swaggen: ci-swaggen2
 			mv jq-linux64 /usr/local/bin/jq && \
 			chmod +x /usr/local/bin/jq; \
 		apk add bash; cd /work/; .devops/scripts/update_openapi.sh"
-	@docker run --rm -v $(PWD):/work $(MKDOCS_IMAGE) \
-	  gh-deploy
 
 .PHONY: gh-deploy
-gh-deploy: ci-swaggen2
-	@docker run --rm -v $(PWD):/work -v ${HOME}/.config:/root/.config -v ${HOME}/.gitconfig-copy:/root/.gitconfig \
-	$(MKDOCS_IMAGE) \
-	bash -c "cd /work;mkdocs gh-deploy"
+gh-deploy:
+	@docker run --rm -v $(PWD):/work \
+        -e GIT_USERNAME="$$(git config user.name)" \
+        -e GIT_EMAIL="$$(git config user.email)" \
+        -e GITHUB_TOKEN="$$(cat ${HOME}/.git-credentials | grep 'https' | cut -d'@' -f1 | cut -d':' -f3)" \
+    $(MKDOCS_IMAGE) \
+    bash -c "cd /work && \
+            git config --global user.name \"$$GIT_USERNAME\" && \
+            git config --global user.email \"$$GIT_EMAIL\" && \
+            echo 'https://$$GITHUB_TOKEN:x-oauth-basic@github.com' > /root/.git-credentials && \
+            git config --global credential.helper store && \
+            mkdocs gh-deploy --force"
 
 .PHONY: gen-ecs256-pair
 gen-ecs256-pair:

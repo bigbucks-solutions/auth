@@ -1,5 +1,7 @@
 package types
 
+import "bigbucks/solution/auth/actions/types"
+
 type SimpleResponse struct {
 	Message string `json:"message" example:"message"`
 }
@@ -21,4 +23,11 @@ type Profile struct {
 	Phone     string  `json:"phone"`
 	Email     string  `json:"email"`
 	Picture   *string `json:"avatar"`
+}
+
+type ListRolesPagedResponse struct {
+	Roles []types.ListRoleResponse `json:"roles"`
+	Total int64                    `json:"total"`
+	Page  int                      `json:"page"`
+	Size  int                      `json:"size"`
 }
