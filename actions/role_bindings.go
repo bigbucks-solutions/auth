@@ -376,10 +376,39 @@ func UnBindUserRole(userID string, roleID string, orgID string) (int, error) {
 		if err := tx.Where("id = ?", userID).First(&user).Error; err != nil {
 			return err
 		}
-		// Find the role
-		if err := tx.First(&role, "id = ? AND org_id = ?", roleID, orgID).Error; err != nil {
+
+		// Find the role - use FOR UPDATE to lock the row during transaction
+		if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&role, "id = ? AND org_id = ?", roleID, orgID).Error; err != nil {
 			return err
 		}
+
+		// Lock ALL UserOrgRole rows for this ORGANIZATION to prevent concurrent modifications
+		// This ensures our count check is accurate across all users in the organization,
+		// preventing concurrent removals from different users that could leave an org without admins
+		if err := tx.Exec("SELECT 1 FROM user_org_roles WHERE org_id = ? FOR UPDATE", orgID).Error; err != nil {
+			return err
+		}
+		// Check if the user is an admin and if removing this role would leave the org without admins
+		if role.Name == "Super Admin" || role.Name == "Admin" {
+			// Count all admin roles in the organization EXCLUDING the one we're about to remove
+			var remainingAdminCount int64
+			err := tx.Model(&models.UserOrgRole{}).
+				Joins("JOIN roles ON user_org_roles.role_id = roles.id").
+				Where("roles.name IN ? AND user_org_roles.org_id = ? AND NOT (user_org_roles.user_id = ? AND user_org_roles.role_id = ?)",
+					[]string{"Super Admin", "Admin"},
+					orgID,
+					user.ID,
+					role.ID).
+				Count(&remainingAdminCount).Error
+			if err != nil {
+				return err
+			}
+
+			if remainingAdminCount == 0 {
+				return errors.New("cannot remove the last admin role from the organization")
+			}
+		}
+
 		// Delete the user-org-role binding with explicit WHERE conditions
 		result := tx.Where("user_id = ? AND role_id = ? AND org_id = ?", user.ID, role.ID, orgID).Delete(&models.UserOrgRole{})
 		if result.Error != nil {
