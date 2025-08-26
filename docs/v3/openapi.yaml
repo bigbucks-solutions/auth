@@ -358,7 +358,7 @@ paths:
           description: ""
       summary: Revoke a specific user session
       tags:
-      - auth
+      - sessions
   /sessions/users/{user_id}:
     get:
       description: List User sessions for provided userId
@@ -396,7 +396,7 @@ paths:
           description: ""
       summary: List User session for provided userId
       tags:
-      - auth
+      - sessions
   /signin:
     post:
       description: Authenticate user with password and issue jwt token
@@ -685,7 +685,7 @@ paths:
           description: ""
       summary: Revoke all user sessions except current
       tags:
-      - auth
+      - sessions
 components:
   schemas:
     actions.UserListResponse:

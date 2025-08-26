@@ -12,7 +12,7 @@ import (
 //
 //	@Summary		List User session for provided userId
 //	@Description	List User sessions for provided userId
-//	@Tags			auth
+//	@Tags			sessions
 //	@Accept			json
 //	@Produce		json
 //	@Param			X-Auth	header	string	true	"Authorization"
@@ -43,7 +43,7 @@ func Sessions(w http.ResponseWriter, r *http.Request, ctx *request_context.Conte
 //
 //	@Summary		Revoke a specific user session
 //	@Description	Revokes a specific session by session ID
-//	@Tags			auth
+//	@Tags			sessions
 //	@Accept			json
 //	@Produce		json
 //	@Param			X-Auth	header	string	true	"Authorization"
@@ -80,7 +80,7 @@ func RevokeSession(w http.ResponseWriter, r *http.Request, ctx *request_context.
 //
 //	@Summary		Revoke all user sessions except current
 //	@Description	Revokes all sessions for a user except the current session
-//	@Tags			auth
+//	@Tags			sessions
 //	@Accept			json
 //	@Produce		json
 //	@Param			X-Auth	header	string	true	"Authorization"

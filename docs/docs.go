@@ -498,7 +498,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "sessions"
                 ],
                 "summary": "List User session for provided userId",
                 "parameters": [
@@ -550,7 +550,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "sessions"
                 ],
                 "summary": "Revoke a specific user session",
                 "parameters": [
@@ -940,7 +940,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "sessions"
                 ],
                 "summary": "Revoke all user sessions except current",
                 "parameters": [

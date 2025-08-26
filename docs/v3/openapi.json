@@ -558,7 +558,7 @@
         },
         "summary": "List User session for provided userId",
         "tags": [
-          "auth"
+          "sessions"
         ]
       }
     },
@@ -614,7 +614,7 @@
         },
         "summary": "Revoke a specific user session",
         "tags": [
-          "auth"
+          "sessions"
         ]
       }
     },
@@ -1064,7 +1064,7 @@
         },
         "summary": "Revoke all user sessions except current",
         "tags": [
-          "auth"
+          "sessions"
         ]
       }
     }

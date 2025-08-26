@@ -18,8 +18,8 @@ The command to create a user role.
 Create a permission object which can be binded to any role, This binded permissions are checked against role during authorization.
 
 ```bash
-    auth add-permission <PERMISSION_NAME> --description <PERMISSION_DESCRIPTION> --resource <PERMISSION_RESOURCE>
-    # eg: auth add-permission VIEW-ACC-REPORT --description "Allows to view accounts report" --resource ACCOUNTS 
+    auth create-permission --description <PERMISSION_DESCRIPTION> --resource <PERMISSION_RESOURCE> --scope <SCOPE> --action <ACTION>
+    # eg: auth create-permission --description "all account permission" --resource "accounts" --scope "org" --action "read"
 ```
 
 # Bind permission to role
@@ -27,7 +27,7 @@ Create a permission object which can be binded to any role, This binded permissi
 Bind the specified permission to the role
 
 ```bash
-auth role bind-permission <ROLE_NAME> <PERMISSION_NAME>
+auth role bind-permission <ROLE_ID> --resource <PERMISSION_RESOURCE> --scope <SCOPE> --action <ACTION> --orgid <ORG_ID>
 # eg: auth role bind-permission ADMIN VIEW-ACC-REPORT
 
 ```

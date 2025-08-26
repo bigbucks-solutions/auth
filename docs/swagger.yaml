@@ -584,7 +584,7 @@ paths:
           description: ""
       summary: Revoke a specific user session
       tags:
-      - auth
+      - sessions
   /sessions/users/{user_id}:
     get:
       consumes:
@@ -619,7 +619,7 @@ paths:
           description: ""
       summary: List User session for provided userId
       tags:
-      - auth
+      - sessions
   /signin:
     post:
       consumes:
@@ -876,7 +876,7 @@ paths:
           description: ""
       summary: Revoke all user sessions except current
       tags:
-      - auth
+      - sessions
 securityDefinitions:
   JWTAuth:
     description: JWT token for user authentication (not a simple API key despite the

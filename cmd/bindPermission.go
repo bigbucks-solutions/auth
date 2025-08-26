@@ -35,7 +35,7 @@ var bindPermissionCmd = &cobra.Command{
 	Short: "Bind the specified permission to the role",
 	Long: `Bind the permission to the role
 For example:
-	auth role bind-permission ROLE_NAME PERM_NAME`,
+	auth role bind-permission <ROLE_ID> --resource <PERMISSION_RESOURCE> --scope <SCOPE> --action <ACTION> --orgid <ORG_ID>`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		_, err := actions.BindPermission(resource, scope, action, role_key, org_id, permission_cache.NewPermissionCache(settings.Current), context.Background())

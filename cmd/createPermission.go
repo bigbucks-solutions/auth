@@ -35,7 +35,7 @@ var createPermissionCmd = &cobra.Command{
 	Long: `Create a permission object which can be binded to role,
 This binded permissions are checked against role during authorizations
 For example:
-	auth create-permission ACCNT_ALL --description "all account permission" --resource "accounts"
+	auth create-permission --description "all account permission" --resource "accounts" --scope "org" --action "read"
 `,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
