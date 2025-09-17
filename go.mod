@@ -15,9 +15,10 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
-	github.com/huandu/facebook/v2 v2.5.6
+	github.com/huandu/facebook/v2 v2.7.2
 	github.com/jackc/pgconn v1.13.0
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/oklog/ulid/v2 v2.1.0
 	github.com/onsi/ginkgo/v2 v2.21.0
 	github.com/onsi/gomega v1.34.2
 	github.com/redis/go-redis/v9 v9.7.0
@@ -63,7 +64,6 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/microsoft/go-mssqldb v1.8.0 // indirect
 	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
-	github.com/oklog/ulid/v2 v2.1.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/opencontainers/runc v1.1.2 // indirect
