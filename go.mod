@@ -25,7 +25,8 @@ require (
 	github.com/rs/cors v1.8.2
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.13.0
-	github.com/swaggo/http-swagger v1.3.3
+	github.com/swaggo/http-swagger v1.3.4
+	github.com/swaggo/http-swagger/v2 v2.0.2
 	github.com/swaggo/swag v1.8.5
 	go.uber.org/zap v1.23.0
 	golang.org/x/crypto v0.31.0
