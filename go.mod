@@ -1,6 +1,6 @@
 module bigbucks/solution/auth
 
-go 1.22.0
+go 1.23.0
 
 toolchain go1.23.1
 
@@ -28,8 +28,8 @@ require (
 	github.com/swaggo/http-swagger v1.3.3
 	github.com/swaggo/swag v1.8.5
 	go.uber.org/zap v1.23.0
-	golang.org/x/crypto v0.31.0
-	golang.org/x/sync v0.10.0
+	golang.org/x/crypto v0.35.0
+	golang.org/x/sync v0.11.0
 	google.golang.org/grpc v1.56.3
 	google.golang.org/protobuf v1.34.1
 	gorm.io/datatypes v1.0.7
@@ -113,8 +113,8 @@ require (
 	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/net v0.32.0 // indirect
 	golang.org/x/oauth2 v0.7.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/tools v0.28.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
