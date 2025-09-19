@@ -2,7 +2,7 @@ module bigbucks/solution/auth
 
 go 1.23.0
 
-toolchain go1.23.1
+toolchain go1.25.1
 
 require (
 	ariga.io/atlas-provider-gorm v0.5.0
