@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:14
+    image: postgres:17
     environment:
       POSTGRES_DB: bigbucks
       POSTGRES_USER: bigbucks
