@@ -1,6 +1,6 @@
 module bigbucks/solution/auth
 
-go 1.23.0
+go 1.24.0
 
 toolchain go1.25.1
 
@@ -31,7 +31,7 @@ require (
 	github.com/swaggo/swag v1.8.5
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.41.0
-	golang.org/x/sync v0.16.0
+	golang.org/x/sync v0.17.0
 	google.golang.org/grpc v1.67.1
 	google.golang.org/protobuf v1.36.9
 	gorm.io/datatypes v1.2.6
