@@ -34,7 +34,7 @@ require (
 	golang.org/x/sync v0.16.0
 	google.golang.org/grpc v1.67.1
 	google.golang.org/protobuf v1.36.9
-	gorm.io/datatypes v1.0.7
+	gorm.io/datatypes v1.2.6
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.0
 )
@@ -85,7 +85,7 @@ require (
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
-	gorm.io/driver/sqlserver v1.5.4 // indirect
+	gorm.io/driver/sqlserver v1.6.0 // indirect
 )
 
 require (
