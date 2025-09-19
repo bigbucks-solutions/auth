@@ -9,7 +9,7 @@ require (
 	github.com/dchest/authcookie v0.0.0-20190824115100-f900d2294c8e
 	github.com/futurenda/google-auth-id-token-verifier v0.0.0-20170311140316-2a5b89f28b7e
 	github.com/go-playground/locales v0.14.1
-	github.com/go-playground/universal-translator v0.18.0
+	github.com/go-playground/universal-translator v0.18.1
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.6.0
