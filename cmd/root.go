@@ -34,8 +34,7 @@ import (
 	"net/http"
 	"os"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -70,6 +69,12 @@ var rootCmd = &cobra.Command{
 			loging.Logger.Fatalln(err)
 		}
 		settings.Current.LoadKeys()
+
+		config := loging.Config{
+			Level: settings.Current.LogLevel, // reads from config file/env
+		}
+		loging.Initialize(config)
+		defer loging.Logger.Sync() //nolint:errcheck
 
 		// dsn := "user=bigbucks password=bigbucks DB.name=bigbucks port=5432 host=localhost sslmode=disable"
 		dsn := fmt.Sprintf("host=%s user=%s password=%s DB.name=%s port=%s sslmode=disable", settings.Current.DBHost, settings.Current.DBUsername, settings.Current.DBPassword, settings.Current.DBName, settings.Current.DBPort)
@@ -139,10 +144,10 @@ func startGrpcServer(settings *settings.Settings) (err error) {
 	perm_cache := permission_cache.NewPermissionCache(settings)
 	session_store := sessionstore.NewSessionStore(settings)
 	auth_server := grpc_auth.NewGRPCServer(settings, *perm_cache, *session_store)
-	grpcServer = grpc.NewServer(grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-		grpc_zap.UnaryServerInterceptor(loging.Logger.Desugar()),
+	grpcServer = grpc.NewServer(grpc.ChainUnaryInterceptor(
+		grpc_zap.UnaryServerInterceptor(loging.InterceptorLogger(loging.Logger.Desugar())),
 		auth_server.JWTInterceptor,
-	)))
+	))
 
 	reflection.Register(grpcServer)
 	grpc_auth.RegisterAuthServer(grpcServer, auth_server)

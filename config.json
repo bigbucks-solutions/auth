@@ -13,5 +13,6 @@
     "redisAddress": "localhost:6379",
     "redisPassword": "",
     "redisDB": "0",
-    "redisUsername": ""
+    "redisUsername": "",
+    "logLevel": "debug"
 }

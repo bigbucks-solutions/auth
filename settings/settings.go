@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // AuthMethod describes an authentication method.
@@ -72,6 +72,7 @@ type Settings struct {
 	RedisAddress  string `json:"redisAddress"`
 	RedisUsername string `json:"redisUsername"`
 	RedisPassword string `json:"redisPassword"`
+	LogLevel      string `json:"logLevel"`
 }
 
 // Clean cleans any variables that might need cleaning.

@@ -12,7 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
-	httpSwagger "github.com/swaggo/http-swagger"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 type handleFunc func(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error)

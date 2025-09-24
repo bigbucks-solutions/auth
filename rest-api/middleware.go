@@ -57,7 +57,11 @@ func Authenticate(w http.ResponseWriter, r *http.Request, settings *settings.Set
 		return false, authToken, err
 	}
 
-	expired := !authToken.VerifyExpiresAt(time.Now().Add(time.Hour), true)
+	expTime, expErr := authToken.GetExpirationTime()
+	if expErr != nil {
+		return false, authToken, expErr
+	}
+	expired := !expTime.After(time.Now().Add(time.Hour))
 	if expired {
 		w.Header().Add("X-Renew-Token", "true")
 	}
