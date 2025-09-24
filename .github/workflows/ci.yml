@@ -31,7 +31,7 @@ jobs:
 
     - name: Lint Check
       run: |
-        golangci-lint run
+        golangci-lint run --timeout 2m0s
 
     - name: Build
       run: go build -v ./...
