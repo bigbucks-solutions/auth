@@ -35,9 +35,25 @@ jobs:
           wait-interval: 30
           running-workflow-name: 'auto-approve'
 
-      # Only approve if CI passes
+      # Check if PR is already approved
+      - name: Check if PR is already approved
+        id: check_approved
+        run: |
+          # Get PR review status
+          reviews=$(gh pr view ${{ github.event.pull_request.number }} --json reviews -q '.reviews[].state')
+          if echo "$reviews" | grep -q "APPROVED"; then
+            echo "PR is already approved, skipping approval"
+            echo "already_approved=true" >> $GITHUB_OUTPUT
+          else
+            echo "PR needs approval"
+            echo "already_approved=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Only approve if CI passes and PR is not already approved
       - name: Approve PR and enable auto-merge
-        if: success()
+        if: success() && steps.check_approved.outputs.already_approved != 'true'
         run: |
           # Approve the PR
           gh pr review --approve ${{ github.event.pull_request.number }}
