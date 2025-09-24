@@ -29,7 +29,7 @@ var roleCmd = &cobra.Command{
 	auth role -h`,
 	// Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("Invalid command")
+		return errors.New("invalid command")
 	},
 }
 

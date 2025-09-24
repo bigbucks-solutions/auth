@@ -3,6 +3,7 @@ package controllers
 import (
 	"bigbucks/solution/auth/actions"
 	"bigbucks/solution/auth/constants"
+	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/request_context"
 	"bigbucks/solution/auth/rest-api/controllers/types"
@@ -82,6 +83,41 @@ func CreateRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Con
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	err = json.NewEncoder(w).Encode(role)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return 0, nil
+}
+
+// @Summary		Update existing role
+// @Description	Update an existing role in the system
+// @Tags			roles
+// @Accept			json
+// @Param			X-Auth	header	string	true	"Authorization"
+// @Produce		json
+// @Param			role	body	types.Role	true	"Role object"
+// @Success		201
+// @Router			/roles/{id} [put]
+func UpdateRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
+	var role types.Role
+	err := json.NewDecoder(r.Body).Decode(&role)
+	if err != nil {
+		loging.Logger.Error("Failed to decode role", err)
+		return http.StatusBadRequest, err
+	}
+	roleID := mux.Vars(r)["role_id"]
+	if roleID == "" {
+		return http.StatusBadRequest, nil
+	}
+
+	code, err := actions.UpdateRole(roleID, &models.Role{Name: role.Name, Description: role.Description, OrgID: ctx.CurrentOrgID, ExtraAttrs: role.ExtraAttrs})
+	if err != nil {
+		return code, err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(role)
 	if err != nil {
 		return http.StatusInternalServerError, err

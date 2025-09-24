@@ -2,7 +2,7 @@ package actions
 
 import (
 	"bigbucks/solution/auth/loging"
-	. "bigbucks/solution/auth/models"
+	"bigbucks/solution/auth/models"
 	valids "bigbucks/solution/auth/validations"
 	"errors"
 	"fmt"
@@ -12,7 +12,7 @@ import (
 )
 
 // CreateOrganization : Create new Organization with a super user attached
-func CreateOrganization(org *Organization) (int, error) {
+func CreateOrganization(org *models.Organization) (int, error) {
 	err := valids.Validate.Struct(org)
 	loging.Logger.Debugln(err)
 	customerr := valids.NewErrorDict()
@@ -20,27 +20,27 @@ func CreateOrganization(org *Organization) (int, error) {
 		customerr.GetErrorTranslations(err)
 		return http.StatusBadRequest, customerr
 	}
-	var SuperUserRole Role = Role{Name: "SuperUser"}
-	Dbcon.FirstOrCreate(&SuperUserRole, "name = ?", "SuperUser")
-	err = Dbcon.Transaction(func(tx *gorm.DB) error {
+	var SuperUserRole = models.Role{Name: "SuperUser"}
+	models.Dbcon.FirstOrCreate(&SuperUserRole, "name = ?", "SuperUser")
+	err = models.Dbcon.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Omit("Users").Create(org).Error; err != nil {
 			fmt.Println(err)
 			return err
 		}
 		for _, usr := range org.Users {
-			usr.Profile = Profile{
+			usr.Profile = models.Profile{
 				Email: usr.Username,
 			}
 		}
 		if len(org.Users) > 0 {
 			if err := tx.Create(org.Users).Error; err != nil {
-				if nerr := ParseError(err); errors.Is(nerr, ErrDuplicateKey) {
+				if nerr := models.ParseError(err); errors.Is(nerr, models.ErrDuplicateKey) {
 					customerr.Errors["username"] = "Username already exists"
 					return nerr
 				}
 				return err
 			}
-			if err := tx.Create(&UserOrgRole{OrgID: org.ID,
+			if err := tx.Create(&models.UserOrgRole{OrgID: org.ID,
 				UserID: org.Users[0].ID,
 				RoleID: SuperUserRole.ID}).Error; err != nil {
 				return err

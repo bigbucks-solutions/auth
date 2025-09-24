@@ -1,7 +1,7 @@
 package jwtops
 
 import (
-	. "bigbucks/solution/auth/loging"
+	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/settings"
 	"net/http"
@@ -24,7 +24,7 @@ func (e Extractor) ExtractToken(r *http.Request) (string, error) {
 	// Extract from header Bearer AUthorization
 	token, _ = request.AuthorizationHeaderExtractor.ExtractToken(r)
 	if token != "" && strings.Count(token, ".") == 2 {
-		Logger.Debugln("Token from header", token)
+		loging.Logger.Debugln("Token from header", token)
 		return token, nil
 
 	}
@@ -65,13 +65,13 @@ func SignJWT(user *models.User, sessionId string) (signed string, err error) {
 	token := jwt.NewWithClaims(signingMethod, claims)
 	signingKey, err := jwt.ParseECPrivateKeyFromPEM(settings.SingingKey)
 	if err != nil {
-		Logger.Error("Error parsing signing key", zap.Error(err))
+		loging.Logger.Error("Error parsing signing key", zap.Error(err))
 		return
 	}
 
 	signed, err = token.SignedString(signingKey)
 	if err != nil {
-		Logger.Error("Error signing token", zap.Error(err))
+		loging.Logger.Error("Error signing token", zap.Error(err))
 		return
 	}
 	return
@@ -83,7 +83,7 @@ func VerifyJWT(obj interface{}) (claims settings.AuthToken, token *jwt.Token, er
 	}
 	switch v := obj.(type) {
 	default:
-		Logger.Error("unexpected type %T", v)
+		loging.Logger.Error("unexpected type %T", v)
 		panic(v)
 	case *http.Request:
 		token, err = request.ParseFromRequest(obj.(*http.Request), &Extractor{}, keyFunc, request.WithClaims(&claims))
@@ -92,11 +92,11 @@ func VerifyJWT(obj interface{}) (claims settings.AuthToken, token *jwt.Token, er
 	}
 
 	if err != nil {
-		Logger.Error("Error verifying token", zap.Error(err))
+		loging.Logger.Error("Error verifying token", zap.Error(err))
 
 	}
 	if token == nil {
-		Logger.Warn("Token is empty")
+		loging.Logger.Warn("Token is empty")
 		return
 
 	}

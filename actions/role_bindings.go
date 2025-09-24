@@ -113,6 +113,47 @@ func CreatePermission(perm *models.Permission) (int, error) {
 	return 0, nil
 }
 
+// UpdateRole : Updates existing Role
+func UpdateRole(roleID string, updatedRole *models.Role) (int, error) {
+	err := valids.Validate.Struct(updatedRole)
+	loging.Logger.Debug(updatedRole, err)
+	customerr := valids.NewErrorDict()
+	if err != nil {
+		customerr.GetErrorTranslations(err)
+		return http.StatusBadRequest, customerr
+	}
+
+	var role models.Role
+	if err := models.Dbcon.First(&role, "id = ? and org_id = ?", roleID, updatedRole.OrgID).Error; err != nil {
+		loging.Logger.Error(err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			customerr.Errors["role"] = "Role not found"
+			return http.StatusNotFound, customerr
+		}
+		return http.StatusInternalServerError, err
+	}
+
+	// Prevent editing system role
+	if role.IsSystemRole {
+		customerr.Errors["role"] = "System role cannot be edited"
+		return http.StatusForbidden, customerr
+	}
+
+	role.Name = updatedRole.Name
+	role.Description = updatedRole.Description
+	role.ExtraAttrs = updatedRole.ExtraAttrs
+
+	if err := models.Dbcon.Save(&role).Error; err != nil {
+		loging.Logger.Error(err)
+		if nerr := models.ParseError(err); errors.Is(nerr, models.ErrDuplicateKey) {
+			customerr.Errors["name"] = "Role with same name already exists"
+			return http.StatusConflict, customerr
+		}
+		return http.StatusConflict, err
+	}
+	return 0, nil
+}
+
 // ListRolePermission: Returns all the permissions bound to the role
 func ListRolePermission(roleID string, orgID string, ctx context.Context) ([]types.ListRolePermission, int, error) {
 	var role models.Role
@@ -141,7 +182,7 @@ func ListRolePermission(roleID string, orgID string, ctx context.Context) ([]typ
 		loging.Logger.Error(err)
 		return nil, http.StatusInternalServerError, err
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	for rows.Next() {
 		var perm types.ListRolePermission

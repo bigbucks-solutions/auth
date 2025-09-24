@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"bigbucks/solution/auth/constants"
-	cnst "bigbucks/solution/auth/constants"
 	jwtops "bigbucks/solution/auth/jwt-ops"
 	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
@@ -86,7 +85,7 @@ func GoogleSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
-	err = googleIdTokenver.VerifyIDToken(googCred.IdToken, cnst.GoogleClientID)
+	err = googleIdTokenver.VerifyIDToken(googCred.IdToken, constants.GoogleClientID)
 	if err == nil {
 		success, user, _ := oauth.GoogleAuthenticate(googCred.IdToken, googCred.AccessToken)
 		if !success {

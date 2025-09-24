@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"bigbucks/solution/auth/actions"
-	_ "bigbucks/solution/auth/actions"
 	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"

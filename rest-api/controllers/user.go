@@ -4,7 +4,6 @@ import (
 	"bigbucks/solution/auth/actions"
 	"bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/loging"
-	. "bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/request_context"
 	"bigbucks/solution/auth/rest-api/controllers/types"
@@ -57,7 +56,7 @@ func SendResetToken(w http.ResponseWriter, r *http.Request, ctx *request_context
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-	Logger.Debugln("Sending Reset Token..")
+	loging.Logger.Debugln("Sending Reset Token..")
 	err = json.NewEncoder(w).Encode(&types.SimpleResponse{Message: "Password reset token sent to registered email"})
 	if err != nil {
 		return http.StatusInternalServerError, err

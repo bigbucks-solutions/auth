@@ -87,6 +87,9 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	api.Handle("/roles",
 		makeHandler(ctr.CreateRole, WithAuth(true), WithPermission("role:*:write")),
 	).Methods("POST")
+	api.Handle("/roles/{role_id}",
+		makeHandler(ctr.UpdateRole, WithAuth(true), WithPermission("role:*:write")),
+	).Methods("PUT")
 	api.Handle("/roles/{role_id}/permissions",
 		makeHandler(ctr.ListPermissionsOfRole, WithAuth(true), WithPermission("role:*:write")),
 	).Methods("GET")

@@ -153,11 +153,11 @@ func (usr User) LogLoginActivity(attrs map[string]interface{}) error {
 
 // UpdateUserProfile Update user profile data from map<string, dynamic> datastructure
 func (usr User) UpdateUserProfile(data map[string][]string, picture []*multipart.FileHeader) (int, error) {
-	var filename string = ""
+	var filename = ""
 	if len(picture) > 0 {
 		uuidWithHyphen := uuid.New()
 		fmt.Println(uuidWithHyphen)
-		uuid := strings.Replace(uuidWithHyphen.String(), "-", "", -1)
+		uuid := strings.ReplaceAll(uuidWithHyphen.String(), "-", "")
 		file, _ := picture[0].Open()
 		filename = fmt.Sprintf("%s.jpg", uuid)
 		tmpfile, _ := os.Create(fmt.Sprintf("./profile_pics/%s", filename))
@@ -166,7 +166,10 @@ func (usr User) UpdateUserProfile(data map[string][]string, picture []*multipart
 			loging.Logger.Error("Error saving profile picture", err)
 			return http.StatusInternalServerError, err
 		}
-		tmpfile.Close()
+		err = tmpfile.Close()
+		if err != nil {
+			loging.Logger.Error("Error closing temporary file", err)
+		}
 	}
 	var profile Profile
 	err := Dbcon.Model(&usr).Association("Profile").Find(&profile)
@@ -175,7 +178,10 @@ func (usr User) UpdateUserProfile(data map[string][]string, picture []*multipart
 		return http.StatusInternalServerError, err
 	}
 	if len(profile.Picture) > 0 {
-		os.Remove(fmt.Sprintf("./profile_pics/%s", profile.Picture))
+		err = os.Remove(fmt.Sprintf("./profile_pics/%s", profile.Picture))
+		if err != nil {
+			loging.Logger.Error("Error removing old profile picture", err)
+		}
 	}
 	profile.Email = data["useremail"][0]
 	profile.FirstName = data["firstname"][0]

@@ -2,8 +2,6 @@ module bigbucks/solution/auth
 
 go 1.24.0
 
-toolchain go1.25.1
-
 require (
 	ariga.io/atlas-provider-gorm v0.5.0
 	github.com/dchest/authcookie v0.0.0-20190824115100-f900d2294c8e
