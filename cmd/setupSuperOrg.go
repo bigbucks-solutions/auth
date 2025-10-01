@@ -21,9 +21,15 @@ import (
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/settings"
+	"bufio"
 	"context"
+	"fmt"
+	"os"
+	"strings"
+	"syscall"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 	"gorm.io/gorm"
 )
 
@@ -33,12 +39,53 @@ var setupSuperOrgCmd = &cobra.Command{
 	Short: "Initializes the super organization and a super admin user",
 	Long:  `This command initializes the super organization and a super admin user.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		org := &models.Organization{Name: "Super Organization", ContactEmail: "jamshi.onnet@gmail.com"}
-		org.ID = models.SuperOrganization
+
 		var role models.Role
 		err := models.Dbcon.Transaction(func(tx *gorm.DB) error {
+
+			reader := bufio.NewReader(os.Stdin)
+
+			fmt.Print("Enter organization: ")
+			orgName, err := reader.ReadString('\n')
+			if err != nil {
+				return err
+			}
+			orgName = strings.TrimSpace(orgName)
+
+			fmt.Print("Enter username: ")
+			username, err := reader.ReadString('\n')
+			if err != nil {
+				return err
+			}
+			username = strings.TrimSpace(username)
+
+			fmt.Print("Enter email: ")
+			email, err := reader.ReadString('\n')
+			if err != nil {
+				return err
+			}
+			email = strings.TrimSpace(email)
+
+			fmt.Print("Enter password: ")
+			passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
+			if err != nil {
+				return err
+			}
+			password := string(passwordBytes)
+			fmt.Println() // Add newline after password input
+
+			fmt.Print("Enter first name: ")
+			firstName, err := reader.ReadString('\n')
+			if err != nil {
+				return err
+			}
+			firstName = strings.TrimSpace(firstName)
+
+			org := &models.Organization{Name: orgName, ContactEmail: email}
+			org.ID = models.SuperOrganization
 			role = models.Role{Name: "Super Admin", OrgID: models.SuperOrganization}
-			err := tx.FirstOrCreate(&role).Error
+
+			err = tx.FirstOrCreate(&role).Error
 			if err != nil {
 				loging.Logger.Error(err)
 				return err
@@ -48,10 +95,11 @@ var setupSuperOrgCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
+
 			user := &models.User{
-				Username: "jamshi.onnet@gmail.com",
-				Password: "Jamsheed",
-				Profile:  models.Profile{FirstName: "Jamsheed", Email: "jamshi.onnet@gmail.com"},
+				Username: username,
+				Password: password,
+				Profile:  models.Profile{FirstName: firstName, Email: email},
 			}
 			err = tx.FirstOrCreate(user).Error
 			if err != nil {
