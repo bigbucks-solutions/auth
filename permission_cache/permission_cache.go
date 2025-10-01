@@ -240,3 +240,66 @@ func (pc *PermissionCache) Cleanup(ctx context.Context, orgID string) error {
 	_, err := pipe.Exec(ctx)
 	return err
 }
+
+// UpdateRoleName - Updates role name in all permission keys
+func (pc *PermissionCache) UpdateRoleName(ctx context.Context, orgID, oldRoleName, newRoleName string) error {
+	if oldRoleName == newRoleName {
+		return nil // No change needed
+	}
+
+	loging.Logger.Info("Updating role name in cache",
+		zap.String("orgID", orgID),
+		zap.String("oldName", oldRoleName),
+		zap.String("newName", newRoleName))
+	return pc.updateRoleNameInCache(ctx, orgID, oldRoleName, newRoleName)
+}
+
+func (pc *PermissionCache) updateRoleNameInCache(ctx context.Context, orgID, oldRoleName, newRoleName string) error {
+	pattern := fmt.Sprintf("perm:%s:*", orgID)
+	iter := pc.RedisClient.Scan(ctx, 0, pattern, 0).Iterator()
+
+	pipe := pc.RedisClient.Pipeline()
+	keysToUpdate := []string{}
+
+	// First pass: Find all keys that contain the old role name
+	for iter.Next(ctx) {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			key := iter.Val()
+			isMember, err := pc.RedisClient.SIsMember(ctx, key, strings.ToUpper(oldRoleName)).Result()
+			if err == nil && isMember {
+				keysToUpdate = append(keysToUpdate, key)
+			}
+		}
+	}
+
+	if err := iter.Err(); err != nil {
+		return err
+	}
+
+	// Second pass: Update all found keys
+	for _, key := range keysToUpdate {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			// Remove old role name and add new role name
+			pipe.SRem(ctx, key, strings.ToUpper(oldRoleName))
+			pipe.SAdd(ctx, key, strings.ToUpper(newRoleName))
+			pipe.Expire(ctx, key, pc.cacheTTL)
+		}
+	}
+
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to update role name in cache: %w", err)
+	}
+
+	loging.Logger.Info("Role name updated in cache",
+		zap.String("orgID", orgID),
+		zap.Int("keysUpdated", len(keysToUpdate)))
+
+	return nil
+}

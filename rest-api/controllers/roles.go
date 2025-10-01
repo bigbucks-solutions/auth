@@ -111,7 +111,7 @@ func UpdateRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Con
 		return http.StatusBadRequest, nil
 	}
 
-	code, err := actions.UpdateRole(roleID, &models.Role{Name: role.Name, Description: role.Description, OrgID: ctx.CurrentOrgID, ExtraAttrs: role.ExtraAttrs})
+	code, err := actions.UpdateRole(roleID, &models.Role{Name: role.Name, Description: role.Description, OrgID: ctx.CurrentOrgID, ExtraAttrs: role.ExtraAttrs}, ctx.PermCache, ctx.Context)
 	if err != nil {
 		return code, err
 	}

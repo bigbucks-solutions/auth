@@ -49,9 +49,8 @@ func (l *responseLogger) Size() int {
 	return l.size
 }
 
-func Authenticate(w http.ResponseWriter, r *http.Request, settings *settings.Settings) (bool, settings.AuthToken, error) {
+func Authenticate(w *responseLogger, r *http.Request, settings *settings.Settings) (bool, settings.AuthToken, error) {
 
-	// updated := d.store.Users.LastUpdate(tk.User.ID) > tk.IssuedAt
 	authToken, _, err := jwtops.VerifyJWT(r)
 	if err != nil {
 		return false, authToken, err
@@ -102,10 +101,10 @@ func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, pe
 		ctx.PermCache = perm_cache
 		ctx.SessionStore = session_store
 		if config.auth {
-			success, authToken, _ := Authenticate(w, r, setting)
-			loging.Logger.Debugw("Authenticated User: ", zap.String("User", authToken.ID))
+			success, authToken, _ := Authenticate(_responseLogger, r, setting)
+			loging.Logger.Debugw("User: ", zap.String("User", authToken.ID))
 			if !success {
-				http.Error(w, strconv.Itoa(http.StatusUnauthorized)+" "+http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+				http.Error(_responseLogger, strconv.Itoa(http.StatusUnauthorized)+" "+http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 				return
 			}
 			ctx.Auth = &authToken
@@ -118,17 +117,17 @@ func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, pe
 			if config.resource != "" && config.scope != "" && config.action != "" {
 				valid, _, err := session_store.ValidateSession(ctx.Auth.ID)
 				if err != nil || !valid {
-					http.Error(w, "Session expired", http.StatusUnauthorized)
+					http.Error(_responseLogger, "Session expired", http.StatusUnauthorized)
 					return
 				}
 				if ctx.CurrentOrgID == "" {
 					loging.Logger.Warn("No org_id found in request")
-					http.Error(w, "Forbidden", http.StatusForbidden)
+					http.Error(_responseLogger, "Forbidden", http.StatusForbidden)
 					return
 				}
 				hasPermission, err := perm_cache.CheckPermission(&ctx.Context, config.resource, config.scope, config.action, orgID, &ctx.Auth.User)
 				if err != nil || !hasPermission {
-					http.Error(w, "Forbidden", http.StatusForbidden)
+					http.Error(_responseLogger, "Forbidden", http.StatusForbidden)
 					return
 				}
 			}

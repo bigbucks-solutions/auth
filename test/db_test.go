@@ -111,7 +111,7 @@ func setupGormWithDocker() (*gorm.DB, func()) {
 	// Start postgres container
 	postgresResource, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "postgres",
-		Tag:        "14",
+		Tag:        "17",
 		Env: []string{
 			"POSTGRES_PASSWORD=" + passwd,
 			"POSTGRES_DB=" + dbName,
@@ -128,7 +128,7 @@ func setupGormWithDocker() (*gorm.DB, func()) {
 	// Start redis container
 	redisResource, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "redis",
-		Tag:        "6",
+		Tag:        "8.2",
 	}, func(config *docker.HostConfig) {
 		config.AutoRemove = true
 		config.RestartPolicy = docker.NeverRestart()

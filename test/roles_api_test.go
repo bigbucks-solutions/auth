@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -96,6 +97,82 @@ var _ = Describe("Roles API Tests", Ordered, func() {
 			var actual map[string]interface{}
 			_ = json.Unmarshal([]byte(role.ExtraAttrs), &actual)
 			Ω(actual).Should(HaveKey("test"))
+
+		})
+	})
+
+	Context("Update Role", func() {
+		It("Should update role successfully", func() {
+			// first create a role to update
+			roleData := []byte(`{
+				"name": "test_role_to_update",
+				"description": "Test role description to update",
+				"extraAttrs": {
+					"test": "test"
+				}
+			}`)
+			request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/roles", s.URL), bytes.NewBuffer(roleData))
+			request.Header.Set("Content-Type", "application/json")
+			request.Header.Set("X-Auth", jwt)
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
+			response, _ := c.Do(request)
+
+			Ω(response.StatusCode).Should(Equal(201))
+			var roleToUpdate models.Role
+			models.Dbcon.Find(&roleToUpdate, "name = ?", "test_role_to_update")
+			Ω(roleToUpdate.Name).Should(Equal("test_role_to_update"))
+			Ω(roleToUpdate.Description).Should(Equal("Test role description to update"))
+			roleToUpdateID := roleToUpdate.ID
+
+			// Add some permissions to this role
+			code, err := actions.BindPermission("user", "all", "write", roleToUpdateID, models.SuperOrganization, permission_cache.NewPermissionCache(settings.Current), context.Background())
+
+			Ω(code).Should(Equal(0))
+			Ω(err).Should(BeNil())
+
+			// build permission cache
+			pc := permission_cache.NewPermissionCache(settings.Current)
+			ctx := context.Background()
+			res, err := pc.CheckPermission(&ctx, "user", "all", "write", models.SuperOrganization, &settings.UserInfo{Username: "test_user", Roles: []settings.UserOrgRole{{Role: "test_role_to_update", OrgID: models.SuperOrganization}}})
+			Ω(err).Should(BeNil())
+			Ω(res).Should(BeTrue())
+
+			// now update the role
+			roleData = []byte(`{
+				"name": "test_role_updated",
+				"description": "Test role description updated",
+				"extraAttrs": {
+					"test": "test_updated"
+				}
+			}`)
+			request, _ = http.NewRequest("PUT", fmt.Sprintf("%s/api/v1/roles/%s", s.URL, roleToUpdateID), bytes.NewBuffer(roleData))
+			request.Header.Set("Content-Type", "application/json")
+			request.Header.Set("X-Auth", jwt)
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
+			response, _ = c.Do(request)
+
+			Ω(response.StatusCode).Should(Equal(200))
+			var role models.Role
+			models.Dbcon.Find(&role, "id = ?", roleToUpdateID)
+			Ω(role.Name).Should(Equal("test_role_updated"))
+			Ω(role.Description).Should(Equal("Test role description updated"))
+			var actual map[string]interface{}
+			_ = json.Unmarshal([]byte(role.ExtraAttrs), &actual)
+			Ω(actual).Should(HaveKey("test"))
+
+			// Test if permission cache is updated with new role name
+			// Old role name should not exist
+			key := fmt.Sprintf("perm:%s:%s:%s:%s", models.SuperOrganization, "USER", "ALL", "WRITE")
+
+			isMember, err := pc.RedisClient.SIsMember(ctx, key, strings.ToUpper("test_role_to_update")).Result()
+			Ω(err).Should(BeNil())
+			Ω(isMember).Should(BeFalse())
+
+			// New role name should exist
+
+			isMember, err = pc.RedisClient.SIsMember(ctx, key, strings.ToUpper("test_role_updated")).Result()
+			Ω(err).Should(BeNil())
+			Ω(isMember).Should(BeTrue())
 
 		})
 	})

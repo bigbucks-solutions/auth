@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"time"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -114,9 +115,9 @@ func CreatePermission(perm *models.Permission) (int, error) {
 }
 
 // UpdateRole : Updates existing Role
-func UpdateRole(roleID string, updatedRole *models.Role) (int, error) {
+func UpdateRole(roleID string, updatedRole *models.Role, perm_cache *permission_cache.PermissionCache, ctx context.Context) (int, error) {
 	err := valids.Validate.Struct(updatedRole)
-	loging.Logger.Debug(updatedRole, err)
+	loging.Logger.Debug("Update Body", updatedRole, err)
 	customerr := valids.NewErrorDict()
 	if err != nil {
 		customerr.GetErrorTranslations(err)
@@ -136,14 +137,32 @@ func UpdateRole(roleID string, updatedRole *models.Role) (int, error) {
 	// Prevent editing system role
 	if role.IsSystemRole {
 		customerr.Errors["role"] = "System role cannot be edited"
-		return http.StatusForbidden, customerr
+		return http.StatusNotAcceptable, customerr
 	}
 
-	role.Name = updatedRole.Name
-	role.Description = updatedRole.Description
-	role.ExtraAttrs = updatedRole.ExtraAttrs
+	oldRoleName := role.Name
+	// Update role in transaction
+	err = models.Dbcon.Transaction(func(tx *gorm.DB) error {
+		role.Name = updatedRole.Name
+		role.Description = updatedRole.Description
+		role.ExtraAttrs = updatedRole.ExtraAttrs
 
-	if err := models.Dbcon.Save(&role).Error; err != nil {
+		if err := tx.Save(&role).Error; err != nil {
+			return err
+		}
+
+		if err := perm_cache.UpdateRoleName(ctx, updatedRole.OrgID, oldRoleName, updatedRole.Name); err != nil {
+			loging.Logger.Warn("Failed to update cache after role name change",
+				zap.String("oldName", oldRoleName),
+				zap.String("newName", updatedRole.Name),
+				zap.Error(err))
+			// Don't fail the transaction for cache errors
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		loging.Logger.Error(err)
 		if nerr := models.ParseError(err); errors.Is(nerr, models.ErrDuplicateKey) {
 			customerr.Errors["name"] = "Role with same name already exists"
