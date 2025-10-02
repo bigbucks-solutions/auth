@@ -29,7 +29,7 @@ require (
 	golang.org/x/crypto v0.42.0
 	golang.org/x/sync v0.17.0
 	google.golang.org/grpc v1.75.1
-	google.golang.org/protobuf v1.36.9
+	google.golang.org/protobuf v1.36.10
 	gorm.io/datatypes v1.2.7
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.0
