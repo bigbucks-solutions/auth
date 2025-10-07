@@ -124,23 +124,8 @@ func (pc *PermissionCache) CheckPermission(ctx *context.Context, resource, scope
 		}
 	}
 	// If key doesn't exist, trigger cache build and continue checking other actions
-	if acquired, lockValue := pc.acquireLock(*ctx, orgID); acquired {
-		go func(ctx context.Context, orgID, lockValue string) {
-			defer func() {
-				if r := recover(); r != nil {
-					loging.Logger.Error("Panic in cache build", zap.Any("error", r))
-				}
-				pc.releaseLock(orgID, lockValue)
-			}()
-
-			// Use background context for cache building
-			buildCtx := context.Background()
-			if err := pc.buildCacheForOrg(buildCtx, orgID); err != nil {
-				loging.Logger.Error("Failed to build cache",
-					zap.String("orgID", orgID),
-					zap.Error(err))
-			}
-		}(*ctx, orgID, lockValue)
+	if err := pc.EnsureCacheForOrg(*ctx, orgID); err != nil {
+		loging.Logger.Error("Failed to ensure cache for org", zap.String("orgID", orgID), zap.Error(err))
 	}
 	// After checking cache, fallback to DB for final verification
 
@@ -161,6 +146,29 @@ func (pc *PermissionCache) CheckPermission(ctx *context.Context, resource, scope
 
 	return false, nil
 }
+
+func (pc *PermissionCache) EnsureCacheForOrg(ctx context.Context, orgID string) error {
+	if acquired, lockValue := pc.acquireLock(ctx, orgID); acquired {
+		go func(ctx context.Context, orgID, lockValue string) {
+			defer func() {
+				if r := recover(); r != nil {
+					loging.Logger.Error("Panic in cache build", zap.Any("error", r))
+				}
+				pc.releaseLock(orgID, lockValue)
+			}()
+
+			// Use background context for cache building
+			buildCtx := context.Background()
+			if err := pc.buildCacheForOrg(buildCtx, orgID); err != nil {
+				loging.Logger.Error("Failed to build cache",
+					zap.String("orgID", orgID),
+					zap.Error(err))
+			}
+		}(ctx, orgID, lockValue)
+	}
+	return nil
+}
+
 func (pc *PermissionCache) AddRoleToPermKey(ctx context.Context, orgID string, roleName string, resource string, scope string, action string) error {
 	key := fmt.Sprintf("perm:%s:%s:%s:%s", orgID, strings.ToUpper(resource), strings.ToUpper(scope), strings.ToUpper(action))
 	pipe := pc.RedisClient.Pipeline()

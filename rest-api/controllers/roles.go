@@ -315,3 +315,33 @@ func ListPermissionsOfRole(w http.ResponseWriter, r *http.Request, ctx *request_
 	}
 	return 0, nil
 }
+
+// @Summary		Delete existing role
+// @Description	Delete an existing role if it has no associated users
+// @Tags			roles
+// @Accept			json
+// @Param			X-Auth	header	string	true	"Authorization"
+// @Param			role_id	path	string	true	"Role ID"
+// @Produce		json
+// @Success		200		{object}	types.SimpleResponse
+// @Failure		400		{object}	types.SimpleResponse	"Role has associated users"
+// @Failure		404		{object}	types.SimpleResponse	"Role not found"
+// @Router			/roles/{role_id} [delete]
+func DeleteRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
+	roleID := mux.Vars(r)["role_id"]
+	if roleID == "" {
+		return http.StatusBadRequest, nil
+	}
+
+	code, err := actions.DeleteRole(roleID, ctx.CurrentOrgID, ctx.PermCache, ctx.Context)
+	if err != nil {
+		return code, err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(map[string]string{"message": "Role deleted successfully"})
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return 0, nil
+}

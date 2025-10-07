@@ -177,6 +177,95 @@ var _ = Describe("Roles API Tests", Ordered, func() {
 		})
 	})
 
+	Context("Delete Role", func() {
+		It("Should delete role successfully", func() {
+			// first create a role to delete
+			roleData := []byte(`{
+				"name": "test_role_to_delete",
+				"description": "Test role description to delete",
+				"extraAttrs": {
+					"test": "test"
+				}
+			}`)
+			request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/roles", s.URL), bytes.NewBuffer(roleData))
+			request.Header.Set("Content-Type", "application/json")
+			request.Header.Set("X-Auth", jwt)
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
+			response, _ := c.Do(request)
+
+			Ω(response.StatusCode).Should(Equal(201))
+			var roleToDelete models.Role
+			models.Dbcon.Find(&roleToDelete, "name = ?", "test_role_to_delete")
+			Ω(roleToDelete.Name).Should(Equal("test_role_to_delete"))
+			roleToDeleteID := roleToDelete.ID
+
+			// Add some permissions to this role
+			code, err := actions.BindPermission("user", "all", "write", roleToDeleteID, models.SuperOrganization, permission_cache.NewPermissionCache(settings.Current), context.Background())
+			Ω(err).Should(BeNil())
+			Ω(code).Should(Equal(0))
+			// build permission cache
+			pc := permission_cache.NewPermissionCache(settings.Current)
+			ctx := context.Background()
+			res, err := pc.CheckPermission(&ctx, "user", "all", "write", models.SuperOrganization, &settings.UserInfo{Username: "test_user", Roles: []settings.UserOrgRole{{Role: "test_role_to_delete", OrgID: models.SuperOrganization}}})
+			Ω(err).Should(BeNil())
+			Ω(res).Should(BeTrue())
+
+			// now delete the role
+			request, _ = http.NewRequest("DELETE", fmt.Sprintf("%s/api/v1/roles/%s", s.URL, roleToDeleteID), nil)
+			request.Header.Set("Content-Type", "application/json")
+			request.Header.Set("X-Auth", jwt)
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
+			response, _ = c.Do(request)
+
+			Ω(response.StatusCode).Should(Equal(200))
+			var role models.Role
+			result := models.Dbcon.Find(&role, "id = ?", roleToDeleteID)
+			Ω(result.RowsAffected).Should(Equal(int64(0)))
+
+		})
+		It("Should not delete system role", func() {
+			var systemRole models.Role
+			// Create a system role
+			models.Dbcon.Create(&models.Role{
+				Name:         "system_role",
+				Description:  "System role",
+				IsSystemRole: true,
+				OrgID:        models.SuperOrganization,
+			})
+			models.Dbcon.Find(&systemRole, "name = ?", "system_role")
+			Ω(systemRole.ID).ShouldNot(BeEmpty())
+			request, _ := http.NewRequest("DELETE", fmt.Sprintf("%s/api/v1/roles/%s", s.URL, systemRole.ID), nil)
+			request.Header.Set("Content-Type", "application/json")
+			request.Header.Set("X-Auth", jwt)
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
+			response, _ := c.Do(request)
+
+			Ω(response.StatusCode).Should(Equal(400))
+			var result map[string]interface{}
+			bodyBytes, _ := io.ReadAll(response.Body)
+			_ = json.Unmarshal(bodyBytes, &result)
+
+			Ω(result).Should(HaveKey("errors"))
+			Ω(result["errors"].(map[string]interface{})["role"].(string)).Should(Equal("Cannot delete system role"))
+		})
+		It("Should not delete role associated to user", func() {
+			// roleID is already associated to TestUserID in BeforeAll
+			request, _ := http.NewRequest("DELETE", fmt.Sprintf("%s/api/v1/roles/%s", s.URL, roleID), nil)
+			request.Header.Set("Content-Type", "application/json")
+			request.Header.Set("X-Auth", jwt)
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
+			response, _ := c.Do(request)
+
+			Ω(response.StatusCode).Should(Equal(400))
+			var result map[string]interface{}
+			bodyBytes, _ := io.ReadAll(response.Body)
+			_ = json.Unmarshal(bodyBytes, &result)
+
+			Ω(result).Should(HaveKey("errors"))
+			Ω(result["errors"].(map[string]interface{})).Should(HaveKey("role"))
+		})
+	})
+
 	Context("Create Permission", func() {
 		It("Should create permission successfully", func() {
 			permData := []byte(`{

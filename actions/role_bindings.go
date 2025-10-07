@@ -488,3 +488,68 @@ func UnBindUserRole(userID string, roleID string, orgID string) (int, error) {
 	return 0, nil
 
 }
+
+// DeleteRole : Deletes a role if it has no associated users
+func DeleteRole(roleID string, orgID string, perm_cache *permission_cache.PermissionCache, ctx context.Context) (int, error) {
+	customerr := valids.NewErrorDict()
+
+	err := models.Dbcon.Transaction(func(tx *gorm.DB) error {
+		// First, check if role exists and belongs to the org
+		var role models.Role
+		if err := tx.Where("id = ? AND org_id = ?", roleID, orgID).First(&role).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				customerr.Errors["role_id"] = "Role not found"
+				return customerr
+			}
+			return err
+		}
+
+		// Check if it's a system role - system roles cannot be deleted
+		if role.IsSystemRole {
+			customerr.Errors["role"] = "Cannot delete system role"
+			return customerr
+		}
+
+		// Check if role has any associated users
+		var userCount int64
+		if err := tx.Model(&models.UserOrgRole{}).Where("role_id = ? AND org_id = ?", roleID, orgID).Count(&userCount).Error; err != nil {
+			return err
+		}
+
+		if userCount > 0 {
+			customerr.Errors["role"] = fmt.Sprintf("Cannot delete role. It is currently assigned to %d user(s). Please unassign all users from this role before deletion.", userCount)
+			return customerr
+		}
+
+		// Delete all role-permission bindings first
+		if err := tx.Where("role_id = ?", roleID).Delete(&models.RolePermission{}).Error; err != nil {
+			return err
+		}
+
+		// Delete the role
+		if err := tx.Unscoped().Delete(&role).Error; err != nil {
+			return err
+		}
+
+		loging.Logger.Info(fmt.Sprintf("Successfully deleted role %s (ID: %s) from organization %s", role.Name, roleID, orgID))
+		return nil
+	})
+
+	// Clear permission cache for this organization
+	if perm_cache != nil {
+		go func() {
+			_ = perm_cache.Cleanup(ctx, orgID)
+			_ = perm_cache.EnsureCacheForOrg(ctx, orgID)
+		}()
+	}
+
+	if err != nil {
+		if len(customerr.Errors) > 0 {
+			return http.StatusBadRequest, customerr
+		}
+		loging.Logger.Error("Failed to delete role", zap.Error(err))
+		return http.StatusInternalServerError, err
+	}
+
+	return 0, nil
+}
