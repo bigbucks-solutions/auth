@@ -83,7 +83,7 @@ var setupSuperOrgCmd = &cobra.Command{
 
 			org := &models.Organization{Name: orgName, ContactEmail: email}
 			org.ID = models.SuperOrganization
-			role = models.Role{Name: "Super Admin", OrgID: models.SuperOrganization}
+			role = models.Role{Name: "Super Admin", OrgID: models.SuperOrganization, IsSystemRole: true}
 
 			err = tx.FirstOrCreate(&role).Error
 			if err != nil {

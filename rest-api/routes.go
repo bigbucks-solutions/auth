@@ -75,6 +75,14 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 		makeHandler(ctr.GetUsers, WithAuth(true), WithPermission("user:*:read")),
 	).Methods("GET")
 
+	api.Handle("/users/{user_id}/activate",
+		makeHandler(ctr.ActivateUser, WithAuth(true), WithPermission("user:*:update")),
+	).Methods("PUT")
+
+	api.Handle("/users/{user_id}/deactivate",
+		makeHandler(ctr.DeactivateUser, WithAuth(true), WithPermission("user:*:update")),
+	).Methods("PUT")
+
 	api.Handle("/me", makeHandler(ctr.GetMeDetails, WithAuth(true))).Methods("GET")
 	api.Handle("/user/reset", makeHandler(ctr.SendResetToken)).Methods("POST")
 	api.Handle("/user/updateprofile", makeHandler(ctr.UpdateProfile, WithAuth(true))).Methods("POST")

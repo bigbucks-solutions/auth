@@ -216,7 +216,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request, ctx *request_context.Conte
 
 	searchPrefix := r.URL.Query().Get("search_prefix")
 	roleID := r.URL.Query().Get("role_id")
-	userStatus := constants.UserStatus(r.URL.Query().Get("user_status"))
+	userStatus := constants.UserStatus(r.URL.Query().Get("status"))
 	var userStatusPtr *constants.UserStatus
 	if !slices.Contains(constants.UserStatuses, userStatus) {
 		userStatusPtr = nil
@@ -232,6 +232,86 @@ func GetUsers(w http.ResponseWriter, r *http.Request, ctx *request_context.Conte
 	err = json.NewEncoder(w).Encode(users)
 	if err != nil {
 		loging.Logger.Error("Error encoding users", err)
+		return http.StatusInternalServerError, err
+	}
+	return 0, nil
+}
+
+// ActivateUser godoc
+//
+//	@Summary		Activate a user
+//	@Description	Activate a user in the organization
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			X-Auth	header	string	true	"Authorization"
+//	@Security		JWTAuth
+//	@Param			user_id	path	string	true	"User ID"
+//	@Success		200		{object}	types.SimpleResponse	"Success message"
+//	@Failure		400		{object}	error					"Bad request"
+//	@Failure		404		{object}	error					"User not found"
+//	@Failure		500		{object}	error					"Internal server error"
+//	@Router			/users/{user_id}/activate [put]
+func ActivateUser(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
+	vars := mux.Vars(r)
+	userID := vars["user_id"]
+
+	params := actions.ActivateUserParams{
+		UserID: userID,
+		OrgID:  ctx.CurrentOrgID,
+	}
+
+	code, err := actions.ActivateUser(params)
+	if err != nil {
+		return code, err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(&types.SimpleResponse{
+		Message: "User activated successfully",
+	})
+	if err != nil {
+		loging.Logger.Error("Error encoding activate user response", err)
+		return http.StatusInternalServerError, err
+	}
+	return 0, nil
+}
+
+// DeactivateUser godoc
+//
+//	@Summary		Deactivate a user
+//	@Description	Deactivate a user in the organization
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			X-Auth	header	string	true	"Authorization"
+//	@Security		JWTAuth
+//	@Param			user_id	path	string	true	"User ID"
+//	@Success		200		{object}	types.SimpleResponse	"Success message"
+//	@Failure		400		{object}	error					"Bad request"
+//	@Failure		404		{object}	error					"User not found"
+//	@Failure		500		{object}	error					"Internal server error"
+//	@Router			/users/{user_id}/deactivate [put]
+func DeactivateUser(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
+	vars := mux.Vars(r)
+	userID := vars["user_id"]
+
+	params := actions.DeactivateUserParams{
+		UserID: userID,
+		OrgID:  ctx.CurrentOrgID,
+	}
+
+	code, err := actions.DeactivateUser(params)
+	if err != nil {
+		return code, err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(&types.SimpleResponse{
+		Message: "User deactivated successfully",
+	})
+	if err != nil {
+		loging.Logger.Error("Error encoding deactivate user response", err)
 		return http.StatusInternalServerError, err
 	}
 	return 0, nil

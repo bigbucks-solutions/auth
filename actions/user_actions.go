@@ -146,3 +146,123 @@ func ListUsersForOrg(orgID string, page, pageSize int, status *constants.UserSta
 		PageSize:   pageSize,
 	}, 0, nil
 }
+
+// ActivateUserParams defines the parameters for user activation
+type ActivateUserParams struct {
+	UserID string
+	OrgID  string
+}
+
+// ActivateUser activates a user in the system
+func ActivateUser(params ActivateUserParams) (int, error) {
+	customerr := valids.NewErrorDict()
+
+	// Validate required parameters
+	if params.UserID == "" {
+		customerr.Errors["UserID"] = "User ID is required"
+		return http.StatusBadRequest, customerr
+	}
+	if params.OrgID == "" {
+		customerr.Errors["OrgID"] = "Organization ID is required"
+		return http.StatusBadRequest, customerr
+	}
+
+	var user models.User
+
+	// Check if user exists and belongs to the organization
+	err := models.Dbcon.Model(&models.User{}).
+		Joins("INNER JOIN user_org_roles uor ON uor.user_id = users.id").
+		Where("users.id = ? AND uor.org_id = ?", params.UserID, params.OrgID).
+		First(&user).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			customerr.Errors["User"] = "User not found in the specified organization"
+			return http.StatusNotFound, customerr
+		}
+		customerr.Errors["Database"] = "Error finding user: " + err.Error()
+		loging.Logger.Error("Error finding user for activation", err)
+		return http.StatusInternalServerError, customerr
+	}
+
+	// Check if user is already active
+	if user.Status == constants.UserStatusActive {
+		customerr.Errors["Status"] = "User is already active"
+		return http.StatusBadRequest, customerr
+	}
+
+	// Update user status to active
+	err = models.Dbcon.Model(&user).Update("status", constants.UserStatusActive).Error
+	if err != nil {
+		customerr.Errors["Database"] = "Error activating user: " + err.Error()
+		loging.Logger.Error("Error activating user", err)
+		return http.StatusInternalServerError, customerr
+	}
+
+	loging.Logger.Info("User activated successfully", map[string]interface{}{
+		"user_id": params.UserID,
+		"org_id":  params.OrgID,
+	})
+
+	return 0, nil
+}
+
+// DeactivateUserParams defines the parameters for user deactivation
+type DeactivateUserParams struct {
+	UserID string
+	OrgID  string
+}
+
+// DeactivateUser deactivates a user in the system
+func DeactivateUser(params DeactivateUserParams) (int, error) {
+	customerr := valids.NewErrorDict()
+
+	// Validate required parameters
+	if params.UserID == "" {
+		customerr.Errors["UserID"] = "User ID is required"
+		return http.StatusBadRequest, customerr
+	}
+	if params.OrgID == "" {
+		customerr.Errors["OrgID"] = "Organization ID is required"
+		return http.StatusBadRequest, customerr
+	}
+
+	var user models.User
+
+	// Check if user exists and belongs to the organization
+	err := models.Dbcon.Model(&models.User{}).
+		Joins("INNER JOIN user_org_roles uor ON uor.user_id = users.id").
+		Where("users.id = ? AND uor.org_id = ?", params.UserID, params.OrgID).
+		First(&user).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			customerr.Errors["User"] = "User not found in the specified organization"
+			return http.StatusNotFound, customerr
+		}
+		customerr.Errors["Database"] = "Error finding user: " + err.Error()
+		loging.Logger.Error("Error finding user for deactivation", err)
+		return http.StatusInternalServerError, customerr
+	}
+
+	// Check if user is already inactive
+	if user.Status == constants.UserStatusInactive {
+		customerr.Errors["Status"] = "User is already inactive"
+		return http.StatusBadRequest, customerr
+	}
+
+	// Update user status to inactive
+	err = models.Dbcon.Model(&user).Update("status", constants.UserStatusInactive).Error
+	if err != nil {
+		customerr.Errors["Database"] = "Error deactivating user: " + err.Error()
+		loging.Logger.Error("Error deactivating user", err)
+		return http.StatusInternalServerError, customerr
+	}
+
+	loging.Logger.Info("User deactivated successfully", map[string]interface{}{
+		"user_id": params.UserID,
+		"org_id":  params.OrgID,
+	})
+
+	return 0, nil
+}
