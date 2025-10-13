@@ -443,6 +443,65 @@ paths:
       summary: List permission of a role
       tags:
       - roles
+  /roles/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update an existing role in the system
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: Role object
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Role'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+      summary: Update existing role
+      tags:
+      - roles
+  /roles/{role_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an existing role if it has no associated users
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: Role ID
+        in: path
+        name: role_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.SimpleResponse'
+        "400":
+          description: Role has associated users
+          schema:
+            $ref: '#/definitions/types.SimpleResponse'
+        "404":
+          description: Role not found
+          schema:
+            $ref: '#/definitions/types.SimpleResponse'
+      summary: Delete existing role
+      tags:
+      - roles
   /roles/bind-permission:
     post:
       consumes:
@@ -843,6 +902,80 @@ paths:
       summary: Lists the users
       tags:
       - auth
+  /users/{user_id}/activate:
+    put:
+      consumes:
+      - application/json
+      description: Activate a user in the organization
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/types.SimpleResponse'
+        "400":
+          description: Bad request
+          schema: {}
+        "404":
+          description: User not found
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      security:
+      - JWTAuth: []
+      summary: Activate a user
+      tags:
+      - auth
+  /users/{user_id}/deactivate:
+    put:
+      consumes:
+      - application/json
+      description: Deactivate a user in the organization
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            $ref: '#/definitions/types.SimpleResponse'
+        "400":
+          description: Bad request
+          schema: {}
+        "404":
+          description: User not found
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      security:
+      - JWTAuth: []
+      summary: Deactivate a user
+      tags:
+      - auth
   /users/{user_id}/sessions:
     delete:
       consumes:
@@ -879,8 +1012,6 @@ paths:
       - sessions
 securityDefinitions:
   JWTAuth:
-    description: JWT token for user authentication (not a simple API key despite the
-      'apikey' type)
     in: header
     name: X-Auth
     type: apiKey
