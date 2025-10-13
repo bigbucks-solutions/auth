@@ -17,4 +17,9 @@ Unlike traditional monolithic authentication and authorization solutions, our mi
 
 In this docs, we will also discuss the key design principles and architecture of the microservice, and explain how it can be integrated with other microservices to provide a complete authentication and authorization solution, and will serve as a guide for those who are interested in using it in their own cloud-based applications.
 
-***Credits: CHATGPT AI***
+## Features
+
+- Username & Password Login
+- Password reset
+- User Sessions
+- RBAC Authorization
