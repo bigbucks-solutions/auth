@@ -420,54 +420,6 @@ paths:
       summary: Create new role
       tags:
       - roles
-  /roles/:role_id/permissions:
-    post:
-      consumes:
-      - application/json
-      description: Lists permissions of a role
-      parameters:
-      - description: Authorization
-        in: header
-        name: X-Auth
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/types.ListRolePermission'
-            type: array
-      summary: List permission of a role
-      tags:
-      - roles
-  /roles/{id}:
-    put:
-      consumes:
-      - application/json
-      description: Update an existing role in the system
-      parameters:
-      - description: Authorization
-        in: header
-        name: X-Auth
-        required: true
-        type: string
-      - description: Role object
-        in: body
-        name: role
-        required: true
-        schema:
-          $ref: '#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Role'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-      summary: Update existing role
-      tags:
-      - roles
   /roles/{role_id}:
     delete:
       consumes:
@@ -500,6 +452,63 @@ paths:
           schema:
             $ref: '#/definitions/types.SimpleResponse'
       summary: Delete existing role
+      tags:
+      - roles
+    put:
+      consumes:
+      - application/json
+      description: Update an existing role in the system
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: Role ID
+        in: path
+        name: role_id
+        required: true
+        type: string
+      - description: Role object
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Role'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+      summary: Update existing role
+      tags:
+      - roles
+  /roles/{role_id}/permissions:
+    post:
+      consumes:
+      - application/json
+      description: Lists permissions of a role
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: Role ID
+        in: path
+        name: role_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/types.ListRolePermission'
+            type: array
+      summary: List permission of a role
       tags:
       - roles
   /roles/bind-permission:

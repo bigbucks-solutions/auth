@@ -289,41 +289,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/roles/:role_id/permissions": {
-            "post": {
-                "description": "Lists permissions of a role",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "roles"
-                ],
-                "summary": "List permission of a role",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Authorization",
-                        "name": "X-Auth",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/types.ListRolePermission"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/roles/bind-permission": {
             "post": {
                 "description": "Associates a permission with a role",
@@ -488,7 +453,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/roles/{id}": {
+        "/roles/{role_id}": {
             "put": {
                 "description": "Update an existing role in the system",
                 "consumes": [
@@ -510,6 +475,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "string",
+                        "description": "Role ID",
+                        "name": "role_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Role object",
                         "name": "role",
                         "in": "body",
@@ -524,9 +496,7 @@ const docTemplate = `{
                         "description": "Created"
                     }
                 }
-            }
-        },
-        "/roles/{role_id}": {
+            },
             "delete": {
                 "description": "Delete an existing role if it has no associated users",
                 "consumes": [
@@ -572,6 +542,48 @@ const docTemplate = `{
                         "description": "Role not found",
                         "schema": {
                             "$ref": "#/definitions/types.SimpleResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/{role_id}/permissions": {
+            "post": {
+                "description": "Lists permissions of a role",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "List permission of a role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Role ID",
+                        "name": "role_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/types.ListRolePermission"
+                            }
                         }
                     }
                 }

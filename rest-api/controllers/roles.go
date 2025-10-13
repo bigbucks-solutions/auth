@@ -95,10 +95,11 @@ func CreateRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Con
 // @Tags			roles
 // @Accept			json
 // @Param			X-Auth	header	string	true	"Authorization"
+// @Param			role_id	path	string	true	"Role ID"
 // @Produce		json
 // @Param			role	body	types.Role	true	"Role object"
 // @Success		201
-// @Router			/roles/{id} [put]
+// @Router			/roles/{role_id} [put]
 func UpdateRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var role types.Role
 	err := json.NewDecoder(r.Body).Decode(&role)
@@ -300,8 +301,9 @@ func UnBindRoleToUser(w http.ResponseWriter, r *http.Request, ctx *request_conte
 // @Accept			json
 // @Produce		json
 // @Param			X-Auth	header	string	true	"Authorization"
+// @Param			role_id	path	string	true	"Role ID"
 // @Success		200	{array}	types.ListRolePermission
-// @Router			/roles/:role_id/permissions [post]
+// @Router			/roles/{role_id}/permissions [post]
 func ListPermissionsOfRole(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	role_id := mux.Vars(r)["role_id"]
 	permissions, code, err := actions.ListRolePermission(role_id, ctx.CurrentOrgID, ctx.Context)

@@ -294,41 +294,6 @@
         "x-codegen-request-body-name": "role"
       }
     },
-    "/roles/:role_id/permissions": {
-      "post": {
-        "description": "Lists permissions of a role",
-        "parameters": [
-          {
-            "description": "Authorization",
-            "in": "header",
-            "name": "X-Auth",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/types.ListRolePermission"
-                  },
-                  "type": "array"
-                }
-              }
-            },
-            "description": "OK"
-          }
-        },
-        "summary": "List permission of a role",
-        "tags": [
-          "roles"
-        ]
-      }
-    },
     "/roles/bind-permission": {
       "post": {
         "description": "Associates a permission with a role",
@@ -503,6 +468,156 @@
           "roles"
         ],
         "x-codegen-request-body-name": "binding"
+      }
+    },
+    "/roles/{role_id}": {
+      "delete": {
+        "description": "Delete an existing role if it has no associated users",
+        "parameters": [
+          {
+            "description": "Authorization",
+            "in": "header",
+            "name": "X-Auth",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Role ID",
+            "in": "path",
+            "name": "role_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/types.SimpleResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/types.SimpleResponse"
+                }
+              }
+            },
+            "description": "Role has associated users"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/types.SimpleResponse"
+                }
+              }
+            },
+            "description": "Role not found"
+          }
+        },
+        "summary": "Delete existing role",
+        "tags": [
+          "roles"
+        ]
+      },
+      "put": {
+        "description": "Update an existing role in the system",
+        "parameters": [
+          {
+            "description": "Authorization",
+            "in": "header",
+            "name": "X-Auth",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Role ID",
+            "in": "path",
+            "name": "role_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/bigbucks_solution_auth_rest-api_controllers_types.Role"
+              }
+            }
+          },
+          "description": "Role object",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {},
+            "description": "Created"
+          }
+        },
+        "summary": "Update existing role",
+        "tags": [
+          "roles"
+        ],
+        "x-codegen-request-body-name": "role"
+      }
+    },
+    "/roles/{role_id}/permissions": {
+      "post": {
+        "description": "Lists permissions of a role",
+        "parameters": [
+          {
+            "description": "Authorization",
+            "in": "header",
+            "name": "X-Auth",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Role ID",
+            "in": "path",
+            "name": "role_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/types.ListRolePermission"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "List permission of a role",
+        "tags": [
+          "roles"
+        ]
       }
     },
     "/sessions/users/{user_id}": {
@@ -1012,6 +1127,158 @@
         ]
       }
     },
+    "/users/{user_id}/activate": {
+      "put": {
+        "description": "Activate a user in the organization",
+        "parameters": [
+          {
+            "description": "Authorization",
+            "in": "header",
+            "name": "X-Auth",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "User ID",
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/types.SimpleResponse"
+                }
+              }
+            },
+            "description": "Success message"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "User not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "JWTAuth": []
+          }
+        ],
+        "summary": "Activate a user",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/users/{user_id}/deactivate": {
+      "put": {
+        "description": "Deactivate a user in the organization",
+        "parameters": [
+          {
+            "description": "Authorization",
+            "in": "header",
+            "name": "X-Auth",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "User ID",
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/types.SimpleResponse"
+                }
+              }
+            },
+            "description": "Success message"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "User not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "JWTAuth": []
+          }
+        ],
+        "summary": "Deactivate a user",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/users/{user_id}/sessions": {
       "delete": {
         "description": "Revokes all sessions for a user except the current session",
@@ -1447,7 +1714,6 @@
     },
     "securitySchemes": {
       "JWTAuth": {
-        "description": "JWT token for user authentication (not a simple API key despite the 'apikey' type)",
         "in": "header",
         "name": "X-Auth",
         "type": "apiKey"
