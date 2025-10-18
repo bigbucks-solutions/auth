@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{.Subject}}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .content {
+            padding: 20px;
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .footer {
+            text-align: center;
+            color: #6c757d;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Organization Invitation</h1>
+    </div>
+
+    <div class="content">
+        <p>Hello,</p>
+
+        <p>You have been invited to join <strong>{{.OrganizationName}}</strong> with the role of
+            <strong>{{.RoleName}}</strong>.</p>
+
+        <p>{{.InviterName}} has invited you to collaborate on this organization.</p>
+
+        <p>Click the button below to accept the invitation:</p>
+
+        <div style="text-align: center;">
+            <a href="{{.InvitationLink}}" class="button">Accept Invitation</a>
+        </div>
+
+        <p>Or copy and paste this link into your browser:</p>
+        <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 3px;">
+            {{.InvitationLink}}
+        </p>
+
+        <p><small>This invitation will expire on {{.ExpirationDate}}.</small></p>
+
+        <p>If you did not expect this invitation, you can safely ignore this email.</p>
+
+        <p>Best regards,<br>
+            {{.OrganizationName}} Team</p>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2025 {{.OrganizationName}}. All rights reserved.</p>
+    </div>
+</body>
+
+</html>

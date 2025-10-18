@@ -78,7 +78,7 @@ var _ = BeforeSuite(func() {
 	err = models.Dbcon.Create(sampleData).Error
 	Ω(err).To(Succeed())
 	TestUserID = sampleData.ID
-	settings.Current = &settings.Settings{Alg: "ES256", PrivateKey: "ec_private.pem", PublicKey: "ec_public.pem"}
+	settings.Current = &settings.Settings{Alg: "ES256", PrivateKey: "ec_private.pem", PublicKey: "ec_public.pem", LogLevel: "info"}
 	// settings.Current.LoadKeys()
 	handler, err := router.NewHandler(settings.Current, permission_cache.NewPermissionCache(settings.Current), sessionstore.NewSessionStore(settings.Current))
 

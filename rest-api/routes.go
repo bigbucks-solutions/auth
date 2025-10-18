@@ -120,6 +120,24 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	api.Handle("/roles/unbind-user",
 		makeHandler(ctr.UnBindRoleToUser, WithAuth(true), WithPermission("user:*:update")),
 	).Methods("POST")
+
+	// Invitations
+	api.Handle("/invitations",
+		makeHandler(ctr.InviteUser, WithAuth(true), WithPermission("user:*:write")),
+	).Methods("POST")
+	api.Handle("/invitations",
+		makeHandler(ctr.ListInvitations, WithAuth(true), WithPermission("user:*:read")),
+	).Methods("GET")
+	api.Handle("/invitations/accept",
+		makeHandler(ctr.AcceptInvitation, WithAuth(true)),
+	).Methods("GET")
+	api.Handle("/invitations/{invitation_id}",
+		makeHandler(ctr.RevokeInvitation, WithAuth(true), WithPermission("user:*:write")),
+	).Methods("DELETE")
+	api.Handle("/invitations/{invitation_id}/resend",
+		makeHandler(ctr.ResendInvitation, WithAuth(true), WithPermission("user:*:write")),
+	).Methods("POST")
+
 	// Master data
 	api.Handle("/master-data/resources",
 		makeHandler(ctr.GetResources, WithAuth(true), WithPermission("masterdata:*:read")),

@@ -73,6 +73,11 @@ type Settings struct {
 	RedisUsername string `json:"redisUsername"`
 	RedisPassword string `json:"redisPassword"`
 	LogLevel      string `json:"logLevel"`
+	SMTPHost      string `json:"smtpHost"`
+	SMTPPort      string `json:"smtpPort"`
+	SMTPUsername  string `json:"smtpUsername"`
+	SMTPPassword  string `json:"smtpPassword"`
+	SMTPFrom      string `json:"smtpFrom"`
 }
 
 // Clean cleans any variables that might need cleaning.

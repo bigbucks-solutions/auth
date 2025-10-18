@@ -74,18 +74,15 @@
 package passwordreset
 
 import (
+	"bigbucks/solution/auth/emailservice"
 	"bigbucks/solution/auth/loging"
-	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/binary"
 	"errors"
-	"fmt"
-	"net/smtp"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/dchest/authcookie"
@@ -193,15 +190,7 @@ func VerifyToken(token string, pwdvalFn func(string) ([]byte, error), secret []b
 
 // SendResetEmail Send Password Reset Email
 func SendResetEmail(token string, to string, username string) {
-	auth := smtp.PlainAuth("", "npmedco@gmail.com", "zerj tpau wazl jtcb", "smtp.gmail.com")
-	toEmail := []string{to}
-	templateFileName := "./passwordreset/template.html"
-	t, err := template.ParseFiles(templateFileName)
-	if err != nil {
-		fmt.Println(err)
-	}
-	buf := new(bytes.Buffer)
-	data := struct {
+	if err := emailservice.SendEmail(to, "./templates/password_reset.html", struct {
 		Company  string
 		Token    string
 		Username string
@@ -209,19 +198,8 @@ func SendResetEmail(token string, to string, username string) {
 		Company:  "BigBucks",
 		Token:    token,
 		Username: username,
+	}); err != nil {
+		loging.Logger.Errorln("Failed to send password reset email:", err)
 	}
-	if err = t.Execute(buf, data); err != nil {
-		fmt.Println(err)
-	}
-	// mime := "MIME-version: 1.0;\nContent-Type: text/plain; charset=\"UTF-8\";\n\n"
-	// subject := "Subject: Password Reset" + "!\n"
-	body := "To: " + to + "\r\nSubject: " + "Subject: Password Reset" + "\r\n" + MIME + "\r\n" + buf.String()
-	// msg := []byte(subject + mime + "\n" + buf.String())
-	// r.body = buf.String()
-	// msg := []byte("To: jamshi.onnet@gmail.com\r\n" +
-	// 	"Subject: Why are you not using Mailtrap yet?\r\n" +
-	// 	"\r\n" +
-	// 	"Here’s the space for our great sales pitch\r\n")
-	err = smtp.SendMail("smtp.gmail.com:587", auth, "jamshi.onnet@gmail.com", toEmail, []byte(body))
-	loging.Logger.Errorln(err)
+
 }

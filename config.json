@@ -14,5 +14,10 @@
     "redisPassword": "",
     "redisDB": "0",
     "redisUsername": "",
-    "logLevel": "debug"
+    "logLevel": "info",
+    "smtpHost": "smtp.gmail.com",
+    "smtpPort": "587",
+    "smtpUsername": "",
+    "smtpPassword": "",
+    "smtpFrom": "noreply@bigbucks.com"
 }
