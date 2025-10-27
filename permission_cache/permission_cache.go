@@ -109,6 +109,9 @@ func (pc *PermissionCache) CheckPermission(ctx *context.Context, resource, scope
 		for _, act := range actions {
 			// Check each action-scope combination against all user roles
 			for _, role := range userInfo.Roles {
+				if role.OrgID != orgID {
+					continue
+				}
 				key := fmt.Sprintf("perm:%s:%s:%s:%s", orgID, resource, scp, act)
 
 				role_ := strings.ToUpper(role.Role)

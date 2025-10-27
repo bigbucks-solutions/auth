@@ -105,4 +105,20 @@ func InitializeValidations() {
 	if err != nil {
 		loging.Logger.Error(err)
 	}
+	err = Validate.RegisterValidation("valid_phone", func(fl validator.FieldLevel) bool {
+		value := fl.Field().String()
+		// check value contains digits and starting optional +
+		for i, char := range value {
+			if i == 0 && char == '+' {
+				continue
+			}
+			if !unicode.IsNumber(char) {
+				return false
+			}
+		}
+		return true
+	})
+	if err != nil {
+		loging.Logger.Error(err)
+	}
 }

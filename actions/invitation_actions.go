@@ -4,13 +4,14 @@ import (
 	"bigbucks/solution/auth/emailservice"
 	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
+	"bigbucks/solution/auth/settings"
 	valids "bigbucks/solution/auth/validations"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -188,8 +189,10 @@ func AcceptInvitation(token string, userID string) (int, error) {
 		if !invitation.CanBeAccepted() {
 			if invitation.IsExpired() {
 				customerr.Errors["token"] = "Invitation has expired"
+				customerr.Errors["_status"] = strconv.Itoa(http.StatusNotAcceptable)
 			} else {
 				customerr.Errors["token"] = "Invitation cannot be accepted"
+				customerr.Errors["_status"] = strconv.Itoa(http.StatusNotAcceptable)
 			}
 			return customerr
 		}
@@ -199,6 +202,7 @@ func AcceptInvitation(token string, userID string) (int, error) {
 		if err := tx.Where("id = ?", userID).First(&user).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				customerr.Errors["user_id"] = "User not found"
+				customerr.Errors["_status"] = strconv.Itoa(http.StatusExpectationFailed)
 				return customerr
 			}
 			return err
@@ -206,6 +210,7 @@ func AcceptInvitation(token string, userID string) (int, error) {
 
 		if user.Username != invitation.Email {
 			customerr.Errors["email"] = "Invitation email does not match user email"
+			customerr.Errors["_status"] = strconv.Itoa(http.StatusExpectationFailed)
 			return customerr
 		}
 
@@ -239,9 +244,24 @@ func AcceptInvitation(token string, userID string) (int, error) {
 		return nil
 	})
 
+	//check error type and return appropriate status code
+
 	if err != nil {
-		loging.Logger.Error("Error accepting invitation", err)
-		return http.StatusBadRequest, err
+		switch err := err.(type) {
+		case *valids.ValidationErrors:
+			loging.Logger.Error("Validation error accepting invitation", err)
+			if err.Errors["_status"] != "" {
+				status, convErr := strconv.Atoi(err.Errors["_status"])
+				if convErr == nil {
+					delete(err.Errors, "_status")
+					return status, err
+				}
+			}
+			return http.StatusBadRequest, err
+		default:
+			loging.Logger.Error("Error accepting invitation", err)
+			return http.StatusInternalServerError, err
+		}
 	}
 
 	return http.StatusOK, nil
@@ -465,10 +485,7 @@ func generateInvitationToken() (string, error) {
 // SendInvitationEmail sends an invitation email to the invited user
 func SendInvitationEmail(invitation *models.Invitation) error {
 	// Get base URL from environment or use default
-	baseURL := os.Getenv("APP_BASE_URL")
-	if baseURL == "" {
-		baseURL = "https://app.bigbucks.com" // Default base URL
-	}
+	baseURL := settings.Current.BaseHost
 
 	// Prepare email template parameters
 	params := map[string]interface{}{
@@ -476,7 +493,7 @@ func SendInvitationEmail(invitation *models.Invitation) error {
 		"OrganizationName": invitation.Organization.Name,
 		"RoleName":         invitation.Role.Name,
 		"InviterName":      "Team", // You might want to get the actual inviter name
-		"InvitationLink":   fmt.Sprintf("%s/invitations/accept?token=%s", baseURL, invitation.Token),
+		"InvitationLink":   fmt.Sprintf("%s/auth/invitations/accept/%s", baseURL, invitation.Token),
 		"ExpirationDate":   invitation.ExpiresAt.Format("January 2, 2006 at 3:04 PM"),
 	}
 

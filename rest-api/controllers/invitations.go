@@ -2,10 +2,12 @@ package controllers
 
 import (
 	"bigbucks/solution/auth/actions"
+	jwtops "bigbucks/solution/auth/jwt-ops"
 	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/request_context"
 	"bigbucks/solution/auth/rest-api/controllers/types"
+	"bigbucks/solution/auth/validations"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -22,6 +24,12 @@ type InviteUserRequest struct {
 // AcceptInvitationRequest represents the request body for accepting an invitation
 type AcceptInvitationRequest struct {
 	Token string `json:"token" validate:"required"`
+}
+
+// Response with new JWT token after accepting invitation
+type AcceptInvitationResponse struct {
+	Message  string `json:"message"`
+	JWTToken string `json:"jwtToken"`
 }
 
 // InvitationResponse represents the response format for invitations
@@ -69,6 +77,11 @@ func InviteUser(w http.ResponseWriter, r *http.Request, ctx *request_context.Con
 	var req InviteUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		loging.Logger.Error("Failed to decode invitation request", err)
+		return http.StatusBadRequest, err
+	}
+
+	if err := validations.Validate.Struct(req); err != nil {
+		loging.Logger.Error("Invitation request validation failed", err)
 		return http.StatusBadRequest, err
 	}
 
@@ -218,10 +231,11 @@ func ListInvitations(w http.ResponseWriter, r *http.Request, ctx *request_contex
 // @Produce		json
 // @Param			X-Auth	header	string	true	"Authorization"
 // @Param			token		query		string		true	"Invitation Token"
-// @Success		200		{object}	types.SimpleResponse	"Invitation accepted successfully"
+// @Success		200		{object}	AcceptInvitationResponse	"Invitation accepted successfully"
 // @Failure		400		{object}	error					"Bad request"
 // @Failure		401		{object}	error					"Unauthorized"
 // @Failure		500		{object}	error					"Internal server error"
+// @Failure		409		{object}	error					"Conflict - Invitation already accepted"
 // @Router			/invitations/accept [get]
 func AcceptInvitation(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	token := r.URL.Query().Get("token")
@@ -243,9 +257,28 @@ func AcceptInvitation(w http.ResponseWriter, r *http.Request, ctx *request_conte
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	if code == http.StatusOK {
+		loging.Logger.Debug("Invitation accepted successfully for user: " + currentUser.Username)
+		user, err := ctx.GetCurrentUserModel()
+		if err != nil {
+			return http.StatusInternalServerError, err
+		}
+		newJWT, err := jwtops.SignJWT(user, ctx.Auth.ID)
+		if err != nil {
+			loging.Logger.Error("Failed to sign new JWT after accepting invitation", err)
+			return http.StatusInternalServerError, err
+		}
+		return 0, json.NewEncoder(w).Encode(&AcceptInvitationResponse{
+			Message:  "Invitation accepted successfully",
+			JWTToken: newJWT,
+		})
+
+	}
+
 	return 0, json.NewEncoder(w).Encode(&types.SimpleResponse{
 		Message: "Invitation accepted successfully",
 	})
+
 }
 
 // @Summary		Revoke invitation

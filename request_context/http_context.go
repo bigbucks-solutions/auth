@@ -35,7 +35,7 @@ func (c *Context) GetCurrentScope() (scope *constants.Scope, err error) {
 	return
 }
 func (c *Context) GetCurrentUserModel() (user *models.User, err error) {
-	if err := models.Dbcon.Where("username = ?", c.Auth.User.Username).First(&user).Error; gorm.ErrRecordNotFound == err {
+	if err := models.Dbcon.Where("username = ?", c.Auth.User.Username).Preload("Roles").First(&user).Error; gorm.ErrRecordNotFound == err {
 		loging.Logger.Debugln(err)
 		return nil, err
 	}

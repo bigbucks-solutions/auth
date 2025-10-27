@@ -220,49 +220,9 @@ var _ = Describe("Invitation Actions", func() {
 			code, err := actions.AcceptInvitation(invitation.Token, differentUser.ID)
 
 			Ω(err).Should(HaveOccurred())
-			Ω(code).Should(Equal(400))
+			Ω(code).Should(Equal(417))
 		})
 	})
-
-	// Context("ListInvitations", func() {
-	// 	BeforeEach(func() {
-	// 		// Create multiple invitations
-	// 		emails := []string{"invite1@test.com", "invite2@test.com", "invite3@test.com"}
-	// 		for _, email := range emails {
-	// 			params := actions.InviteUserParams{
-	// 				Email:     email,
-	// 				OrgID:     orgID,
-	// 				RoleID:    roleID,
-	// 				InviterID: inviterID,
-	// 			}
-	// 			_, _, err := actions.InviteUserToOrg(params)
-	// 			Ω(err).Should(BeNil())
-	// 		}
-	// 	})
-
-	// 	It("Should return paginated list of invitations", func() {
-	// 		invitations, total, code, err := actions.ListInvitations(orgID, 1, 2, nil)
-
-	// 		Ω(err).Should(BeNil())
-	// 		Ω(code).Should(Equal(200))
-	// 		Ω(len(invitations)).Should(Equal(2))
-	// 		Ω(total).Should(Equal(int64(3)))
-	// 	})
-
-	// 	It("Should filter by status", func() {
-	// 		status := models.InvitationStatusPending
-	// 		invitations, total, code, err := actions.ListInvitations(orgID, 1, 10, &status)
-
-	// 		Ω(err).Should(BeNil())
-	// 		Ω(code).Should(Equal(200))
-	// 		Ω(len(invitations)).Should(Equal(3))
-	// 		Ω(total).Should(Equal(int64(3)))
-
-	// 		for _, invitation := range invitations {
-	// 			Ω(invitation.Status).Should(Equal(models.InvitationStatusPending))
-	// 		}
-	// 	})
-	// })
 
 	Context("RevokeInvitation", func() {
 		var invitation *models.Invitation

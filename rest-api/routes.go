@@ -64,7 +64,7 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	api.Handle("/renew", makeHandler(ctr.RenewToken, WithAuth(true))).Methods("POST")
 	api.Handle("/signout", makeHandler(ctr.SignOut, WithAuth(true))).Methods("POST")
 	api.Handle("/get-org/{id:[0-9]+}", makeHandler(ctr.GetOrg)).Methods("GET")
-	api.Handle("/create-org", makeHandler(ctr.CreateOrg)).Methods("POST")
+	api.Handle("/organizations", makeHandler(ctr.CreateOrg, WithAuth(true))).Methods("POST")
 
 	// sessions
 	api.Handle("/sessions/users/{user_id}", makeHandler(ctr.Sessions, WithAuth(true), WithPermission("session:all:read"))).Methods("GET")

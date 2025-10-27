@@ -12,9 +12,11 @@ type Organization struct {
 	Name                string `gorm:"not null" validate:"required,min=4"`
 	Address             string
 	ContactEmail        string `validate:"required,email"`
-	ContactNumber       string `validate:"omitempty,min=8,numeric"`
-	// Branches      []OrganizationBranch `gorm:"foreignkey:ParentOrg;"`
-	Users []*User `gorm:"many2many:UserOrgRole;JoinForeignKey:OrgID;JoinReferences:UserID;" validate:"required,len=1,dive"`
+	ContactNumber       string `validate:"omitempty,min=5"`
+	Country             string
+	WebsiteURL          string  `validate:"omitempty,url"`
+	CompanyDescription  string  `gorm:"type:text" validate:"omitempty,max=500"`
+	Users               []*User `gorm:"many2many:UserOrgRole;JoinForeignKey:OrgID;JoinReferences:UserID;" validate:"required,len=1,dive"`
 }
 
 // GetOrganization : Get Organization Detail with primary key

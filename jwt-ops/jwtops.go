@@ -59,6 +59,7 @@ func SignJWT(user *models.User, sessionId string) (signed string, err error) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 60)),
 			Issuer:    "BigBucks Auth",
 			ID:        sessionId,
+			Subject:   user.ID,
 		},
 	}
 	signingMethod := jwt.GetSigningMethod(settings.Current.Alg)

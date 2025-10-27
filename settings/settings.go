@@ -57,6 +57,7 @@ type AuthToken struct {
 type Settings struct {
 	SecretKey     string `json:"key" mapstructure:"key"`
 	BaseURL       string `json:"baseURL"`
+	BaseHost      string `json:"baseHost"`
 	Port          string `json:"port"`
 	Address       string `json:"address"`
 	Log           string `json:"log"`

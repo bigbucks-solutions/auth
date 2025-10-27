@@ -1,6 +1,6 @@
 {
     "key": "qiyeiuyeiqeoiqeuq",
-    "port": "8000",
+    "port": "9000",
     "alg": "ES256",
     "privateKey": "ec_private.pem",
     "publicKey": "ec_public.pem",
@@ -14,10 +14,11 @@
     "redisPassword": "",
     "redisDB": "0",
     "redisUsername": "",
-    "logLevel": "info",
+    "logLevel": "debug",
     "smtpHost": "smtp.gmail.com",
     "smtpPort": "587",
     "smtpUsername": "",
     "smtpPassword": "",
-    "smtpFrom": "noreply@bigbucks.com"
+    "smtpFrom": "noreply@bigbucks.com",
+    "baseHost": "http://localhost:3000"
 }
