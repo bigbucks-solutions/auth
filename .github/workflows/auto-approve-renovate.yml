@@ -24,7 +24,7 @@ jobs:
         !contains(github.event.pull_request.title, 'major')))
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # CRUCIAL: Wait for CI checks to complete first
       - name: Wait for CI checks to complete

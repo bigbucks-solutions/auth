@@ -22,7 +22,7 @@ jobs:
         go install github.com/onsi/ginkgo/ginkgo@latest
         go install golang.org/x/tools/cmd/goimports@latest
 
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
 
     - name: Format Check
       run: |
