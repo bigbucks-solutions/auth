@@ -25,7 +25,7 @@ jobs:
           - runner: ubuntu-latest
             platform: linux/amd64
             arch: amd64
-          - runner: ubuntu-latest-arm64
+          - runner: ubuntu-22.04-arm
             platform: linux/arm64
             arch: arm64
 
