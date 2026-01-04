@@ -12,6 +12,26 @@
         "digest"
       ],
       "automerge": true
+    },
+    {
+      "matchDatasources": [
+        "docker",
+        "golang-version"
+      ],
+      "matchPackageNames": [
+        "golang",
+        "go"
+      ],
+      "allowedVersions": "1.25"
+    },
+    {
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "postgres"
+      ],
+      "allowedVersions": "18"
     }
   ]
 }
