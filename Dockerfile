@@ -29,7 +29,7 @@ COPY --from=builder /build/auth .
 
 # Copy necessary files (adjust based on your needs)
 COPY --from=builder /build/templates ./templates
-COPY --from=builder /build/migrations ./migrations
+COPY --from=builder /build/migrations/*.sql ./migrations/
 
 # Create directory for profile pics if needed
 RUN mkdir -p /app/profile_pics

@@ -8,3 +8,4 @@ postgres-data/
 __debug_*
 cover.profile
 report.json
+config.docker.json

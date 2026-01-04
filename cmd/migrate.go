@@ -129,7 +129,7 @@ func getMigrate() *migrate.Migrate {
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://migrations",
+		"file://./migrations",
 		"postgres",
 		driver,
 	)
