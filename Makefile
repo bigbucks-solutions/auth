@@ -40,7 +40,11 @@ gen-ecs256-pair:
 
 .PHONY: migration-generate
 migration-generate:
-	atlas migrate diff --env gorm
+	@if [ -z "$(NAME)" ]; then \
+		echo "Error: NAME is required. Usage: make migration-generate NAME=your_migration_name"; \
+		exit 1; \
+	fi
+	atlas migrate diff $(NAME) --env gorm
 
 .PHONY: migration-apply
 migration-apply:
