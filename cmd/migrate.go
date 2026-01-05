@@ -128,8 +128,11 @@ func getMigrate() *migrate.Migrate {
 		os.Exit(1)
 	}
 
+	// Use absolute path to migrations directory
+	migrationsPath := "file://./migrations"
+
 	m, err := migrate.NewWithDatabaseInstance(
-		"file:///migrations",
+		migrationsPath,
 		"postgres",
 		driver,
 	)
