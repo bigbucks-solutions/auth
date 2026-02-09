@@ -1,6 +1,6 @@
 ---
 layout: home
-title: Command Line
+title: Usage
 nav_order: 2
 ---
 
@@ -154,9 +154,3 @@ Then create a `.env` file:
 ```
 DB_PASSWORD=your_secure_password_here
 ```
-
-## Next Steps
-
-- Review the [REST API Documentation](rest_api.md) for available endpoints
-- Learn about [Command Line Tools](commands.md) for administrative tasks
-- Explore [RBAC Configuration](schemas/) for permission management
