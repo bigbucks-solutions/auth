@@ -61,3 +61,6 @@ make gh-deploy
 
 ### Documentation
 For detailed API documentation, visit [https://bigbucks-solutions.github.io/auth/](https://bigbucks-solutions.github.io/auth/)
+## UI Demo
+
+![Roles and Permissions Management](assets/roles-permissions-ui.gif)

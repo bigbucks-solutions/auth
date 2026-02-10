@@ -77,7 +77,7 @@ services:
       retries: 5
 
   migration:
-    image: ghcr.io/your-org/auth:0.1.5
+    image: ghcr.io/bigbucks-solutions/auth:0.1.5
     depends_on:
       postgres:
         condition: service_healthy
@@ -89,7 +89,7 @@ services:
     restart: on-failure
 
   auth:
-    image: ghcr.io/your-org/auth:0.1.5
+    image: ghcr.io/bigbucks-solutions/auth:0.1.5
     depends_on:
       postgres:
         condition: service_healthy
