@@ -266,3 +266,64 @@ func DeactivateUser(params DeactivateUserParams) (int, error) {
 
 	return 0, nil
 }
+
+// GetUserInfo loads a user by ID with all associations using Preload and returns a UserInfo response
+func GetUserInfo(userID string) (*types.UserInfo, int, error) {
+	var user models.User
+	err := models.Dbcon.
+		Preload("Profile").
+		Preload("Roles").
+		Preload("Organizations").
+		Preload("OAuthClient").
+		First(&user, "id = ?", userID).Error
+	if err != nil {
+		return nil, http.StatusNotFound, err
+	}
+
+	// Build avatar URL
+	var picture *string
+	if user.Profile.Picture != "" {
+		s := "/avatar/" + user.Profile.Picture
+		picture = &s
+	}
+
+	userInfo := &types.UserInfo{
+		Username: user.Username,
+		IsSocial: user.OAuthClient.ID != 0,
+		Profile: types.UserInfoProfile{
+			Firstname: user.Profile.FirstName,
+			Lastname:  user.Profile.LastName,
+			Phone:     user.Profile.ContactNumber,
+			Email:     user.Profile.Email,
+			Picture:   picture,
+		},
+	}
+
+	if user.Roles != nil {
+		userInfo.Roles = make([]*types.UserInfoRole, len(user.Roles))
+		for i, role := range user.Roles {
+			userInfo.Roles[i] = &types.UserInfoRole{
+				Name:        role.Name,
+				Description: role.Description,
+			}
+		}
+	}
+	// Remove duplicate organizations using a map
+	if user.Organizations != nil {
+		orgMap := make(map[string]types.UserInfoOrganization, len(user.Organizations))
+		for _, org := range user.Organizations {
+			if _, exists := orgMap[org.ID]; !exists {
+				orgMap[org.ID] = types.UserInfoOrganization{
+					ID:   org.ID,
+					Name: org.Name,
+				}
+			}
+		}
+		userInfo.Organizations = make([]types.UserInfoOrganization, 0, len(orgMap))
+		for _, org := range orgMap {
+			userInfo.Organizations = append(userInfo.Organizations, org)
+		}
+	}
+
+	return userInfo, 0, nil
+}

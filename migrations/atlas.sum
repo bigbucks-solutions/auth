@@ -1,2 +1,4 @@
-h1:hv9uJIezRoYmqH/l1I33z9phokyTHmzSvybuzjLoui8=
+h1:sz7wWr1G66YMYaPOZewyoMnfOeMvbzKX7cYW2CBTeTU=
 20260104120111_initial.up.sql h1:oLwuc55MsZ78g8NzWEYfEojH7G2bBu7T4PXE/3VX0pA=
+20260213144039_webauthn.up.sql h1:UKxng5Ye0c2mJItxofdTT5KYkXQpPCHN2r+31MMleRs=
+20260213173113_webauthn-flag.up.sql h1:Bk2cUd9FVkdouex/Pdi/RVCTRt+qXy4YaN3s5kU2abw=

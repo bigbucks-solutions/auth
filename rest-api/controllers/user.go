@@ -142,8 +142,11 @@ func GetMeDetails(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 	if err != nil {
 		return http.StatusNotFound, err
 	}
-	err = json.NewEncoder(w).Encode(user)
+	userInfo, code, err := actions.GetUserInfo(user.ID)
 	if err != nil {
+		return code, err
+	}
+	if err := json.NewEncoder(w).Encode(userInfo); err != nil {
 		return http.StatusInternalServerError, err
 	}
 	return 0, nil

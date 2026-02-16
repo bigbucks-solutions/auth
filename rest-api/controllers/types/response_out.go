@@ -10,20 +10,10 @@ type AuthorizeResponse struct {
 	Status bool `json:"status"`
 }
 
-type UserInfo struct {
-	Username string  `json:"username"`
-	Roles    []*Role `json:"roles,omitempty"`
-	Profile  Profile `json:"profile,omitempty"`
-	IsSocial bool    `json:"isSocialAccount"`
-}
-
-type Profile struct {
-	Firstname string  `json:"firstName"`
-	Lastname  string  `json:"lastName"`
-	Phone     string  `json:"phone"`
-	Email     string  `json:"email"`
-	Picture   *string `json:"avatar"`
-}
+type UserInfo = types.UserInfo
+type Organization = types.UserInfoOrganization
+type Role = types.UserInfoRole
+type Profile = types.UserInfoProfile
 
 type ListRolesPagedResponse struct {
 	Roles []types.ListRoleResponse `json:"roles"`

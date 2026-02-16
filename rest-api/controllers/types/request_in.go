@@ -1,13 +1,5 @@
 package types
 
-import "encoding/json"
-
-type Role struct {
-	Name        string          `json:"name" validate:"required"`
-	Description string          `json:"description"`
-	ExtraAttrs  json.RawMessage `json:"extraAttrs"`
-}
-
 type CheckPermissionBody struct {
 	Scope    string
 	Resource string

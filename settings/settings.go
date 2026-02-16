@@ -55,30 +55,33 @@ type AuthToken struct {
 
 // Server specific settings.
 type Settings struct {
-	SecretKey     string `json:"key" mapstructure:"key"`
-	BaseURL       string `json:"baseURL"`
-	BaseHost      string `json:"baseHost"`
-	Port          string `json:"port"`
-	Address       string `json:"address"`
-	Log           string `json:"log"`
-	Alg           string `json:"alg"`
-	PrivateKey    string `json:"privateKey"`
-	PublicKey     string `json:"publicKey"`
-	DBUsername    string `json:"dBUsername"`
-	DBPassword    string `json:"dBPassword"`
-	DBName        string `json:"dBName"`
-	DBHost        string `json:"dBHost"`
-	DBPort        string `json:"dBPort"`
-	DBSSLMode     string `json:"dBSSLMode"`
-	RedisAddress  string `json:"redisAddress"`
-	RedisUsername string `json:"redisUsername"`
-	RedisPassword string `json:"redisPassword"`
-	LogLevel      string `json:"logLevel"`
-	SMTPHost      string `json:"smtpHost"`
-	SMTPPort      string `json:"smtpPort"`
-	SMTPUsername  string `json:"smtpUsername"`
-	SMTPPassword  string `json:"smtpPassword"`
-	SMTPFrom      string `json:"smtpFrom"`
+	SecretKey       string   `json:"key" mapstructure:"key"`
+	BaseURL         string   `json:"baseURL"`
+	BaseHost        string   `json:"baseHost"`
+	Port            string   `json:"port"`
+	Address         string   `json:"address"`
+	Log             string   `json:"log"`
+	Alg             string   `json:"alg"`
+	PrivateKey      string   `json:"privateKey"`
+	PublicKey       string   `json:"publicKey"`
+	DBUsername      string   `json:"dBUsername"`
+	DBPassword      string   `json:"dBPassword"`
+	DBName          string   `json:"dBName"`
+	DBHost          string   `json:"dBHost"`
+	DBPort          string   `json:"dBPort"`
+	DBSSLMode       string   `json:"dBSSLMode"`
+	RedisAddress    string   `json:"redisAddress"`
+	RedisUsername   string   `json:"redisUsername"`
+	RedisPassword   string   `json:"redisPassword"`
+	LogLevel        string   `json:"logLevel"`
+	SMTPHost        string   `json:"smtpHost"`
+	SMTPPort        string   `json:"smtpPort"`
+	SMTPUsername    string   `json:"smtpUsername"`
+	SMTPPassword    string   `json:"smtpPassword"`
+	SMTPFrom        string   `json:"smtpFrom"`
+	WebAuthnRPID    string   `json:"webAuthnRPID" mapstructure:"webAuthnRPID"`
+	WebAuthnRPName  string   `json:"webAuthnRPName" mapstructure:"webAuthnRPName"`
+	WebAuthnOrigins []string `json:"webAuthnOrigins" mapstructure:"webAuthnOrigins"`
 }
 
 // Clean cleans any variables that might need cleaning.

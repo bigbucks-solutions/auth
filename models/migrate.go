@@ -16,7 +16,7 @@ func Migrate() {
 	_ = Dbcon.AutoMigrate(&UserOrgRole{})
 
 	_ = Dbcon.AutoMigrate(&User{}, &Profile{}, &OAuthClient{}, &Organization{},
-		&Role{}, &Permission{}, &UserOrgRole{}, &RolePermission{}, &ForgotPassword{}, &AuthLog{}, &EmailVerification{}, &MobileVerification{}, &Invitation{})
+		&Role{}, &Permission{}, &UserOrgRole{}, &RolePermission{}, &ForgotPassword{}, &AuthLog{}, &EmailVerification{}, &MobileVerification{}, &Invitation{}, &WebAuthnCredential{})
 
 	// Create
 	// results := Dbcon.Create(&User{Username: "L1212", Password: "jamsheed"})

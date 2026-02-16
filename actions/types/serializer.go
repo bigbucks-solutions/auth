@@ -56,3 +56,30 @@ type SystemPermissionConfig struct {
 	IsHidden    bool   `json:"is_hidden"`
 	Description string `json:"description"`
 }
+
+type UserInfo struct {
+	Username      string                 `json:"username"`
+	Roles         []*UserInfoRole        `json:"roles,omitempty"`
+	Profile       UserInfoProfile        `json:"profile,omitempty"`
+	IsSocial      bool                   `json:"isSocialAccount"`
+	Organizations []UserInfoOrganization `json:"organizations,omitempty"`
+}
+
+type UserInfoOrganization struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type UserInfoRole struct {
+	Name        string          `json:"name" validate:"required"`
+	Description string          `json:"description"`
+	ExtraAttrs  json.RawMessage `json:"extraAttrs"`
+}
+
+type UserInfoProfile struct {
+	Firstname string  `json:"firstName"`
+	Lastname  string  `json:"lastName"`
+	Phone     string  `json:"phone"`
+	Email     string  `json:"email"`
+	Picture   *string `json:"avatar"`
+}

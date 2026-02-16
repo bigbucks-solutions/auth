@@ -6,6 +6,7 @@ import (
 	ctr "bigbucks/solution/auth/rest-api/controllers" //Load all controllers methods by deafult
 	sessionstore "bigbucks/solution/auth/session_store"
 	"bigbucks/solution/auth/settings"
+	webauthnservice "bigbucks/solution/auth/webauthn"
 	"net/http"
 
 	_ "bigbucks/solution/auth/docs"
@@ -148,6 +149,21 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	api.Handle("/master-data/actions",
 		makeHandler(ctr.GetActions, WithAuth(true), WithPermission("masterdata:*:read")),
 	).Methods("GET")
+
+	// WebAuthn
+	waSvc, err := webauthnservice.NewService(settings)
+	if err != nil {
+		return nil, err
+	}
+	ctr.SetWebAuthnService(waSvc)
+
+	api.Handle("/webauthn/register/begin", makeHandler(ctr.BeginWebAuthnRegistration, WithAuth(true))).Methods("POST")
+	api.Handle("/webauthn/register/finish", makeHandler(ctr.FinishWebAuthnRegistration, WithAuth(true))).Methods("POST")
+	api.Handle("/webauthn/login/begin", makeHandler(ctr.BeginWebAuthnLogin)).Methods("POST")
+	api.Handle("/webauthn/login/finish", makeHandler(ctr.FinishWebAuthnLogin)).Methods("POST")
+	api.Handle("/webauthn/credentials", makeHandler(ctr.ListWebAuthnCredentialsCtrl, WithAuth(true))).Methods("GET")
+	api.Handle("/webauthn/credentials/{credential_id:[0-9]+}", makeHandler(ctr.DeleteWebAuthnCredential, WithAuth(true))).Methods("DELETE")
+	api.Handle("/webauthn/check", makeHandler(ctr.HasWebAuthnCredentials)).Methods("GET")
 
 	// Static file server
 	fileServer := http.FileServer(http.Dir("./profile_pics/"))
