@@ -183,10 +183,22 @@ func (usr User) UpdateUserProfile(data map[string][]string, picture []*multipart
 			loging.Logger.Error("Error removing old profile picture", err)
 		}
 	}
-	profile.Email = data["useremail"][0]
 	profile.FirstName = data["firstname"][0]
 	profile.LastName = data["lastname"][0]
 	profile.ContactNumber = data["userphone"][0]
+	// check if bio or designation or country or timezone is updated, if yes then update it otherwise keep the old value
+	if len(data["bio"][0]) > 0 {
+		profile.Bio = data["bio"][0]
+	}
+	if len(data["designation"][0]) > 0 {
+		profile.Designation = data["designation"][0]
+	}
+	if len(data["country"][0]) > 0 {
+		profile.Country = data["country"][0]
+	}
+	if len(data["timezone"][0]) > 0 {
+		profile.Timezone = data["timezone"][0]
+	}
 	profile.Picture = filename
 	// }
 	Dbcon.Save(&profile)

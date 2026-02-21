@@ -9,7 +9,7 @@
     "dBName": "bigbucks",
     "dBHost": "localhost",
     "dBPort": "6432",
-    "dBSSLMode": "true",
+    "dBSSLMode": "disable",
     "redisAddress": "localhost:6379",
     "redisPassword": "",
     "redisDB": "0",
@@ -20,5 +20,10 @@
     "smtpUsername": "",
     "smtpPassword": "",
     "smtpFrom": "noreply@bigbucks.com",
-    "baseHost": "http://localhost:3000"
+    "baseHost": "http://localhost:3000",
+    "webAuthnRPID": "localhost",
+    "webAuthnRPName": "BigBucks Auth",
+    "webAuthnOrigins": [
+        "http://localhost:3000"
+    ]
 }

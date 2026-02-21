@@ -291,11 +291,15 @@ func GetUserInfo(userID string) (*types.UserInfo, int, error) {
 		Username: user.Username,
 		IsSocial: user.OAuthClient.ID != 0,
 		Profile: types.UserInfoProfile{
-			Firstname: user.Profile.FirstName,
-			Lastname:  user.Profile.LastName,
-			Phone:     user.Profile.ContactNumber,
-			Email:     user.Profile.Email,
-			Picture:   picture,
+			Firstname:   user.Profile.FirstName,
+			Lastname:    user.Profile.LastName,
+			Phone:       user.Profile.ContactNumber,
+			Email:       user.Profile.Email,
+			Picture:     picture,
+			Bio:         user.Profile.Bio,
+			Designation: user.Profile.Designation,
+			Country:     user.Profile.Country,
+			Timezone:    user.Profile.Timezone,
 		},
 	}
 

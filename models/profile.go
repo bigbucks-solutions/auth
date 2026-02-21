@@ -17,6 +17,10 @@ type Profile struct {
 	ContactNumber string `json:"phone"`
 	Email         string
 	Picture       string `json:"file"`
+	Bio           string `json:"bio" gorm:"type:text" validate:"max=200"`
+	Designation   string `json:"designation"`
+	Country       string `json:"country" `
+	Timezone      string `json:"timezone" gorm:"default:UTC"`
 }
 
 // MarshalJSON Json Dump override method for Profile struct

@@ -77,9 +77,13 @@ type UserInfoRole struct {
 }
 
 type UserInfoProfile struct {
-	Firstname string  `json:"firstName"`
-	Lastname  string  `json:"lastName"`
-	Phone     string  `json:"phone"`
-	Email     string  `json:"email"`
-	Picture   *string `json:"avatar"`
+	Firstname   string  `json:"firstName"`
+	Lastname    string  `json:"lastName"`
+	Phone       string  `json:"phone"`
+	Email       string  `json:"email"`
+	Picture     *string `json:"avatar"`
+	Bio         string  `json:"bio"`
+	Designation string  `json:"designation"`
+	Country     string  `json:"country"`
+	Timezone    string  `json:"timezone"`
 }
