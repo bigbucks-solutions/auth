@@ -1,0 +1,25 @@
+{
+    "properties": {
+        "file": {
+            "type": "binary"
+        },
+        "firstName": {
+            "type": "string",
+            "example": "John"
+        },
+        "lastName": {
+            "type": "string",
+            "example": "Doe"
+        },
+        "phone": {
+            "type": "string",
+            "example": "0000000"
+        }
+    },
+    "example": {
+        "firstName": "John",
+        "lastName": "Doe",
+        "file": ""
+    },
+    "type": "object"
+}
