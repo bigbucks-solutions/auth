@@ -21,6 +21,425 @@
     }
   ],
   "paths": {
+    "/invitations": {
+      "get": {
+        "description": "Get paginated list of invitations for the current organization with sorting support",
+        "parameters": [
+          {
+            "description": "Authorization",
+            "in": "header",
+            "name": "X-Auth",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page number",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "default": 10,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Filter by status (pending, accepted, expired, revoked)",
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Order by field (email, status, created_at, expires_at, role_name, inviter_name)",
+            "in": "query",
+            "name": "order_by",
+            "schema": {
+              "default": "created_at",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Order direction (asc, desc)",
+            "in": "query",
+            "name": "order_dir",
+            "schema": {
+              "default": "desc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Search term to filter by inviter or invitee email",
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/controllers.ListInvitationsResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "List invitations for organization",
+        "tags": [
+          "invitations"
+        ]
+      },
+      "post": {
+        "description": "Send an invitation to a user to join the organization with a specific role",
+        "parameters": [
+          {
+            "description": "Authorization",
+            "in": "header",
+            "name": "X-Auth",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/controllers.InviteUserRequest"
+              }
+            }
+          },
+          "description": "Invitation details",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/controllers.InvitationResponse"
+                }
+              }
+            },
+            "description": "Invitation sent successfully"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Invite user to organization",
+        "tags": [
+          "invitations"
+        ],
+        "x-codegen-request-body-name": "invitation"
+      }
+    },
+    "/invitations/accept": {
+      "get": {
+        "description": "Accept an invitation to join an organization",
+        "parameters": [
+          {
+            "description": "Authorization",
+            "in": "header",
+            "name": "X-Auth",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Invitation Token",
+            "in": "query",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/controllers.AcceptInvitationResponse"
+                }
+              }
+            },
+            "description": "Invitation accepted successfully"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Conflict - Invitation already accepted"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Accept invitation",
+        "tags": [
+          "invitations"
+        ]
+      }
+    },
+    "/invitations/{invitation_id}/resend": {
+      "post": {
+        "description": "Resend an existing invitation or create a new one if expired",
+        "parameters": [
+          {
+            "description": "Authorization",
+            "in": "header",
+            "name": "X-Auth",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Invitation ID",
+            "in": "path",
+            "name": "invitation_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/controllers.InvitationResponse"
+                }
+              }
+            },
+            "description": "Invitation resent"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Resend invitation",
+        "tags": [
+          "invitations"
+        ]
+      }
+    },
+    "/invitations/{invitation_id}/revoke": {
+      "put": {
+        "description": "Revoke a pending invitation",
+        "parameters": [
+          {
+            "description": "Authorization",
+            "in": "header",
+            "name": "X-Auth",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Invitation ID",
+            "in": "path",
+            "name": "invitation_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/types.SimpleResponse"
+                }
+              }
+            },
+            "description": "Invitation revoked successfully"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invitation not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Revoke invitation",
+        "tags": [
+          "invitations"
+        ]
+      }
+    },
     "/master-data/actions": {
       "get": {
         "parameters": [
@@ -141,7 +560,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/types.UserInfo"
+                  "$ref": "#/components/schemas/bigbucks_solution_auth_rest-api_controllers_types.UserInfo"
                 }
               }
             },
@@ -1334,6 +1753,398 @@
           "sessions"
         ]
       }
+    },
+    "/webauthn/check": {
+      "get": {
+        "description": "Returns whether a given username has WebAuthn credentials registered (for login UI flow decisions).",
+        "parameters": [
+          {
+            "description": "Username to check",
+            "in": "query",
+            "name": "username",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "has_credentials"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad request"
+          }
+        },
+        "summary": "Check if user has WebAuthn credentials",
+        "tags": [
+          "webauthn"
+        ]
+      }
+    },
+    "/webauthn/credentials": {
+      "get": {
+        "description": "Returns all registered WebAuthn credentials for the authenticated user.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "List of credentials"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "JWTAuth": []
+          }
+        ],
+        "summary": "List WebAuthn credentials",
+        "tags": [
+          "webauthn"
+        ]
+      }
+    },
+    "/webauthn/credentials/{credential_id}": {
+      "delete": {
+        "description": "Removes a registered WebAuthn credential by ID.",
+        "parameters": [
+          {
+            "description": "Credential ID",
+            "in": "path",
+            "name": "credential_id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Deleted"
+          },
+          "400": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "JWTAuth": []
+          }
+        ],
+        "summary": "Delete a WebAuthn credential",
+        "tags": [
+          "webauthn"
+        ]
+      }
+    },
+    "/webauthn/login/begin": {
+      "post": {
+        "description": "Starts the WebAuthn authentication ceremony. Pass username for credential-bound login, or omit for discoverable (passkey) login.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/controllers.webAuthnLoginRequest"
+              }
+            }
+          },
+          "description": "Optional username",
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/protocol.CredentialAssertion"
+                }
+              }
+            },
+            "description": "WebAuthn assertion options"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Begin WebAuthn login",
+        "tags": [
+          "webauthn"
+        ],
+        "x-codegen-request-body-name": "request"
+      }
+    },
+    "/webauthn/login/finish": {
+      "post": {
+        "description": "Completes the authentication ceremony, validates the authenticator response, and issues a JWT.",
+        "parameters": [
+          {
+            "description": "Username (must match begin request)",
+            "in": "query",
+            "name": "username",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "JWT token"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Finish WebAuthn login",
+        "tags": [
+          "webauthn"
+        ]
+      }
+    },
+    "/webauthn/register/begin": {
+      "post": {
+        "description": "Starts the WebAuthn registration ceremony for the authenticated user. Returns a CredentialCreationOptions JSON for the browser.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/protocol.CredentialCreation"
+                }
+              }
+            },
+            "description": "WebAuthn creation options"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "JWTAuth": []
+          }
+        ],
+        "summary": "Begin WebAuthn credential registration",
+        "tags": [
+          "webauthn"
+        ]
+      }
+    },
+    "/webauthn/register/finish": {
+      "post": {
+        "description": "Completes the registration ceremony by validating the authenticator response and storing the credential.",
+        "parameters": [
+          {
+            "description": "Friendly name for the credential",
+            "in": "query",
+            "name": "name",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Credential registered"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "JWTAuth": []
+          }
+        ],
+        "summary": "Finish WebAuthn credential registration",
+        "tags": [
+          "webauthn"
+        ]
+      }
     }
   },
   "components": {
@@ -1358,26 +2169,6 @@
         },
         "type": "object"
       },
-      "bigbucks_solution_auth_rest-api_controllers_types.Profile": {
-        "properties": {
-          "avatar": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "firstName": {
-            "type": "string"
-          },
-          "lastName": {
-            "type": "string"
-          },
-          "phone": {
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
       "bigbucks_solution_auth_rest-api_controllers_types.Role": {
         "properties": {
           "description": {
@@ -1396,6 +2187,32 @@
         ],
         "type": "object"
       },
+      "bigbucks_solution_auth_rest-api_controllers_types.UserInfo": {
+        "properties": {
+          "isSocialAccount": {
+            "type": "boolean"
+          },
+          "organizations": {
+            "items": {
+              "$ref": "#/components/schemas/types.UserInfoOrganization"
+            },
+            "type": "array"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/types.UserInfoProfile"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/types.UserInfoRole"
+            },
+            "type": "array"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "constants.UserStatus": {
         "enum": [
           "active",
@@ -1409,6 +2226,61 @@
           "UserStatusPending"
         ]
       },
+      "controllers.AcceptInvitationResponse": {
+        "properties": {
+          "jwtToken": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "controllers.InvitationResponse": {
+        "properties": {
+          "acceptedAt": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "inviter": {
+            "$ref": "#/components/schemas/controllers.UserInfo"
+          },
+          "role": {
+            "$ref": "#/components/schemas/controllers.RoleInfo"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "controllers.InviteUserRequest": {
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "roleId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "roleId"
+        ],
+        "type": "object"
+      },
       "controllers.JsonCred": {
         "properties": {
           "password": {
@@ -1419,6 +2291,26 @@
           },
           "username": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "controllers.ListInvitationsResponse": {
+        "properties": {
+          "invitations": {
+            "items": {
+              "$ref": "#/components/schemas/controllers.InvitationResponse"
+            },
+            "type": "array"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -1442,6 +2334,399 @@
           }
         },
         "type": "object"
+      },
+      "controllers.RoleInfo": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "controllers.UserInfo": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "controllers.webAuthnLoginRequest": {
+        "properties": {
+          "mediation": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "protocol.AttestationFormat": {
+        "enum": [
+          "packed",
+          "tpm",
+          "android-key",
+          "android-safetynet",
+          "fido-u2f",
+          "apple",
+          "none"
+        ],
+        "type": "string",
+        "x-enum-varnames": [
+          "AttestationFormatPacked",
+          "AttestationFormatTPM",
+          "AttestationFormatAndroidKey",
+          "AttestationFormatAndroidSafetyNet",
+          "AttestationFormatFIDOUniversalSecondFactor",
+          "AttestationFormatApple",
+          "AttestationFormatNone"
+        ]
+      },
+      "protocol.AuthenticationExtensions": {
+        "additionalProperties": {
+          "type": "object"
+        },
+        "type": "object"
+      },
+      "protocol.AuthenticatorAttachment": {
+        "enum": [
+          "platform",
+          "cross-platform"
+        ],
+        "type": "string",
+        "x-enum-varnames": [
+          "Platform",
+          "CrossPlatform"
+        ]
+      },
+      "protocol.AuthenticatorSelection": {
+        "properties": {
+          "authenticatorAttachment": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/protocol.AuthenticatorAttachment"
+              }
+            ],
+            "description": "AuthenticatorAttachment If this member is present, eligible authenticators are filtered to only\nauthenticators attached with the specified AuthenticatorAttachment enum.",
+            "type": "object"
+          },
+          "requireResidentKey": {
+            "description": "RequireResidentKey this member describes the Relying Party's requirements regarding resident\ncredentials. If the parameter is set to true, the authenticator MUST create a client-side-resident\npublic key credential source when creating a public key credential.",
+            "type": "boolean"
+          },
+          "residentKey": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/protocol.ResidentKeyRequirement"
+              }
+            ],
+            "description": "ResidentKey this member describes the Relying Party's requirements regarding resident\ncredentials per Webauthn Level 2.",
+            "type": "object"
+          },
+          "userVerification": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/protocol.UserVerificationRequirement"
+              }
+            ],
+            "description": "UserVerification This member describes the Relying Party's requirements regarding user verification for\nthe create() operation. Eligible authenticators are filtered to only those capable of satisfying this\nrequirement.",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "protocol.AuthenticatorTransport": {
+        "enum": [
+          "usb",
+          "nfc",
+          "ble",
+          "smart-card",
+          "hybrid",
+          "internal"
+        ],
+        "type": "string",
+        "x-enum-varnames": [
+          "USB",
+          "NFC",
+          "BLE",
+          "SmartCard",
+          "Hybrid",
+          "Internal"
+        ]
+      },
+      "protocol.ConveyancePreference": {
+        "enum": [
+          "none",
+          "indirect",
+          "direct",
+          "enterprise"
+        ],
+        "type": "string",
+        "x-enum-varnames": [
+          "PreferNoAttestation",
+          "PreferIndirectAttestation",
+          "PreferDirectAttestation",
+          "PreferEnterpriseAttestation"
+        ]
+      },
+      "protocol.CredentialAssertion": {
+        "properties": {
+          "mediation": {
+            "$ref": "#/components/schemas/protocol.CredentialMediationRequirement"
+          },
+          "publicKey": {
+            "$ref": "#/components/schemas/protocol.PublicKeyCredentialRequestOptions"
+          }
+        },
+        "type": "object"
+      },
+      "protocol.CredentialCreation": {
+        "properties": {
+          "mediation": {
+            "$ref": "#/components/schemas/protocol.CredentialMediationRequirement"
+          },
+          "publicKey": {
+            "$ref": "#/components/schemas/protocol.PublicKeyCredentialCreationOptions"
+          }
+        },
+        "type": "object"
+      },
+      "protocol.CredentialDescriptor": {
+        "properties": {
+          "id": {
+            "description": "CredentialID The ID of a credential to allow/disallow.",
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "transports": {
+            "description": "The authenticator transports that can be used.",
+            "items": {
+              "$ref": "#/components/schemas/protocol.AuthenticatorTransport"
+            },
+            "type": "array"
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/protocol.CredentialType"
+              }
+            ],
+            "description": "The valid credential types.",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "protocol.CredentialMediationRequirement": {
+        "enum": [
+          "",
+          "silent",
+          "optional",
+          "conditional",
+          "required"
+        ],
+        "type": "string",
+        "x-enum-varnames": [
+          "MediationDefault",
+          "MediationSilent",
+          "MediationOptional",
+          "MediationConditional",
+          "MediationRequired"
+        ]
+      },
+      "protocol.CredentialParameter": {
+        "properties": {
+          "alg": {
+            "$ref": "#/components/schemas/webauthncose.COSEAlgorithmIdentifier"
+          },
+          "type": {
+            "$ref": "#/components/schemas/protocol.CredentialType"
+          }
+        },
+        "type": "object"
+      },
+      "protocol.CredentialType": {
+        "enum": [
+          "public-key"
+        ],
+        "type": "string",
+        "x-enum-varnames": [
+          "PublicKeyCredentialType"
+        ]
+      },
+      "protocol.PublicKeyCredentialCreationOptions": {
+        "properties": {
+          "attestation": {
+            "$ref": "#/components/schemas/protocol.ConveyancePreference"
+          },
+          "attestationFormats": {
+            "items": {
+              "$ref": "#/components/schemas/protocol.AttestationFormat"
+            },
+            "type": "array"
+          },
+          "authenticatorSelection": {
+            "$ref": "#/components/schemas/protocol.AuthenticatorSelection"
+          },
+          "challenge": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "excludeCredentials": {
+            "items": {
+              "$ref": "#/components/schemas/protocol.CredentialDescriptor"
+            },
+            "type": "array"
+          },
+          "extensions": {
+            "$ref": "#/components/schemas/protocol.AuthenticationExtensions"
+          },
+          "hints": {
+            "items": {
+              "$ref": "#/components/schemas/protocol.PublicKeyCredentialHints"
+            },
+            "type": "array"
+          },
+          "pubKeyCredParams": {
+            "items": {
+              "$ref": "#/components/schemas/protocol.CredentialParameter"
+            },
+            "type": "array"
+          },
+          "rp": {
+            "$ref": "#/components/schemas/protocol.RelyingPartyEntity"
+          },
+          "timeout": {
+            "type": "integer"
+          },
+          "user": {
+            "$ref": "#/components/schemas/protocol.UserEntity"
+          }
+        },
+        "type": "object"
+      },
+      "protocol.PublicKeyCredentialHints": {
+        "enum": [
+          "security-key",
+          "client-device",
+          "hybrid"
+        ],
+        "type": "string",
+        "x-enum-varnames": [
+          "PublicKeyCredentialHintSecurityKey",
+          "PublicKeyCredentialHintClientDevice",
+          "PublicKeyCredentialHintHybrid"
+        ]
+      },
+      "protocol.PublicKeyCredentialRequestOptions": {
+        "properties": {
+          "allowCredentials": {
+            "items": {
+              "$ref": "#/components/schemas/protocol.CredentialDescriptor"
+            },
+            "type": "array"
+          },
+          "challenge": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "extensions": {
+            "$ref": "#/components/schemas/protocol.AuthenticationExtensions"
+          },
+          "hints": {
+            "items": {
+              "$ref": "#/components/schemas/protocol.PublicKeyCredentialHints"
+            },
+            "type": "array"
+          },
+          "rpId": {
+            "type": "string"
+          },
+          "timeout": {
+            "type": "integer"
+          },
+          "userVerification": {
+            "$ref": "#/components/schemas/protocol.UserVerificationRequirement"
+          }
+        },
+        "type": "object"
+      },
+      "protocol.RelyingPartyEntity": {
+        "properties": {
+          "id": {
+            "description": "A unique identifier for the Relying Party entity, which sets the RP ID.",
+            "type": "string"
+          },
+          "name": {
+            "description": "A human-palatable name for the entity. Its function depends on what the PublicKeyCredentialEntity represents:\n\nWhen inherited by PublicKeyCredentialRpEntity it is a human-palatable identifier for the Relying Party,\nintended only for display. For example, \"ACME Corporation\", \"Wonderful Widgets, Inc.\" or \"ОАО Примертех\".\n\nWhen inherited by PublicKeyCredentialUserEntity, it is a human-palatable identifier for a user account. It is\nintended only for display, i.e., aiding the user in determining the difference between user accounts with similar\ndisplayNames. For example, \"alexm\", \"alex.p.mueller@example.com\" or \"+14255551234\".",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "protocol.ResidentKeyRequirement": {
+        "enum": [
+          "discouraged",
+          "preferred",
+          "required"
+        ],
+        "type": "string",
+        "x-enum-varnames": [
+          "ResidentKeyRequirementDiscouraged",
+          "ResidentKeyRequirementPreferred",
+          "ResidentKeyRequirementRequired"
+        ]
+      },
+      "protocol.UserEntity": {
+        "properties": {
+          "displayName": {
+            "description": "A human-palatable name for the user account, intended only for display.\nFor example, \"Alex P. Müller\" or \"田中 倫\". The Relying Party SHOULD let\nthe user choose this, and SHOULD NOT restrict the choice more than necessary.",
+            "type": "string"
+          },
+          "id": {
+            "description": "ID is the user handle of the user account entity. To ensure secure operation,\nauthentication and authorization decisions MUST be made on the basis of this id\nmember, not the displayName nor name members. See Section 6.1 of\n[RFC8266](https://www.w3.org/TR/webauthn/#biblio-rfc8266).",
+            "type": "object"
+          },
+          "name": {
+            "description": "A human-palatable name for the entity. Its function depends on what the PublicKeyCredentialEntity represents:\n\nWhen inherited by PublicKeyCredentialRpEntity it is a human-palatable identifier for the Relying Party,\nintended only for display. For example, \"ACME Corporation\", \"Wonderful Widgets, Inc.\" or \"ОАО Примертех\".\n\nWhen inherited by PublicKeyCredentialUserEntity, it is a human-palatable identifier for a user account. It is\nintended only for display, i.e., aiding the user in determining the difference between user accounts with similar\ndisplayNames. For example, \"alexm\", \"alex.p.mueller@example.com\" or \"+14255551234\".",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "protocol.UserVerificationRequirement": {
+        "enum": [
+          "required",
+          "preferred",
+          "discouraged"
+        ],
+        "type": "string",
+        "x-enum-comments": {
+          "VerificationPreferred": "This is the default."
+        },
+        "x-enum-descriptions": [
+          "",
+          "This is the default.",
+          ""
+        ],
+        "x-enum-varnames": [
+          "VerificationRequired",
+          "VerificationPreferred",
+          "VerificationDiscouraged"
+        ]
       },
       "types.AuthorizeResponse": {
         "properties": {
@@ -1647,24 +2932,65 @@
         },
         "type": "object"
       },
-      "types.UserInfo": {
+      "types.UserInfoOrganization": {
         "properties": {
-          "isSocialAccount": {
-            "type": "boolean"
+          "id": {
+            "type": "string"
           },
-          "profile": {
-            "$ref": "#/components/schemas/bigbucks_solution_auth_rest-api_controllers_types.Profile"
-          },
-          "roles": {
-            "items": {
-              "$ref": "#/components/schemas/bigbucks_solution_auth_rest-api_controllers_types.Role"
-            },
-            "type": "array"
-          },
-          "username": {
+          "name": {
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "types.UserInfoProfile": {
+        "properties": {
+          "avatar": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "designation": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "types.UserInfoRole": {
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "extraAttrs": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
         "type": "object"
       },
       "types.UserRoleBindingBody": {
@@ -1685,6 +3011,37 @@
           "userId"
         ],
         "type": "object"
+      },
+      "webauthncose.COSEAlgorithmIdentifier": {
+        "enum": [
+          -7,
+          -8,
+          -35,
+          -36,
+          -37,
+          -38,
+          -39,
+          -47,
+          -257,
+          -258,
+          -259,
+          -65535
+        ],
+        "type": "integer",
+        "x-enum-varnames": [
+          "AlgES256",
+          "AlgEdDSA",
+          "AlgES384",
+          "AlgES512",
+          "AlgPS256",
+          "AlgPS384",
+          "AlgPS512",
+          "AlgES256K",
+          "AlgRS256",
+          "AlgRS384",
+          "AlgRS512",
+          "AlgRS1"
+        ]
       },
       "userUpdateProfileBody": {
         "properties": {

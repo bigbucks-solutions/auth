@@ -7,7 +7,7 @@ MKDOCS_IMAGE = jamshi/mk-docs-gh:latest
 
 .PHONY: ci-swaggen2
 ci-swaggen2:
-	@docker run --rm -v $(PWD):/work $(WORKER_IMAGE) sh -c "apk update && apk add --no-cache git && go install github.com/swaggo/swag/cmd/swag@latest && cd /work && swag init -g ./rest-api/routes.go"
+	@docker run --rm -v $(PWD):/work $(WORKER_IMAGE) sh -c "apk update && apk add --no-cache git && go install github.com/swaggo/swag/cmd/swag@latest && cd /work && swag init --parseDependency --parseInternal -g ./rest-api/routes.go"
 
 # Generate OAS3 from swaggo/swag output since that project doesn't support it
 # TODO: Remove this if V3 spec is ever returned from that project
@@ -48,7 +48,7 @@ migration-generate:
 
 .PHONY: migration-apply
 migration-apply:
-	atlas migrate apply --env gorm --url "postgres://bigbucks:bigbucks@localhost:6432/bigbucks?search_path=public&sslmode=disable"
+	go run main.go migrate up
 
 .PHONY: run-local-dependencies
 run-local-dependencies:

@@ -24,6 +24,302 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/invitations": {
+            "get": {
+                "description": "Get paginated list of invitations for the current organization with sorting support",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "invitations"
+                ],
+                "summary": "List invitations for organization",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status (pending, accepted, expired, revoked)",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "created_at",
+                        "description": "Order by field (email, status, created_at, expires_at, role_name, inviter_name)",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Order direction (asc, desc)",
+                        "name": "order_dir",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term to filter by inviter or invitee email",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ListInvitationsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {}
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {}
+                    }
+                }
+            },
+            "post": {
+                "description": "Send an invitation to a user to join the organization with a specific role",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "invitations"
+                ],
+                "summary": "Invite user to organization",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Invitation details",
+                        "name": "invitation",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.InviteUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Invitation sent successfully",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.InvitationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {}
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/invitations/accept": {
+            "get": {
+                "description": "Accept an invitation to join an organization",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "invitations"
+                ],
+                "summary": "Accept invitation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Invitation Token",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invitation accepted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.AcceptInvitationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {}
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "409": {
+                        "description": "Conflict - Invitation already accepted",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/invitations/{invitation_id}/resend": {
+            "post": {
+                "description": "Resend an existing invitation or create a new one if expired",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "invitations"
+                ],
+                "summary": "Resend invitation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Invitation ID",
+                        "name": "invitation_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invitation resent",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.InvitationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/invitations/{invitation_id}/revoke": {
+            "put": {
+                "description": "Revoke a pending invitation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "invitations"
+                ],
+                "summary": "Revoke invitation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Invitation ID",
+                        "name": "invitation_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invitation revoked successfully",
+                        "schema": {
+                            "$ref": "#/definitions/types.SimpleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {}
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Invitation not found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/master-data/actions": {
             "get": {
                 "consumes": [
@@ -151,7 +447,7 @@ const docTemplate = `{
                     "200": {
                         "description": "User details",
                         "schema": {
-                            "$ref": "#/definitions/types.UserInfo"
+                            "$ref": "#/definitions/bigbucks_solution_auth_rest-api_controllers_types.UserInfo"
                         }
                     },
                     "400": {
@@ -1193,6 +1489,291 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/webauthn/check": {
+            "get": {
+                "description": "Returns whether a given username has WebAuthn credentials registered (for login UI flow decisions).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webauthn"
+                ],
+                "summary": "Check if user has WebAuthn credentials",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Username to check",
+                        "name": "username",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "has_credentials",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/webauthn/credentials": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Returns all registered WebAuthn credentials for the authenticated user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webauthn"
+                ],
+                "summary": "List WebAuthn credentials",
+                "responses": {
+                    "200": {
+                        "description": "List of credentials",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/webauthn/credentials/{credential_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Removes a registered WebAuthn credential by ID.",
+                "tags": [
+                    "webauthn"
+                ],
+                "summary": "Delete a WebAuthn credential",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Credential ID",
+                        "name": "credential_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {}
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/webauthn/login/begin": {
+            "post": {
+                "description": "Starts the WebAuthn authentication ceremony. Pass username for credential-bound login, or omit for discoverable (passkey) login.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webauthn"
+                ],
+                "summary": "Begin WebAuthn login",
+                "parameters": [
+                    {
+                        "description": "Optional username",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.webAuthnLoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "WebAuthn assertion options",
+                        "schema": {
+                            "$ref": "#/definitions/protocol.CredentialAssertion"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/webauthn/login/finish": {
+            "post": {
+                "description": "Completes the authentication ceremony, validates the authenticator response, and issues a JWT.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webauthn"
+                ],
+                "summary": "Finish WebAuthn login",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Username (must match begin request)",
+                        "name": "username",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "JWT token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {}
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/webauthn/register/begin": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Starts the WebAuthn registration ceremony for the authenticated user. Returns a CredentialCreationOptions JSON for the browser.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webauthn"
+                ],
+                "summary": "Begin WebAuthn credential registration",
+                "responses": {
+                    "200": {
+                        "description": "WebAuthn creation options",
+                        "schema": {
+                            "$ref": "#/definitions/protocol.CredentialCreation"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/webauthn/register/finish": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Completes the registration ceremony by validating the authenticator response and storing the credential.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webauthn"
+                ],
+                "summary": "Finish WebAuthn credential registration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Friendly name for the credential",
+                        "name": "name",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Credential registered",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {}
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {}
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1216,26 +1797,6 @@ const docTemplate = `{
                 }
             }
         },
-        "bigbucks_solution_auth_rest-api_controllers_types.Profile": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "firstName": {
-                    "type": "string"
-                },
-                "lastName": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                }
-            }
-        },
         "bigbucks_solution_auth_rest-api_controllers_types.Role": {
             "type": "object",
             "required": [
@@ -1254,6 +1815,32 @@ const docTemplate = `{
                 }
             }
         },
+        "bigbucks_solution_auth_rest-api_controllers_types.UserInfo": {
+            "type": "object",
+            "properties": {
+                "isSocialAccount": {
+                    "type": "boolean"
+                },
+                "organizations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.UserInfoOrganization"
+                    }
+                },
+                "profile": {
+                    "$ref": "#/definitions/types.UserInfoProfile"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.UserInfoRole"
+                    }
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "constants.UserStatus": {
             "type": "string",
             "enum": [
@@ -1267,6 +1854,61 @@ const docTemplate = `{
                 "UserStatusPending"
             ]
         },
+        "controllers.AcceptInvitationResponse": {
+            "type": "object",
+            "properties": {
+                "jwtToken": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.InvitationResponse": {
+            "type": "object",
+            "properties": {
+                "acceptedAt": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "expiresAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "inviter": {
+                    "$ref": "#/definitions/controllers.UserInfo"
+                },
+                "role": {
+                    "$ref": "#/definitions/controllers.RoleInfo"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.InviteUserRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "roleId"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "roleId": {
+                    "type": "string"
+                }
+            }
+        },
         "controllers.JsonCred": {
             "type": "object",
             "properties": {
@@ -1278,6 +1920,26 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "controllers.ListInvitationsResponse": {
+            "type": "object",
+            "properties": {
+                "invitations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.InvitationResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -1300,6 +1962,392 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "controllers.RoleInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.UserInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.webAuthnLoginRequest": {
+            "type": "object",
+            "properties": {
+                "mediation": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "protocol.AttestationFormat": {
+            "type": "string",
+            "enum": [
+                "packed",
+                "tpm",
+                "android-key",
+                "android-safetynet",
+                "fido-u2f",
+                "apple",
+                "none"
+            ],
+            "x-enum-varnames": [
+                "AttestationFormatPacked",
+                "AttestationFormatTPM",
+                "AttestationFormatAndroidKey",
+                "AttestationFormatAndroidSafetyNet",
+                "AttestationFormatFIDOUniversalSecondFactor",
+                "AttestationFormatApple",
+                "AttestationFormatNone"
+            ]
+        },
+        "protocol.AuthenticationExtensions": {
+            "type": "object",
+            "additionalProperties": {}
+        },
+        "protocol.AuthenticatorAttachment": {
+            "type": "string",
+            "enum": [
+                "platform",
+                "cross-platform"
+            ],
+            "x-enum-varnames": [
+                "Platform",
+                "CrossPlatform"
+            ]
+        },
+        "protocol.AuthenticatorSelection": {
+            "type": "object",
+            "properties": {
+                "authenticatorAttachment": {
+                    "description": "AuthenticatorAttachment If this member is present, eligible authenticators are filtered to only\nauthenticators attached with the specified AuthenticatorAttachment enum.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/protocol.AuthenticatorAttachment"
+                        }
+                    ]
+                },
+                "requireResidentKey": {
+                    "description": "RequireResidentKey this member describes the Relying Party's requirements regarding resident\ncredentials. If the parameter is set to true, the authenticator MUST create a client-side-resident\npublic key credential source when creating a public key credential.",
+                    "type": "boolean"
+                },
+                "residentKey": {
+                    "description": "ResidentKey this member describes the Relying Party's requirements regarding resident\ncredentials per Webauthn Level 2.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/protocol.ResidentKeyRequirement"
+                        }
+                    ]
+                },
+                "userVerification": {
+                    "description": "UserVerification This member describes the Relying Party's requirements regarding user verification for\nthe create() operation. Eligible authenticators are filtered to only those capable of satisfying this\nrequirement.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/protocol.UserVerificationRequirement"
+                        }
+                    ]
+                }
+            }
+        },
+        "protocol.AuthenticatorTransport": {
+            "type": "string",
+            "enum": [
+                "usb",
+                "nfc",
+                "ble",
+                "smart-card",
+                "hybrid",
+                "internal"
+            ],
+            "x-enum-varnames": [
+                "USB",
+                "NFC",
+                "BLE",
+                "SmartCard",
+                "Hybrid",
+                "Internal"
+            ]
+        },
+        "protocol.ConveyancePreference": {
+            "type": "string",
+            "enum": [
+                "none",
+                "indirect",
+                "direct",
+                "enterprise"
+            ],
+            "x-enum-varnames": [
+                "PreferNoAttestation",
+                "PreferIndirectAttestation",
+                "PreferDirectAttestation",
+                "PreferEnterpriseAttestation"
+            ]
+        },
+        "protocol.CredentialAssertion": {
+            "type": "object",
+            "properties": {
+                "mediation": {
+                    "$ref": "#/definitions/protocol.CredentialMediationRequirement"
+                },
+                "publicKey": {
+                    "$ref": "#/definitions/protocol.PublicKeyCredentialRequestOptions"
+                }
+            }
+        },
+        "protocol.CredentialCreation": {
+            "type": "object",
+            "properties": {
+                "mediation": {
+                    "$ref": "#/definitions/protocol.CredentialMediationRequirement"
+                },
+                "publicKey": {
+                    "$ref": "#/definitions/protocol.PublicKeyCredentialCreationOptions"
+                }
+            }
+        },
+        "protocol.CredentialDescriptor": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "CredentialID The ID of a credential to allow/disallow.",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "transports": {
+                    "description": "The authenticator transports that can be used.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/protocol.AuthenticatorTransport"
+                    }
+                },
+                "type": {
+                    "description": "The valid credential types.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/protocol.CredentialType"
+                        }
+                    ]
+                }
+            }
+        },
+        "protocol.CredentialMediationRequirement": {
+            "type": "string",
+            "enum": [
+                "",
+                "silent",
+                "optional",
+                "conditional",
+                "required"
+            ],
+            "x-enum-varnames": [
+                "MediationDefault",
+                "MediationSilent",
+                "MediationOptional",
+                "MediationConditional",
+                "MediationRequired"
+            ]
+        },
+        "protocol.CredentialParameter": {
+            "type": "object",
+            "properties": {
+                "alg": {
+                    "$ref": "#/definitions/webauthncose.COSEAlgorithmIdentifier"
+                },
+                "type": {
+                    "$ref": "#/definitions/protocol.CredentialType"
+                }
+            }
+        },
+        "protocol.CredentialType": {
+            "type": "string",
+            "enum": [
+                "public-key"
+            ],
+            "x-enum-varnames": [
+                "PublicKeyCredentialType"
+            ]
+        },
+        "protocol.PublicKeyCredentialCreationOptions": {
+            "type": "object",
+            "properties": {
+                "attestation": {
+                    "$ref": "#/definitions/protocol.ConveyancePreference"
+                },
+                "attestationFormats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/protocol.AttestationFormat"
+                    }
+                },
+                "authenticatorSelection": {
+                    "$ref": "#/definitions/protocol.AuthenticatorSelection"
+                },
+                "challenge": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "excludeCredentials": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/protocol.CredentialDescriptor"
+                    }
+                },
+                "extensions": {
+                    "$ref": "#/definitions/protocol.AuthenticationExtensions"
+                },
+                "hints": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/protocol.PublicKeyCredentialHints"
+                    }
+                },
+                "pubKeyCredParams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/protocol.CredentialParameter"
+                    }
+                },
+                "rp": {
+                    "$ref": "#/definitions/protocol.RelyingPartyEntity"
+                },
+                "timeout": {
+                    "type": "integer"
+                },
+                "user": {
+                    "$ref": "#/definitions/protocol.UserEntity"
+                }
+            }
+        },
+        "protocol.PublicKeyCredentialHints": {
+            "type": "string",
+            "enum": [
+                "security-key",
+                "client-device",
+                "hybrid"
+            ],
+            "x-enum-varnames": [
+                "PublicKeyCredentialHintSecurityKey",
+                "PublicKeyCredentialHintClientDevice",
+                "PublicKeyCredentialHintHybrid"
+            ]
+        },
+        "protocol.PublicKeyCredentialRequestOptions": {
+            "type": "object",
+            "properties": {
+                "allowCredentials": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/protocol.CredentialDescriptor"
+                    }
+                },
+                "challenge": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "extensions": {
+                    "$ref": "#/definitions/protocol.AuthenticationExtensions"
+                },
+                "hints": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/protocol.PublicKeyCredentialHints"
+                    }
+                },
+                "rpId": {
+                    "type": "string"
+                },
+                "timeout": {
+                    "type": "integer"
+                },
+                "userVerification": {
+                    "$ref": "#/definitions/protocol.UserVerificationRequirement"
+                }
+            }
+        },
+        "protocol.RelyingPartyEntity": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "A unique identifier for the Relying Party entity, which sets the RP ID.",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "A human-palatable name for the entity. Its function depends on what the PublicKeyCredentialEntity represents:\n\nWhen inherited by PublicKeyCredentialRpEntity it is a human-palatable identifier for the Relying Party,\nintended only for display. For example, \"ACME Corporation\", \"Wonderful Widgets, Inc.\" or \"ОАО Примертех\".\n\nWhen inherited by PublicKeyCredentialUserEntity, it is a human-palatable identifier for a user account. It is\nintended only for display, i.e., aiding the user in determining the difference between user accounts with similar\ndisplayNames. For example, \"alexm\", \"alex.p.mueller@example.com\" or \"+14255551234\".",
+                    "type": "string"
+                }
+            }
+        },
+        "protocol.ResidentKeyRequirement": {
+            "type": "string",
+            "enum": [
+                "discouraged",
+                "preferred",
+                "required"
+            ],
+            "x-enum-varnames": [
+                "ResidentKeyRequirementDiscouraged",
+                "ResidentKeyRequirementPreferred",
+                "ResidentKeyRequirementRequired"
+            ]
+        },
+        "protocol.UserEntity": {
+            "type": "object",
+            "properties": {
+                "displayName": {
+                    "description": "A human-palatable name for the user account, intended only for display.\nFor example, \"Alex P. Müller\" or \"田中 倫\". The Relying Party SHOULD let\nthe user choose this, and SHOULD NOT restrict the choice more than necessary.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID is the user handle of the user account entity. To ensure secure operation,\nauthentication and authorization decisions MUST be made on the basis of this id\nmember, not the displayName nor name members. See Section 6.1 of\n[RFC8266](https://www.w3.org/TR/webauthn/#biblio-rfc8266)."
+                },
+                "name": {
+                    "description": "A human-palatable name for the entity. Its function depends on what the PublicKeyCredentialEntity represents:\n\nWhen inherited by PublicKeyCredentialRpEntity it is a human-palatable identifier for the Relying Party,\nintended only for display. For example, \"ACME Corporation\", \"Wonderful Widgets, Inc.\" or \"ОАО Примертех\".\n\nWhen inherited by PublicKeyCredentialUserEntity, it is a human-palatable identifier for a user account. It is\nintended only for display, i.e., aiding the user in determining the difference between user accounts with similar\ndisplayNames. For example, \"alexm\", \"alex.p.mueller@example.com\" or \"+14255551234\".",
+                    "type": "string"
+                }
+            }
+        },
+        "protocol.UserVerificationRequirement": {
+            "type": "string",
+            "enum": [
+                "required",
+                "preferred",
+                "discouraged"
+            ],
+            "x-enum-comments": {
+                "VerificationPreferred": "This is the default."
+            },
+            "x-enum-descriptions": [
+                "",
+                "This is the default.",
+                ""
+            ],
+            "x-enum-varnames": [
+                "VerificationRequired",
+                "VerificationPreferred",
+                "VerificationDiscouraged"
+            ]
         },
         "types.AuthorizeResponse": {
             "type": "object",
@@ -1505,22 +2553,63 @@ const docTemplate = `{
                 }
             }
         },
-        "types.UserInfo": {
+        "types.UserInfoOrganization": {
             "type": "object",
             "properties": {
-                "isSocialAccount": {
-                    "type": "boolean"
+                "id": {
+                    "type": "string"
                 },
-                "profile": {
-                    "$ref": "#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Profile"
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.UserInfoProfile": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
                 },
-                "roles": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Role"
-                    }
+                "bio": {
+                    "type": "string"
                 },
-                "username": {
+                "country": {
+                    "type": "string"
+                },
+                "designation": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.UserInfoRole": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "extraAttrs": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -1543,6 +2632,37 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "webauthncose.COSEAlgorithmIdentifier": {
+            "type": "integer",
+            "enum": [
+                -7,
+                -8,
+                -35,
+                -36,
+                -37,
+                -38,
+                -39,
+                -47,
+                -257,
+                -258,
+                -259,
+                -65535
+            ],
+            "x-enum-varnames": [
+                "AlgES256",
+                "AlgEdDSA",
+                "AlgES384",
+                "AlgES512",
+                "AlgPS256",
+                "AlgPS384",
+                "AlgPS512",
+                "AlgES256K",
+                "AlgRS256",
+                "AlgRS384",
+                "AlgRS512",
+                "AlgRS1"
+            ]
         }
     },
     "securityDefinitions": {

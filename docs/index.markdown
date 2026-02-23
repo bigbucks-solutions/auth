@@ -22,10 +22,10 @@ This project provides a production-ready authentication and authorization micros
 - Multi Tenant
 - User Invitations
 - Social Auth
+- WebAuthn/FIDO2
 
 ## Planned Features
 
 The following features are currently under development or planned for future releases:
 
 - **TOTP (Time-based One-Time Passwords)** - Multi-factor authentication support using authenticator apps
-- **WebAuthn/FIDO2** - Passwordless authentication using hardware security keys and biometrics

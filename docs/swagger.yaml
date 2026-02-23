@@ -13,19 +13,6 @@ definitions:
           $ref: '#/definitions/types.ListUserResponse'
         type: array
     type: object
-  bigbucks_solution_auth_rest-api_controllers_types.Profile:
-    properties:
-      avatar:
-        type: string
-      email:
-        type: string
-      firstName:
-        type: string
-      lastName:
-        type: string
-      phone:
-        type: string
-    type: object
   bigbucks_solution_auth_rest-api_controllers_types.Role:
     properties:
       description:
@@ -38,6 +25,23 @@ definitions:
     required:
     - name
     type: object
+  bigbucks_solution_auth_rest-api_controllers_types.UserInfo:
+    properties:
+      isSocialAccount:
+        type: boolean
+      organizations:
+        items:
+          $ref: '#/definitions/types.UserInfoOrganization'
+        type: array
+      profile:
+        $ref: '#/definitions/types.UserInfoProfile'
+      roles:
+        items:
+          $ref: '#/definitions/types.UserInfoRole'
+        type: array
+      username:
+        type: string
+    type: object
   constants.UserStatus:
     enum:
     - active
@@ -48,6 +52,42 @@ definitions:
     - UserStatusActive
     - UserStatusInactive
     - UserStatusPending
+  controllers.AcceptInvitationResponse:
+    properties:
+      jwtToken:
+        type: string
+      message:
+        type: string
+    type: object
+  controllers.InvitationResponse:
+    properties:
+      acceptedAt:
+        type: string
+      createdAt:
+        type: string
+      email:
+        type: string
+      expiresAt:
+        type: string
+      id:
+        type: string
+      inviter:
+        $ref: '#/definitions/controllers.UserInfo'
+      role:
+        $ref: '#/definitions/controllers.RoleInfo'
+      status:
+        type: string
+    type: object
+  controllers.InviteUserRequest:
+    properties:
+      email:
+        type: string
+      roleId:
+        type: string
+    required:
+    - email
+    - roleId
+    type: object
   controllers.JsonCred:
     properties:
       password:
@@ -56,6 +96,19 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  controllers.ListInvitationsResponse:
+    properties:
+      invitations:
+        items:
+          $ref: '#/definitions/controllers.InvitationResponse'
+        type: array
+      page:
+        type: integer
+      size:
+        type: integer
+      total:
+        type: integer
     type: object
   controllers.RequestPasswordResetToken:
     properties:
@@ -70,6 +123,308 @@ definitions:
       password:
         type: string
     type: object
+  controllers.RoleInfo:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  controllers.UserInfo:
+    properties:
+      id:
+        type: string
+      username:
+        type: string
+    type: object
+  controllers.webAuthnLoginRequest:
+    properties:
+      mediation:
+        type: string
+      username:
+        type: string
+    type: object
+  protocol.AttestationFormat:
+    enum:
+    - packed
+    - tpm
+    - android-key
+    - android-safetynet
+    - fido-u2f
+    - apple
+    - none
+    type: string
+    x-enum-varnames:
+    - AttestationFormatPacked
+    - AttestationFormatTPM
+    - AttestationFormatAndroidKey
+    - AttestationFormatAndroidSafetyNet
+    - AttestationFormatFIDOUniversalSecondFactor
+    - AttestationFormatApple
+    - AttestationFormatNone
+  protocol.AuthenticationExtensions:
+    additionalProperties: {}
+    type: object
+  protocol.AuthenticatorAttachment:
+    enum:
+    - platform
+    - cross-platform
+    type: string
+    x-enum-varnames:
+    - Platform
+    - CrossPlatform
+  protocol.AuthenticatorSelection:
+    properties:
+      authenticatorAttachment:
+        allOf:
+        - $ref: '#/definitions/protocol.AuthenticatorAttachment'
+        description: |-
+          AuthenticatorAttachment If this member is present, eligible authenticators are filtered to only
+          authenticators attached with the specified AuthenticatorAttachment enum.
+      requireResidentKey:
+        description: |-
+          RequireResidentKey this member describes the Relying Party's requirements regarding resident
+          credentials. If the parameter is set to true, the authenticator MUST create a client-side-resident
+          public key credential source when creating a public key credential.
+        type: boolean
+      residentKey:
+        allOf:
+        - $ref: '#/definitions/protocol.ResidentKeyRequirement'
+        description: |-
+          ResidentKey this member describes the Relying Party's requirements regarding resident
+          credentials per Webauthn Level 2.
+      userVerification:
+        allOf:
+        - $ref: '#/definitions/protocol.UserVerificationRequirement'
+        description: |-
+          UserVerification This member describes the Relying Party's requirements regarding user verification for
+          the create() operation. Eligible authenticators are filtered to only those capable of satisfying this
+          requirement.
+    type: object
+  protocol.AuthenticatorTransport:
+    enum:
+    - usb
+    - nfc
+    - ble
+    - smart-card
+    - hybrid
+    - internal
+    type: string
+    x-enum-varnames:
+    - USB
+    - NFC
+    - BLE
+    - SmartCard
+    - Hybrid
+    - Internal
+  protocol.ConveyancePreference:
+    enum:
+    - none
+    - indirect
+    - direct
+    - enterprise
+    type: string
+    x-enum-varnames:
+    - PreferNoAttestation
+    - PreferIndirectAttestation
+    - PreferDirectAttestation
+    - PreferEnterpriseAttestation
+  protocol.CredentialAssertion:
+    properties:
+      mediation:
+        $ref: '#/definitions/protocol.CredentialMediationRequirement'
+      publicKey:
+        $ref: '#/definitions/protocol.PublicKeyCredentialRequestOptions'
+    type: object
+  protocol.CredentialCreation:
+    properties:
+      mediation:
+        $ref: '#/definitions/protocol.CredentialMediationRequirement'
+      publicKey:
+        $ref: '#/definitions/protocol.PublicKeyCredentialCreationOptions'
+    type: object
+  protocol.CredentialDescriptor:
+    properties:
+      id:
+        description: CredentialID The ID of a credential to allow/disallow.
+        items:
+          type: integer
+        type: array
+      transports:
+        description: The authenticator transports that can be used.
+        items:
+          $ref: '#/definitions/protocol.AuthenticatorTransport'
+        type: array
+      type:
+        allOf:
+        - $ref: '#/definitions/protocol.CredentialType'
+        description: The valid credential types.
+    type: object
+  protocol.CredentialMediationRequirement:
+    enum:
+    - ""
+    - silent
+    - optional
+    - conditional
+    - required
+    type: string
+    x-enum-varnames:
+    - MediationDefault
+    - MediationSilent
+    - MediationOptional
+    - MediationConditional
+    - MediationRequired
+  protocol.CredentialParameter:
+    properties:
+      alg:
+        $ref: '#/definitions/webauthncose.COSEAlgorithmIdentifier'
+      type:
+        $ref: '#/definitions/protocol.CredentialType'
+    type: object
+  protocol.CredentialType:
+    enum:
+    - public-key
+    type: string
+    x-enum-varnames:
+    - PublicKeyCredentialType
+  protocol.PublicKeyCredentialCreationOptions:
+    properties:
+      attestation:
+        $ref: '#/definitions/protocol.ConveyancePreference'
+      attestationFormats:
+        items:
+          $ref: '#/definitions/protocol.AttestationFormat'
+        type: array
+      authenticatorSelection:
+        $ref: '#/definitions/protocol.AuthenticatorSelection'
+      challenge:
+        items:
+          type: integer
+        type: array
+      excludeCredentials:
+        items:
+          $ref: '#/definitions/protocol.CredentialDescriptor'
+        type: array
+      extensions:
+        $ref: '#/definitions/protocol.AuthenticationExtensions'
+      hints:
+        items:
+          $ref: '#/definitions/protocol.PublicKeyCredentialHints'
+        type: array
+      pubKeyCredParams:
+        items:
+          $ref: '#/definitions/protocol.CredentialParameter'
+        type: array
+      rp:
+        $ref: '#/definitions/protocol.RelyingPartyEntity'
+      timeout:
+        type: integer
+      user:
+        $ref: '#/definitions/protocol.UserEntity'
+    type: object
+  protocol.PublicKeyCredentialHints:
+    enum:
+    - security-key
+    - client-device
+    - hybrid
+    type: string
+    x-enum-varnames:
+    - PublicKeyCredentialHintSecurityKey
+    - PublicKeyCredentialHintClientDevice
+    - PublicKeyCredentialHintHybrid
+  protocol.PublicKeyCredentialRequestOptions:
+    properties:
+      allowCredentials:
+        items:
+          $ref: '#/definitions/protocol.CredentialDescriptor'
+        type: array
+      challenge:
+        items:
+          type: integer
+        type: array
+      extensions:
+        $ref: '#/definitions/protocol.AuthenticationExtensions'
+      hints:
+        items:
+          $ref: '#/definitions/protocol.PublicKeyCredentialHints'
+        type: array
+      rpId:
+        type: string
+      timeout:
+        type: integer
+      userVerification:
+        $ref: '#/definitions/protocol.UserVerificationRequirement'
+    type: object
+  protocol.RelyingPartyEntity:
+    properties:
+      id:
+        description: A unique identifier for the Relying Party entity, which sets
+          the RP ID.
+        type: string
+      name:
+        description: |-
+          A human-palatable name for the entity. Its function depends on what the PublicKeyCredentialEntity represents:
+
+          When inherited by PublicKeyCredentialRpEntity it is a human-palatable identifier for the Relying Party,
+          intended only for display. For example, "ACME Corporation", "Wonderful Widgets, Inc." or "ОАО Примертех".
+
+          When inherited by PublicKeyCredentialUserEntity, it is a human-palatable identifier for a user account. It is
+          intended only for display, i.e., aiding the user in determining the difference between user accounts with similar
+          displayNames. For example, "alexm", "alex.p.mueller@example.com" or "+14255551234".
+        type: string
+    type: object
+  protocol.ResidentKeyRequirement:
+    enum:
+    - discouraged
+    - preferred
+    - required
+    type: string
+    x-enum-varnames:
+    - ResidentKeyRequirementDiscouraged
+    - ResidentKeyRequirementPreferred
+    - ResidentKeyRequirementRequired
+  protocol.UserEntity:
+    properties:
+      displayName:
+        description: |-
+          A human-palatable name for the user account, intended only for display.
+          For example, "Alex P. Müller" or "田中 倫". The Relying Party SHOULD let
+          the user choose this, and SHOULD NOT restrict the choice more than necessary.
+        type: string
+      id:
+        description: |-
+          ID is the user handle of the user account entity. To ensure secure operation,
+          authentication and authorization decisions MUST be made on the basis of this id
+          member, not the displayName nor name members. See Section 6.1 of
+          [RFC8266](https://www.w3.org/TR/webauthn/#biblio-rfc8266).
+      name:
+        description: |-
+          A human-palatable name for the entity. Its function depends on what the PublicKeyCredentialEntity represents:
+
+          When inherited by PublicKeyCredentialRpEntity it is a human-palatable identifier for the Relying Party,
+          intended only for display. For example, "ACME Corporation", "Wonderful Widgets, Inc." or "ОАО Примертех".
+
+          When inherited by PublicKeyCredentialUserEntity, it is a human-palatable identifier for a user account. It is
+          intended only for display, i.e., aiding the user in determining the difference between user accounts with similar
+          displayNames. For example, "alexm", "alex.p.mueller@example.com" or "+14255551234".
+        type: string
+    type: object
+  protocol.UserVerificationRequirement:
+    enum:
+    - required
+    - preferred
+    - discouraged
+    type: string
+    x-enum-comments:
+      VerificationPreferred: This is the default.
+    x-enum-descriptions:
+    - ""
+    - This is the default.
+    - ""
+    x-enum-varnames:
+    - VerificationRequired
+    - VerificationPreferred
+    - VerificationDiscouraged
   types.AuthorizeResponse:
     properties:
       status:
@@ -206,18 +561,45 @@ definitions:
         example: message
         type: string
     type: object
-  types.UserInfo:
+  types.UserInfoOrganization:
     properties:
-      isSocialAccount:
-        type: boolean
-      profile:
-        $ref: '#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Profile'
-      roles:
-        items:
-          $ref: '#/definitions/bigbucks_solution_auth_rest-api_controllers_types.Role'
-        type: array
-      username:
+      id:
         type: string
+      name:
+        type: string
+    type: object
+  types.UserInfoProfile:
+    properties:
+      avatar:
+        type: string
+      bio:
+        type: string
+      country:
+        type: string
+      designation:
+        type: string
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      phone:
+        type: string
+      timezone:
+        type: string
+    type: object
+  types.UserInfoRole:
+    properties:
+      description:
+        type: string
+      extraAttrs:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+    required:
+    - name
     type: object
   types.UserRoleBindingBody:
     properties:
@@ -232,6 +614,34 @@ definitions:
     - roleId
     - userId
     type: object
+  webauthncose.COSEAlgorithmIdentifier:
+    enum:
+    - -7
+    - -8
+    - -35
+    - -36
+    - -37
+    - -38
+    - -39
+    - -47
+    - -257
+    - -258
+    - -259
+    - -65535
+    type: integer
+    x-enum-varnames:
+    - AlgES256
+    - AlgEdDSA
+    - AlgES384
+    - AlgES512
+    - AlgPS256
+    - AlgPS384
+    - AlgPS512
+    - AlgES256K
+    - AlgRS256
+    - AlgRS384
+    - AlgRS512
+    - AlgRS1
 host: localhost:8000
 info:
   contact:
@@ -246,6 +656,213 @@ info:
   title: BigBucks Solutions Auth Engine
   version: 0.0.1
 paths:
+  /invitations:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of invitations for the current organization
+        with sorting support
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Filter by status (pending, accepted, expired, revoked)
+        in: query
+        name: status
+        type: string
+      - default: created_at
+        description: Order by field (email, status, created_at, expires_at, role_name,
+          inviter_name)
+        in: query
+        name: order_by
+        type: string
+      - default: desc
+        description: Order direction (asc, desc)
+        in: query
+        name: order_dir
+        type: string
+      - description: Search term to filter by inviter or invitee email
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.ListInvitationsResponse'
+        "400":
+          description: Bad request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      summary: List invitations for organization
+      tags:
+      - invitations
+    post:
+      consumes:
+      - application/json
+      description: Send an invitation to a user to join the organization with a specific
+        role
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: Invitation details
+        in: body
+        name: invitation
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.InviteUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Invitation sent successfully
+          schema:
+            $ref: '#/definitions/controllers.InvitationResponse'
+        "400":
+          description: Bad request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      summary: Invite user to organization
+      tags:
+      - invitations
+  /invitations/{invitation_id}/resend:
+    post:
+      consumes:
+      - application/json
+      description: Resend an existing invitation or create a new one if expired
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: Invitation ID
+        in: path
+        name: invitation_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invitation resent
+          schema:
+            $ref: '#/definitions/controllers.InvitationResponse'
+        "400":
+          description: Bad request
+          schema: {}
+        "404":
+          description: Not found
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      summary: Resend invitation
+      tags:
+      - invitations
+  /invitations/{invitation_id}/revoke:
+    put:
+      consumes:
+      - application/json
+      description: Revoke a pending invitation
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: Invitation ID
+        in: path
+        name: invitation_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invitation revoked successfully
+          schema:
+            $ref: '#/definitions/types.SimpleResponse'
+        "400":
+          description: Bad request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "404":
+          description: Invitation not found
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      summary: Revoke invitation
+      tags:
+      - invitations
+  /invitations/accept:
+    get:
+      consumes:
+      - application/json
+      description: Accept an invitation to join an organization
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: Invitation Token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invitation accepted successfully
+          schema:
+            $ref: '#/definitions/controllers.AcceptInvitationResponse'
+        "400":
+          description: Bad request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "409":
+          description: Conflict - Invitation already accepted
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      summary: Accept invitation
+      tags:
+      - invitations
   /master-data/actions:
     get:
       consumes:
@@ -328,7 +945,7 @@ paths:
         "200":
           description: User details
           schema:
-            $ref: '#/definitions/types.UserInfo'
+            $ref: '#/definitions/bigbucks_solution_auth_rest-api_controllers_types.UserInfo'
         "400":
           description: ""
         "500":
@@ -1019,6 +1636,199 @@ paths:
       summary: Revoke all user sessions except current
       tags:
       - sessions
+  /webauthn/check:
+    get:
+      description: Returns whether a given username has WebAuthn credentials registered
+        (for login UI flow decisions).
+      parameters:
+      - description: Username to check
+        in: query
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: has_credentials
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Bad request
+          schema: {}
+      summary: Check if user has WebAuthn credentials
+      tags:
+      - webauthn
+  /webauthn/credentials:
+    get:
+      description: Returns all registered WebAuthn credentials for the authenticated
+        user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of credentials
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "401":
+          description: Unauthorized
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      security:
+      - JWTAuth: []
+      summary: List WebAuthn credentials
+      tags:
+      - webauthn
+  /webauthn/credentials/{credential_id}:
+    delete:
+      description: Removes a registered WebAuthn credential by ID.
+      parameters:
+      - description: Credential ID
+        in: path
+        name: credential_id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: Deleted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "404":
+          description: Not found
+          schema: {}
+      security:
+      - JWTAuth: []
+      summary: Delete a WebAuthn credential
+      tags:
+      - webauthn
+  /webauthn/login/begin:
+    post:
+      consumes:
+      - application/json
+      description: Starts the WebAuthn authentication ceremony. Pass username for
+        credential-bound login, or omit for discoverable (passkey) login.
+      parameters:
+      - description: Optional username
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/controllers.webAuthnLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: WebAuthn assertion options
+          schema:
+            $ref: '#/definitions/protocol.CredentialAssertion'
+        "400":
+          description: Bad request
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      summary: Begin WebAuthn login
+      tags:
+      - webauthn
+  /webauthn/login/finish:
+    post:
+      consumes:
+      - application/json
+      description: Completes the authentication ceremony, validates the authenticator
+        response, and issues a JWT.
+      parameters:
+      - description: Username (must match begin request)
+        in: query
+        name: username
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: JWT token
+          schema:
+            type: string
+        "400":
+          description: Bad request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      summary: Finish WebAuthn login
+      tags:
+      - webauthn
+  /webauthn/register/begin:
+    post:
+      description: Starts the WebAuthn registration ceremony for the authenticated
+        user. Returns a CredentialCreationOptions JSON for the browser.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: WebAuthn creation options
+          schema:
+            $ref: '#/definitions/protocol.CredentialCreation'
+        "401":
+          description: Unauthorized
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      security:
+      - JWTAuth: []
+      summary: Begin WebAuthn credential registration
+      tags:
+      - webauthn
+  /webauthn/register/finish:
+    post:
+      consumes:
+      - application/json
+      description: Completes the registration ceremony by validating the authenticator
+        response and storing the credential.
+      parameters:
+      - description: Friendly name for the credential
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Credential registered
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      security:
+      - JWTAuth: []
+      summary: Finish WebAuthn credential registration
+      tags:
+      - webauthn
 securityDefinitions:
   JWTAuth:
     in: header
