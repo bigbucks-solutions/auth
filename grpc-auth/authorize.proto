@@ -2,23 +2,42 @@ syntax = "proto3";
 
 option go_package = "grpc-auth/";
 
+message AuthorizeRequest {
+  string resource = 1;
+  string scope = 2;
+  string action = 3;
+  string org_id = 4;
+}
+
+message PermissionDetail {
+  string resource = 1;
+  string scope = 2;
+  string action = 3;
+}
+
 message AuthorizeResponse {
   bool result = 1;
+  PermissionDetail permitted = 2;
 }
 
-message AuthorizeRequest {}
-
-message AuthenticateRequest {
-  string username = 1;
-  string password = 2;
-
-}
+// AuthenticateRequest is empty — the JWT is provided via the
+// "authorization" metadata header and validated by the interceptor.
+message AuthenticateRequest {}
 
 message AuthenticateResponse {
-  string token = 1;
+  string user_id = 1;
+  string username = 2;
+  repeated UserOrgRole roles = 3;
+}
+
+message UserOrgRole {
+  string role = 1;
+  string org_id = 2;
 }
 
 service Auth {
-  rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse) {}
+  // Validate a JWT and return the authenticated user's information.
   rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse) {}
+  // Check whether the authenticated user has a specific permission.
+  rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse) {}
 }

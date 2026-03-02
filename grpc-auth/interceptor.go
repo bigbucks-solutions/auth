@@ -3,6 +3,7 @@ package grpc_auth
 import (
 	jwtops "bigbucks/solution/auth/jwt-ops"
 	context "context"
+	"log"
 
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -18,9 +19,6 @@ func (s *Server) JWTInterceptor(
 	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler,
 ) (interface{}, error) {
-	if info.FullMethod == "/Auth/Authenticate" {
-		return handler(ctx, req)
-	}
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, status.Errorf(codes.Unauthenticated, "metadata is not provided")
@@ -36,10 +34,12 @@ func (s *Server) JWTInterceptor(
 	AuthClaim, _, err := jwtops.VerifyJWT(accessToken)
 
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "authorization token expired")
+		log.Printf("Error verifying JWT: %v, token: %s", err, accessToken)
+		return nil, status.Errorf(codes.Unauthenticated, "invalid authorization token")
 	}
 
 	newCtx := context.WithValue(ctx, UserValue("user"), AuthClaim.User)
+	newCtx = context.WithValue(newCtx, UserValue("userID"), AuthClaim.Subject)
 	return handler(newCtx, req)
 
 }

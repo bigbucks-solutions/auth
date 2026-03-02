@@ -20,6 +20,7 @@ type PermissionCache struct {
 	cacheTTL        time.Duration
 	lockTTL         time.Duration
 	actionHierarchy map[string][]string
+	scopeHierarchy  map[string][]string
 	validScopes     map[string]struct{}
 }
 
@@ -44,11 +45,16 @@ func NewPermissionCache(settings *settings.Settings) *PermissionCache {
 			"DELETE": {"WRITE"},
 			"CREATE": {"WRITE"},
 		},
+		scopeHierarchy: map[string][]string{
+			strings.ToUpper(string(constants.ScopeOrg)):        {strings.ToUpper(string(constants.ScopeAll))},
+			strings.ToUpper(string(constants.ScopeAssociated)): {strings.ToUpper(string(constants.ScopeAll)), strings.ToUpper(string(constants.ScopeOrg))},
+			strings.ToUpper(string(constants.ScopeOwn)):        {strings.ToUpper(string(constants.ScopeAll)), strings.ToUpper(string(constants.ScopeOrg)), strings.ToUpper(string(constants.ScopeAssociated))},
+		},
 		validScopes: map[string]struct{}{
-			string(constants.ScopeAll):        {},
-			string(constants.ScopeOrg):        {},
-			string(constants.ScopeAssociated): {},
-			string(constants.ScopeOwn):        {},
+			strings.ToUpper(string(constants.ScopeAll)):        {},
+			strings.ToUpper(string(constants.ScopeOrg)):        {},
+			strings.ToUpper(string(constants.ScopeAssociated)): {},
+			strings.ToUpper(string(constants.ScopeOwn)):        {},
 		},
 	}
 }
@@ -78,14 +84,18 @@ func (pc *PermissionCache) releaseLock(orgID, lockValue string) {
 }
 
 func (pc *PermissionCache) expandScope(scope string) []string {
-	if scope == "*" {
+	normalized := strings.ToUpper(strings.TrimSpace(scope))
+	if normalized == "*" {
 		scopes := make([]string, 0, len(pc.validScopes))
 		for s := range pc.validScopes {
-			scopes = append(scopes, strings.ToUpper(s))
+			scopes = append(scopes, s)
 		}
 		return scopes
 	}
-	return []string{strings.ToUpper(strings.TrimSpace(scope))}
+	if expanded, exists := pc.scopeHierarchy[normalized]; exists {
+		return append(expanded, normalized)
+	}
+	return []string{normalized}
 }
 
 func (pc *PermissionCache) getTransientActions(action string) []string {
@@ -105,46 +115,80 @@ func (pc *PermissionCache) CheckPermission(ctx *context.Context, resource, scope
 	if len(userInfo.Roles) == 0 {
 		return false, nil
 	}
+
+	// Collect org-specific role names once, uppercased
+	orgRoles := make([]string, 0, len(userInfo.Roles))
+	orgRoleOriginal := make(map[string]string, len(userInfo.Roles)) // UPPER -> original
+	for _, role := range userInfo.Roles {
+		if role.OrgID == orgID {
+			upper := strings.ToUpper(role.Role)
+			orgRoles = append(orgRoles, upper)
+			orgRoleOriginal[upper] = role.Role
+		}
+	}
+	if len(orgRoles) == 0 {
+		return false, nil
+	}
+
+	// Phase 1: Pipelined Redis check — batch all SIsMember calls into one round-trip
+	type lookupEntry struct {
+		scope  string
+		action string
+		role   string
+	}
+	pipe := pc.RedisClient.Pipeline()
+	lookups := make([]lookupEntry, 0, len(scopes)*len(actions)*len(orgRoles))
+	cmds := make([]*redis.BoolCmd, 0, cap(lookups))
+
 	for _, scp := range scopes {
 		for _, act := range actions {
-			// Check each action-scope combination against all user roles
-			for _, role := range userInfo.Roles {
-				if role.OrgID != orgID {
-					continue
-				}
-				key := fmt.Sprintf("perm:%s:%s:%s:%s", orgID, resource, scp, act)
-
-				role_ := strings.ToUpper(role.Role)
-				loging.Logger.Desugar().Debug("Checking permission", zap.String("role", role_), zap.String("resource", resource), zap.String("scope", scp), zap.String("action", act))
-
-				isMember, err := pc.RedisClient.SIsMember(*ctx, key, role_).Result()
-				if err == nil && isMember {
-					*ctx = context.WithValue(*ctx, UserPerm, map[string]interface{}{"role": role.Role, "resource": resource, "scope": constants.Scope(strings.ToLower(scp)), "action": constants.Action(strings.ToLower(act))})
-					return true, nil
-				}
-
+			key := fmt.Sprintf("perm:%s:%s:%s:%s", orgID, resource, scp, act)
+			for _, role := range orgRoles {
+				cmds = append(cmds, pipe.SIsMember(*ctx, key, role))
+				lookups = append(lookups, lookupEntry{scope: scp, action: act, role: role})
 			}
 		}
 	}
-	// If key doesn't exist, trigger cache build and continue checking other actions
-	if err := pc.EnsureCacheForOrg(*ctx, orgID); err != nil {
-		loging.Logger.Error("Failed to ensure cache for org", zap.String("orgID", orgID), zap.Error(err))
-	}
-	// After checking cache, fallback to DB for final verification
 
-	for _, scp := range scopes {
-		for _, act := range actions {
-			for _, role := range userInfo.Roles {
-				allowed, err := pc.checkPermissionInDB(*ctx, role.OrgID, role.Role, resource, scp, act)
-				if err != nil {
-					return false, err
-				}
-				if allowed {
-					*ctx = context.WithValue(*ctx, UserPerm, map[string]interface{}{"role": role.Role, "resource": resource, "scope": constants.Scope(strings.ToLower(scp)), "action": constants.Action(strings.ToLower(act))})
-					return true, nil
-				}
+	_, pipeErr := pipe.Exec(*ctx)
+
+	if pipeErr == nil || pipeErr == redis.Nil {
+		for i, cmd := range cmds {
+			if cmd.Val() {
+				lk := lookups[i]
+				loging.Logger.Desugar().Debug("Permission granted from cache",
+					zap.String("role", lk.role), zap.String("resource", resource),
+					zap.String("scope", lk.scope), zap.String("action", lk.action))
+				*ctx = context.WithValue(*ctx, UserPerm, map[string]interface{}{
+					"role":     orgRoleOriginal[lk.role],
+					"resource": resource,
+					"scope":    constants.Scope(strings.ToLower(lk.scope)),
+					"action":   constants.Action(strings.ToLower(lk.action)),
+				})
+				return true, nil
 			}
 		}
+	}
+
+	// Phase 2: Single batched DB query instead of N×M×R individual queries
+	allowed, matchedRole, matchedScope, matchedAction, err := pc.checkPermissionInDBBatch(*ctx, orgID, orgRoles, resource, scopes, actions)
+	if err != nil {
+		return false, err
+	}
+
+	// Trigger async cache rebuild for subsequent requests
+	if cacheErr := pc.EnsureCacheForOrg(*ctx, orgID); cacheErr != nil {
+		loging.Logger.Error("Failed to ensure cache for org", zap.String("orgID", orgID), zap.Error(cacheErr))
+	}
+
+	if allowed {
+		*ctx = context.WithValue(*ctx, UserPerm, map[string]interface{}{
+			"role":     orgRoleOriginal[strings.ToUpper(matchedRole)],
+			"resource": resource,
+			"scope":    constants.Scope(strings.ToLower(matchedScope)),
+			"action":   constants.Action(strings.ToLower(matchedAction)),
+		})
+		return true, nil
 	}
 
 	return false, nil
@@ -190,16 +234,38 @@ func (pc *PermissionCache) RemoveRoleFromPermKey(ctx context.Context, orgID stri
 	return err
 }
 
-func (pc *PermissionCache) checkPermissionInDB(ctx context.Context, orgID string, roleName, resource, scope, action string) (bool, error) {
-	var count int64
-	err := models.Dbcon.WithContext(ctx).Model(&models.Permission{}).
+// checkPermissionInDBBatch performs a single DB query for all role/scope/action combinations
+// instead of N×M×R individual queries, drastically reducing DB round-trips on cache miss.
+func (pc *PermissionCache) checkPermissionInDBBatch(
+	ctx context.Context, orgID string,
+	roleNames []string, resource string,
+	scopes []string, actions []string,
+) (allowed bool, matchedRole, matchedScope, matchedAction string, err error) {
+	var result struct {
+		RoleName string
+		Scope    string
+		Action   string
+	}
+
+	err = models.Dbcon.WithContext(ctx).
+		Model(&models.Permission{}).
+		Select("r.name as role_name, UPPER(permissions.scope) as scope, UPPER(permissions.action) as action").
 		Joins("INNER JOIN role_permissions rp ON rp.permission_id = permissions.id").
 		Joins("INNER JOIN roles r ON r.id = rp.role_id").
-		Where("r.org_id = ? AND r.name = ? AND UPPER(permissions.resource) = ? AND UPPER(permissions.scope) = ? AND UPPER(permissions.action) = ?",
-			orgID, roleName, resource, scope, action).
-		Count(&count).Error
+		Where("r.org_id = ? AND UPPER(r.name) IN ? AND UPPER(permissions.resource) = ? AND UPPER(permissions.scope) IN ? AND UPPER(permissions.action) IN ?",
+			orgID, roleNames, resource, scopes, actions).
+		Limit(1).
+		Scan(&result).Error
 
-	return count > 0, err
+	if err != nil {
+		return false, "", "", "", err
+	}
+
+	if result.RoleName != "" {
+		return true, result.RoleName, result.Scope, result.Action, nil
+	}
+
+	return false, "", "", "", nil
 }
 
 func (pc *PermissionCache) buildCacheForOrg(ctx context.Context, orgID string) error {
