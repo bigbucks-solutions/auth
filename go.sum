@@ -853,12 +853,16 @@ github.com/go-webauthn/webauthn v0.16.2 h1:n116UuvIa7nUVGFP2hO9U24gBqhJTcmbU3ph0
 github.com/go-webauthn/webauthn v0.16.2/go.mod h1:R2xjJxSPat5PYKg5r6cUmqXgbHtbv4GmF6uGkqFMLNI=
 github.com/go-webauthn/webauthn v0.16.3 h1:RorP0c6VbaKP0i0Jxf/vAf7EFb2lmdLW8GLKITeaN5A=
 github.com/go-webauthn/webauthn v0.16.3/go.mod h1:R2xjJxSPat5PYKg5r6cUmqXgbHtbv4GmF6uGkqFMLNI=
+github.com/go-webauthn/webauthn v0.16.4 h1:R9jqR/cYZa7hRquFF7Za/8qoH/K/TIs1/Q/4CyGN+1Q=
+github.com/go-webauthn/webauthn v0.16.4/go.mod h1:SU2ljAgToTV/YLPI0C05QS4qn+e04WpB5g1RMfcZfS4=
 github.com/go-webauthn/x v0.1.26 h1:eNzreFKnwNLDFoywGh9FA8YOMebBWTUNlNSdolQRebs=
 github.com/go-webauthn/x v0.1.26/go.mod h1:jmf/phPV6oIsF6hmdVre+ovHkxjDOmNH0t6fekWUxvg=
 github.com/go-webauthn/x v0.2.1 h1:/oB8i0FhSANuoN+YJF5XHMtppa7zGEYaQrrf6ytotjc=
 github.com/go-webauthn/x v0.2.1/go.mod h1:Wm0X0zXkzznit4gHj4m82GiBZRMEm+TDUIoJWIQLsE4=
 github.com/go-webauthn/x v0.2.2 h1:zIiipvMbr48CXi5RG0XdBJR94kd8I5LfzHPb/q+YYmk=
 github.com/go-webauthn/x v0.2.2/go.mod h1:IpJ5qyWB9NRhLX3C7gIfjTU7RZLXEP6kzFkoVSE7Fz4=
+github.com/go-webauthn/x v0.2.3 h1:8oArS+Rc1SWFLXhE17KZNx258Z4kUSyaDgsSncCO5RA=
+github.com/go-webauthn/x v0.2.3/go.mod h1:tM04GF3V6VYq79AZMl7vbj4q6pz9r7L2criWRzbWhPk=
 github.com/goccy/go-json v0.9.11/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
 github.com/goccy/go-yaml v1.18.0 h1:8W7wMFS12Pcas7KU+VVkaiCng+kG8QiFeFwzFb+rwuw=
 github.com/goccy/go-yaml v1.18.0/go.mod h1:XBurs7gK8ATbW4ZPGKgcbrY1Br56PdM69F7LkFRi1kA=
