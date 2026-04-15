@@ -168,6 +168,8 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	// Static file server
 	fileServer := http.FileServer(http.Dir("./profile_pics/"))
 	r.PathPrefix("/avatar/").Handler(http.StripPrefix("/avatar/", fileServer))
+	logoServer := http.FileServer(http.Dir("./org_logos/"))
+	r.PathPrefix("/org-logo/").Handler(http.StripPrefix("/org-logo/", logoServer))
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 	// r.Handle("/avatar/", http.StripPrefix("/avatar", fileServer))
 	handler := cors.AllowAll().Handler(r)

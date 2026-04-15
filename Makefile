@@ -1,5 +1,5 @@
 # Docker image to run shell and go utility functions in
-WORKER_IMAGE = golang:1.24-alpine3.21
+WORKER_IMAGE = golang:1.25-alpine
 # Docker image to generate OAS3 specs
 OAS3_GENERATOR_DOCKER_IMAGE = openapitools/openapi-generator-cli:latest-release
 

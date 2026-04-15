@@ -459,6 +459,148 @@ const docTemplate = `{
                 }
             }
         },
+        "/organizations": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Create a new organization. Accepts either application/json with a logo_url string, or multipart/form-data with an optional logo file upload.",
+                "consumes": [
+                    "multipart/form-data",
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Create a new organization",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Organization details (JSON)",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/actions.Organization"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Organization name",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Contact email",
+                        "name": "email",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Contact phone",
+                        "name": "phone",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Address",
+                        "name": "address",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "City",
+                        "name": "city",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Postal code",
+                        "name": "postal_code",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "State or county",
+                        "name": "state",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Country",
+                        "name": "country",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Latitude",
+                        "name": "latitude",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Longitude",
+                        "name": "longitude",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Logo URL (alternative to file upload)",
+                        "name": "logo_url",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Logo image file",
+                        "name": "logo",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Website URL",
+                        "name": "website",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Company description",
+                        "name": "description",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Created organization details",
+                        "schema": {
+                            "$ref": "#/definitions/models.Organization"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {}
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/permissions": {
             "post": {
                 "description": "Create a new permission in the system",
@@ -1777,6 +1919,57 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "actions.Organization": {
+            "type": "object",
+            "required": [
+                "email",
+                "name"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "email": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "logo_url": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 4
+                },
+                "phone": {
+                    "type": "string",
+                    "minLength": 5
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
+        },
         "actions.UserListResponse": {
             "type": "object",
             "properties": {
@@ -1840,6 +2033,38 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "constants.Action": {
+            "type": "string",
+            "enum": [
+                "write",
+                "create",
+                "read",
+                "update",
+                "delete"
+            ],
+            "x-enum-varnames": [
+                "ActionWrite",
+                "ActionCreate",
+                "ActionRead",
+                "ActionUpdate",
+                "ActionDelete"
+            ]
+        },
+        "constants.Scope": {
+            "type": "string",
+            "enum": [
+                "all",
+                "org",
+                "associated",
+                "own"
+            ],
+            "x-enum-varnames": [
+                "ScopeAll",
+                "ScopeOrg",
+                "ScopeAssociated",
+                "ScopeOwn"
+            ]
         },
         "constants.UserStatus": {
             "type": "string",
@@ -1996,6 +2221,364 @@ const docTemplate = `{
                 }
             }
         },
+        "gorm.DeletedAt": {
+            "type": "object",
+            "properties": {
+                "time": {
+                    "type": "string"
+                },
+                "valid": {
+                    "description": "Valid is true if Time is not NULL",
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.AuthLog": {
+            "type": "object",
+            "properties": {
+                "attrs": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "loginAt": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.EmailVerification": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "expiresAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.ForgotPassword": {
+            "type": "object",
+            "properties": {
+                "expiry": {
+                    "type": "string"
+                },
+                "resetToken": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.MobileVerification": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "expiresAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "mobileNumber": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.OAuthClient": {
+            "type": "object",
+            "required": [
+                "source"
+            ],
+            "properties": {
+                "source": {
+                    "type": "string",
+                    "enum": [
+                        "google",
+                        "facebook"
+                    ]
+                },
+                "userID": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Organization": {
+            "type": "object",
+            "required": [
+                "contactEmail",
+                "name",
+                "users"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "companyDescription": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "contactEmail": {
+                    "type": "string"
+                },
+                "contactNumber": {
+                    "type": "string",
+                    "minLength": 5
+                },
+                "country": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number",
+                    "format": "float64"
+                },
+                "logoURL": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "number",
+                    "format": "float64"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 4
+                },
+                "postalCode": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                },
+                "websiteURL": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Permission": {
+            "type": "object",
+            "required": [
+                "action",
+                "scope"
+            ],
+            "properties": {
+                "action": {
+                    "minLength": 3,
+                    "enum": [
+                        "read",
+                        "write",
+                        "delete",
+                        "update",
+                        "create"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/constants.Action"
+                        }
+                    ]
+                },
+                "description": {
+                    "type": "string"
+                },
+                "isSystemManaged": {
+                    "description": "Mark if this is a system-managed permission",
+                    "type": "boolean"
+                },
+                "resource": {
+                    "type": "string",
+                    "minLength": 3
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Role"
+                    }
+                },
+                "scope": {
+                    "minLength": 3,
+                    "enum": [
+                        "own",
+                        "org",
+                        "associated",
+                        "all"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/constants.Scope"
+                        }
+                    ]
+                }
+            }
+        },
+        "models.Profile": {
+            "type": "object",
+            "properties": {
+                "bio": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "country": {
+                    "type": "string"
+                },
+                "designation": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "file": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Role": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "extraAttrs": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "isSystemRole": {
+                    "description": "Mark if this is a system-managed role",
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 4
+                },
+                "orgID": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Permission"
+                    }
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                }
+            }
+        },
+        "models.User": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "emailVerification": {
+                    "$ref": "#/definitions/models.EmailVerification"
+                },
+                "emailVerified": {
+                    "type": "boolean"
+                },
+                "forgotPassword": {
+                    "$ref": "#/definitions/models.ForgotPassword"
+                },
+                "lastLogin": {
+                    "$ref": "#/definitions/models.AuthLog"
+                },
+                "mobileVerification": {
+                    "$ref": "#/definitions/models.MobileVerification"
+                },
+                "mobileVerified": {
+                    "type": "boolean"
+                },
+                "oauthClient": {
+                    "$ref": "#/definitions/models.OAuthClient"
+                },
+                "organizations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Organization"
+                    }
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "profile": {
+                    "$ref": "#/definitions/models.Profile"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Role"
+                    }
+                },
+                "status": {
+                    "$ref": "#/definitions/constants.UserStatus"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "protocol.AttestationFormat": {
             "type": "string",
             "enum": [
@@ -2005,6 +2588,7 @@ const docTemplate = `{
                 "android-safetynet",
                 "fido-u2f",
                 "apple",
+                "compound",
                 "none"
             ],
             "x-enum-varnames": [
@@ -2014,6 +2598,7 @@ const docTemplate = `{
                 "AttestationFormatAndroidSafetyNet",
                 "AttestationFormatFIDOUniversalSecondFactor",
                 "AttestationFormatApple",
+                "AttestationFormatCompound",
                 "AttestationFormatNone"
             ]
         },
@@ -2638,12 +3223,19 @@ const docTemplate = `{
             "enum": [
                 -7,
                 -8,
+                -9,
+                -19,
                 -35,
                 -36,
                 -37,
                 -38,
                 -39,
                 -47,
+                -48,
+                -49,
+                -50,
+                -51,
+                -52,
                 -257,
                 -258,
                 -259,
@@ -2652,12 +3244,19 @@ const docTemplate = `{
             "x-enum-varnames": [
                 "AlgES256",
                 "AlgEdDSA",
+                "AlgESP256",
+                "AlgEd25519",
                 "AlgES384",
                 "AlgES512",
                 "AlgPS256",
                 "AlgPS384",
                 "AlgPS512",
                 "AlgES256K",
+                "AlgMLDSA44",
+                "AlgMLDSA65",
+                "AlgMLDSA87",
+                "AlgESP384",
+                "AlgESP512",
                 "AlgRS256",
                 "AlgRS384",
                 "AlgRS512",

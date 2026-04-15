@@ -366,6 +366,56 @@ paths:
       summary: Get logged in user profile information
       tags:
       - auth
+  /organizations:
+    post:
+      description: "Create a new organization. Accepts either application/json with\
+        \ a logo_url string, or multipart/form-data with an optional logo file upload."
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/_organizations_post_request'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_organizations_post_request'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/models.Organization'
+          description: Created organization details
+        "400":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Bad request
+        "401":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Internal server error
+      security:
+      - JWTAuth: []
+      summary: Create a new organization
+      tags:
+      - auth
+      x-codegen-request-body-name: request
   /permissions:
     post:
       description: Create a new permission in the system
@@ -1361,6 +1411,41 @@ paths:
       - webauthn
 components:
   schemas:
+    actions.Organization:
+      properties:
+        address:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        description:
+          maxLength: 500
+          type: string
+        email:
+          type: string
+        latitude:
+          type: number
+        logo_url:
+          type: string
+        longitude:
+          type: number
+        name:
+          minLength: 4
+          type: string
+        phone:
+          minLength: 5
+          type: string
+        postal_code:
+          type: string
+        state:
+          type: string
+        website:
+          type: string
+      required:
+      - email
+      - name
+      type: object
     actions.UserListResponse:
       example:
         total: 1
@@ -1461,6 +1546,32 @@ components:
         username:
           type: string
       type: object
+    constants.Action:
+      enum:
+      - write
+      - create
+      - read
+      - update
+      - delete
+      type: string
+      x-enum-varnames:
+      - ActionWrite
+      - ActionCreate
+      - ActionRead
+      - ActionUpdate
+      - ActionDelete
+    constants.Scope:
+      enum:
+      - all
+      - org
+      - associated
+      - own
+      type: string
+      x-enum-varnames:
+      - ScopeAll
+      - ScopeOrg
+      - ScopeAssociated
+      - ScopeOwn
     constants.UserStatus:
       enum:
       - active
@@ -1614,6 +1725,650 @@ components:
         username:
           type: string
       type: object
+    gorm.DeletedAt:
+      example:
+        valid: true
+        time: time
+      properties:
+        time:
+          type: string
+        valid:
+          description: Valid is true if Time is not NULL
+          type: boolean
+      type: object
+    models.AuthLog:
+      example:
+        loginAt: loginAt
+        userID: userID
+        attrs:
+          key: ""
+      properties:
+        attrs:
+          additionalProperties: true
+          type: object
+        loginAt:
+          type: string
+        userID:
+          type: string
+      type: object
+    models.EmailVerification:
+      example:
+        createdAt: createdAt
+        deletedAt:
+          valid: true
+          time: time
+        id: 1
+        userID: 5
+        email: email
+        expiresAt: expiresAt
+        token: token
+        updatedAt: updatedAt
+      properties:
+        createdAt:
+          type: string
+        deletedAt:
+          $ref: '#/components/schemas/gorm.DeletedAt'
+        email:
+          type: string
+        expiresAt:
+          type: string
+        id:
+          type: integer
+        token:
+          type: string
+        updatedAt:
+          type: string
+        userID:
+          type: integer
+      type: object
+    models.ForgotPassword:
+      example:
+        expiry: expiry
+        resetToken: resetToken
+        userID: userID
+      properties:
+        expiry:
+          type: string
+        resetToken:
+          type: string
+        userID:
+          type: string
+      type: object
+    models.MobileVerification:
+      example:
+        createdAt: createdAt
+        deletedAt:
+          valid: true
+          time: time
+        mobileNumber: mobileNumber
+        id: 5
+        userID: 2
+        expiresAt: expiresAt
+        token: token
+        updatedAt: updatedAt
+      properties:
+        createdAt:
+          type: string
+        deletedAt:
+          $ref: '#/components/schemas/gorm.DeletedAt'
+        expiresAt:
+          type: string
+        id:
+          type: integer
+        mobileNumber:
+          type: string
+        token:
+          type: string
+        updatedAt:
+          type: string
+        userID:
+          type: integer
+      type: object
+    models.OAuthClient:
+      example:
+        source: google
+        userID: userID
+      properties:
+        source:
+          enum:
+          - google
+          - facebook
+          type: string
+        userID:
+          type: string
+      required:
+      - source
+      type: object
+    models.Organization:
+      example:
+        country: country
+        address: address
+        city: city
+        contactEmail: contactEmail
+        companyDescription: companyDescription
+        latitude: 0.8008281904610115
+        postalCode: postalCode
+        logoURL: logoURL
+        users:
+        - lastLogin:
+            loginAt: loginAt
+            userID: userID
+            attrs:
+              key: ""
+          emailVerification:
+            createdAt: createdAt
+            deletedAt:
+              valid: true
+              time: time
+            id: 1
+            userID: 5
+            email: email
+            expiresAt: expiresAt
+            token: token
+            updatedAt: updatedAt
+          profile:
+            country: country
+            firstName: firstName
+            lastName: lastName
+            file: file
+            phone: phone
+            timezone: timezone
+            bio: bio
+            designation: designation
+            email: email
+          roles:
+          - isSystemRole: true
+            permissions:
+            - isSystemManaged: true
+              resource: resource
+              roles:
+              - null
+              - null
+              scope: "{}"
+              action: "{}"
+              description: description
+            - isSystemManaged: true
+              resource: resource
+              roles:
+              - null
+              - null
+              scope: "{}"
+              action: "{}"
+              description: description
+            name: name
+            description: description
+            extraAttrs:
+              key: ""
+            orgID: orgID
+            users:
+            - null
+            - null
+          - isSystemRole: true
+            permissions:
+            - isSystemManaged: true
+              resource: resource
+              roles:
+              - null
+              - null
+              scope: "{}"
+              action: "{}"
+              description: description
+            - isSystemManaged: true
+              resource: resource
+              roles:
+              - null
+              - null
+              scope: "{}"
+              action: "{}"
+              description: description
+            name: name
+            description: description
+            extraAttrs:
+              key: ""
+            orgID: orgID
+            users:
+            - null
+            - null
+          mobileVerified: true
+          oauthClient:
+            source: google
+            userID: userID
+          mobileVerification:
+            createdAt: createdAt
+            deletedAt:
+              valid: true
+              time: time
+            mobileNumber: mobileNumber
+            id: 5
+            userID: 2
+            expiresAt: expiresAt
+            token: token
+            updatedAt: updatedAt
+          emailVerified: true
+          forgotPassword:
+            expiry: expiry
+            resetToken: resetToken
+            userID: userID
+          password: password
+          organizations:
+          - null
+          - null
+          status: active
+          username: username
+        - lastLogin:
+            loginAt: loginAt
+            userID: userID
+            attrs:
+              key: ""
+          emailVerification:
+            createdAt: createdAt
+            deletedAt:
+              valid: true
+              time: time
+            id: 1
+            userID: 5
+            email: email
+            expiresAt: expiresAt
+            token: token
+            updatedAt: updatedAt
+          profile:
+            country: country
+            firstName: firstName
+            lastName: lastName
+            file: file
+            phone: phone
+            timezone: timezone
+            bio: bio
+            designation: designation
+            email: email
+          roles:
+          - isSystemRole: true
+            permissions:
+            - isSystemManaged: true
+              resource: resource
+              roles:
+              - null
+              - null
+              scope: "{}"
+              action: "{}"
+              description: description
+            - isSystemManaged: true
+              resource: resource
+              roles:
+              - null
+              - null
+              scope: "{}"
+              action: "{}"
+              description: description
+            name: name
+            description: description
+            extraAttrs:
+              key: ""
+            orgID: orgID
+            users:
+            - null
+            - null
+          - isSystemRole: true
+            permissions:
+            - isSystemManaged: true
+              resource: resource
+              roles:
+              - null
+              - null
+              scope: "{}"
+              action: "{}"
+              description: description
+            - isSystemManaged: true
+              resource: resource
+              roles:
+              - null
+              - null
+              scope: "{}"
+              action: "{}"
+              description: description
+            name: name
+            description: description
+            extraAttrs:
+              key: ""
+            orgID: orgID
+            users:
+            - null
+            - null
+          mobileVerified: true
+          oauthClient:
+            source: google
+            userID: userID
+          mobileVerification:
+            createdAt: createdAt
+            deletedAt:
+              valid: true
+              time: time
+            mobileNumber: mobileNumber
+            id: 5
+            userID: 2
+            expiresAt: expiresAt
+            token: token
+            updatedAt: updatedAt
+          emailVerified: true
+          forgotPassword:
+            expiry: expiry
+            resetToken: resetToken
+            userID: userID
+          password: password
+          organizations:
+          - null
+          - null
+          status: active
+          username: username
+        websiteURL: websiteURL
+        contactNumber: contactNumber
+        name: name
+        state: state
+        longitude: 6.027456183070403
+      properties:
+        address:
+          type: string
+        city:
+          type: string
+        companyDescription:
+          maxLength: 500
+          type: string
+        contactEmail:
+          type: string
+        contactNumber:
+          minLength: 5
+          type: string
+        country:
+          type: string
+        latitude:
+          format: float64
+          type: number
+        logoURL:
+          type: string
+        longitude:
+          format: float64
+          type: number
+        name:
+          minLength: 4
+          type: string
+        postalCode:
+          type: string
+        state:
+          type: string
+        users:
+          items:
+            $ref: '#/components/schemas/models.User'
+          type: array
+        websiteURL:
+          type: string
+      required:
+      - contactEmail
+      - name
+      - users
+      type: object
+    models.Permission:
+      example:
+        isSystemManaged: true
+        resource: resource
+        roles:
+        - null
+        - null
+        scope: "{}"
+        action: "{}"
+        description: description
+      properties:
+        action:
+          allOf:
+          - $ref: '#/components/schemas/constants.Action'
+          type: object
+        description:
+          type: string
+        isSystemManaged:
+          description: Mark if this is a system-managed permission
+          type: boolean
+        resource:
+          minLength: 3
+          type: string
+        roles:
+          items:
+            $ref: '#/components/schemas/models.Role'
+          type: array
+        scope:
+          allOf:
+          - $ref: '#/components/schemas/constants.Scope'
+          type: object
+      required:
+      - action
+      - scope
+      type: object
+    models.Profile:
+      example:
+        country: country
+        firstName: firstName
+        lastName: lastName
+        file: file
+        phone: phone
+        timezone: timezone
+        bio: bio
+        designation: designation
+        email: email
+      properties:
+        bio:
+          maxLength: 200
+          type: string
+        country:
+          type: string
+        designation:
+          type: string
+        email:
+          type: string
+        file:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        timezone:
+          type: string
+      type: object
+    models.Role:
+      example:
+        isSystemRole: true
+        permissions:
+        - isSystemManaged: true
+          resource: resource
+          roles:
+          - null
+          - null
+          scope: "{}"
+          action: "{}"
+          description: description
+        - isSystemManaged: true
+          resource: resource
+          roles:
+          - null
+          - null
+          scope: "{}"
+          action: "{}"
+          description: description
+        name: name
+        description: description
+        extraAttrs:
+          key: ""
+        orgID: orgID
+        users:
+        - null
+        - null
+      properties:
+        description:
+          type: string
+        extraAttrs:
+          additionalProperties: true
+          type: object
+        isSystemRole:
+          description: Mark if this is a system-managed role
+          type: boolean
+        name:
+          minLength: 4
+          type: string
+        orgID:
+          type: string
+        permissions:
+          items:
+            $ref: '#/components/schemas/models.Permission'
+          type: array
+        users:
+          items:
+            $ref: '#/components/schemas/models.User'
+          type: array
+      required:
+      - name
+      type: object
+    models.User:
+      example:
+        lastLogin:
+          loginAt: loginAt
+          userID: userID
+          attrs:
+            key: ""
+        emailVerification:
+          createdAt: createdAt
+          deletedAt:
+            valid: true
+            time: time
+          id: 1
+          userID: 5
+          email: email
+          expiresAt: expiresAt
+          token: token
+          updatedAt: updatedAt
+        profile:
+          country: country
+          firstName: firstName
+          lastName: lastName
+          file: file
+          phone: phone
+          timezone: timezone
+          bio: bio
+          designation: designation
+          email: email
+        roles:
+        - isSystemRole: true
+          permissions:
+          - isSystemManaged: true
+            resource: resource
+            roles:
+            - null
+            - null
+            scope: "{}"
+            action: "{}"
+            description: description
+          - isSystemManaged: true
+            resource: resource
+            roles:
+            - null
+            - null
+            scope: "{}"
+            action: "{}"
+            description: description
+          name: name
+          description: description
+          extraAttrs:
+            key: ""
+          orgID: orgID
+          users:
+          - null
+          - null
+        - isSystemRole: true
+          permissions:
+          - isSystemManaged: true
+            resource: resource
+            roles:
+            - null
+            - null
+            scope: "{}"
+            action: "{}"
+            description: description
+          - isSystemManaged: true
+            resource: resource
+            roles:
+            - null
+            - null
+            scope: "{}"
+            action: "{}"
+            description: description
+          name: name
+          description: description
+          extraAttrs:
+            key: ""
+          orgID: orgID
+          users:
+          - null
+          - null
+        mobileVerified: true
+        oauthClient:
+          source: google
+          userID: userID
+        mobileVerification:
+          createdAt: createdAt
+          deletedAt:
+            valid: true
+            time: time
+          mobileNumber: mobileNumber
+          id: 5
+          userID: 2
+          expiresAt: expiresAt
+          token: token
+          updatedAt: updatedAt
+        emailVerified: true
+        forgotPassword:
+          expiry: expiry
+          resetToken: resetToken
+          userID: userID
+        password: password
+        organizations:
+        - null
+        - null
+        status: active
+        username: username
+      properties:
+        emailVerification:
+          $ref: '#/components/schemas/models.EmailVerification'
+        emailVerified:
+          type: boolean
+        forgotPassword:
+          $ref: '#/components/schemas/models.ForgotPassword'
+        lastLogin:
+          $ref: '#/components/schemas/models.AuthLog'
+        mobileVerification:
+          $ref: '#/components/schemas/models.MobileVerification'
+        mobileVerified:
+          type: boolean
+        oauthClient:
+          $ref: '#/components/schemas/models.OAuthClient'
+        organizations:
+          items:
+            $ref: '#/components/schemas/models.Organization'
+          type: array
+        password:
+          minLength: 8
+          type: string
+        profile:
+          $ref: '#/components/schemas/models.Profile'
+        roles:
+          items:
+            $ref: '#/components/schemas/models.Role'
+          type: array
+        status:
+          $ref: '#/components/schemas/constants.UserStatus'
+        username:
+          type: string
+      required:
+      - password
+      - username
+      type: object
     protocol.AttestationFormat:
       enum:
       - packed
@@ -1622,6 +2377,7 @@ components:
       - android-safetynet
       - fido-u2f
       - apple
+      - compound
       - none
       type: string
       x-enum-varnames:
@@ -1631,6 +2387,7 @@ components:
       - AttestationFormatAndroidSafetyNet
       - AttestationFormatFIDOUniversalSecondFactor
       - AttestationFormatApple
+      - AttestationFormatCompound
       - AttestationFormatNone
     protocol.AuthenticationExtensions:
       additionalProperties:
@@ -2340,12 +3097,19 @@ components:
       enum:
       - -7
       - -8
+      - -9
+      - -19
       - -35
       - -36
       - -37
       - -38
       - -39
       - -47
+      - -48
+      - -49
+      - -50
+      - -51
+      - -52
       - -257
       - -258
       - -259
@@ -2354,16 +3118,69 @@ components:
       x-enum-varnames:
       - AlgES256
       - AlgEdDSA
+      - AlgESP256
+      - AlgEd25519
       - AlgES384
       - AlgES512
       - AlgPS256
       - AlgPS384
       - AlgPS512
       - AlgES256K
+      - AlgMLDSA44
+      - AlgMLDSA65
+      - AlgMLDSA87
+      - AlgESP384
+      - AlgESP512
       - AlgRS256
       - AlgRS384
       - AlgRS512
       - AlgRS1
+    _organizations_post_request:
+      properties:
+        name:
+          description: Organization name
+          type: string
+        email:
+          description: Contact email
+          type: string
+        phone:
+          description: Contact phone
+          type: string
+        address:
+          description: Address
+          type: string
+        city:
+          description: City
+          type: string
+        postal_code:
+          description: Postal code
+          type: string
+        state:
+          description: State or county
+          type: string
+        country:
+          description: Country
+          type: string
+        latitude:
+          description: Latitude
+          type: number
+        longitude:
+          description: Longitude
+          type: number
+        logo_url:
+          description: Logo URL (alternative to file upload)
+          type: string
+        logo:
+          description: Logo image file
+          format: binary
+          type: string
+        website:
+          description: Website URL
+          type: string
+        description:
+          description: Company description
+          type: string
+      type: object
     _user_updateprofile_post_request:
       properties:
         request:

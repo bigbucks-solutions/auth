@@ -11,9 +11,16 @@ type Organization struct {
 	constants.BaseModel `json:"-" gorm:"embedded"`
 	Name                string `gorm:"not null" validate:"required,min=4"`
 	Address             string
-	ContactEmail        string `validate:"required,email"`
-	ContactNumber       string `validate:"omitempty,min=5"`
+	City                string
+	PostalCode          string
+	State               string
 	Country             string
+	Latitude            float64
+	Longitude           float64
+	LogoURL             string
+	TaxID               string
+	ContactEmail        string  `validate:"required,email"`
+	ContactNumber       string  `validate:"omitempty,min=5"`
 	WebsiteURL          string  `validate:"omitempty,url"`
 	CompanyDescription  string  `gorm:"type:text" validate:"omitempty,max=500"`
 	Users               []*User `gorm:"many2many:UserOrgRole;JoinForeignKey:OrgID;JoinReferences:UserID;" validate:"required,len=1,dive"`
