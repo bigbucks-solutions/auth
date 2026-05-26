@@ -3,7 +3,7 @@ module bigbucks/solution/auth
 go 1.25.5
 
 require (
-	ariga.io/atlas-provider-gorm v0.6.0
+	ariga.io/atlas-provider-gorm v0.6.1
 	github.com/dchest/authcookie v0.0.0-20190824115100-f900d2294c8e
 	github.com/futurenda/google-auth-id-token-verifier v0.0.0-20170311140316-2a5b89f28b7e
 	github.com/fxamacker/cbor/v2 v2.9.2
