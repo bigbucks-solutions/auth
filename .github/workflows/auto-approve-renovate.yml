@@ -24,11 +24,11 @@ jobs:
         !contains(github.event.pull_request.title, 'major')))
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # CRUCIAL: Wait for CI checks to complete first
       - name: Wait for CI checks to complete
-        uses: lewagon/wait-on-check-action@v1.6.1
+        uses: lewagon/wait-on-check-action@v1.8.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
