@@ -577,6 +577,12 @@ const docTemplate = `{
                         "description": "Company description",
                         "name": "description",
                         "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tax ID",
+                        "name": "tax_id",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -596,6 +602,59 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal server error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/organizations/{org_id}": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Gets complete organization details, including its users. The authenticated user must belong to the requested organization.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get organization details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Organization ID",
+                        "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.OrganizationDetails"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {}
                     }
                 }
@@ -1965,6 +2024,9 @@ const docTemplate = `{
                 "state": {
                     "type": "string"
                 },
+                "tax_id": {
+                    "type": "string"
+                },
                 "website": {
                     "type": "string"
                 }
@@ -2387,6 +2449,9 @@ const docTemplate = `{
                 "state": {
                     "type": "string"
                 },
+                "taxID": {
+                    "type": "string"
+                },
                 "users": {
                     "type": "array",
                     "items": {
@@ -2394,6 +2459,68 @@ const docTemplate = `{
                     }
                 },
                 "websiteURL": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.OrganizationDetails": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "company_description": {
+                    "type": "string"
+                },
+                "contact_email": {
+                    "type": "string"
+                },
+                "contact_number": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "logo_url": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "tax_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                },
+                "website_url": {
                     "type": "string"
                 }
             }

@@ -416,6 +416,53 @@ paths:
       tags:
       - auth
       x-codegen-request-body-name: request
+  /organizations/{org_id}:
+    get:
+      description: "Gets complete organization details, including its users. The authenticated\
+        \ user must belong to the requested organization."
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        schema:
+          type: string
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/models.OrganizationDetails'
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Not Found
+      security:
+      - JWTAuth: []
+      summary: Get organization details
+      tags:
+      - auth
   /permissions:
     post:
       description: Create a new permission in the system
@@ -1440,6 +1487,8 @@ components:
           type: string
         state:
           type: string
+        tax_id:
+          type: string
         website:
           type: string
       required:
@@ -2061,6 +2110,7 @@ components:
           status: active
           username: username
         websiteURL: websiteURL
+        taxID: taxID
         contactNumber: contactNumber
         name: name
         state: state
@@ -2095,6 +2145,8 @@ components:
           type: string
         state:
           type: string
+        taxID:
+          type: string
         users:
           items:
             $ref: '#/components/schemas/models.User'
@@ -2105,6 +2157,276 @@ components:
       - contactEmail
       - name
       - users
+      type: object
+    models.OrganizationDetails:
+      example:
+        country: country
+        address: address
+        city: city
+        logo_url: logo_url
+        latitude: 0.8008281904610115
+        created_at: created_at
+        contact_number: contact_number
+        tax_id: tax_id
+        users:
+        - lastLogin:
+            loginAt: loginAt
+            userID: userID
+            attrs:
+              key: ""
+          emailVerification:
+            createdAt: createdAt
+            deletedAt:
+              valid: true
+              time: time
+            id: 1
+            userID: 5
+            email: email
+            expiresAt: expiresAt
+            token: token
+            updatedAt: updatedAt
+          profile:
+            country: country
+            firstName: firstName
+            lastName: lastName
+            file: file
+            phone: phone
+            timezone: timezone
+            bio: bio
+            designation: designation
+            email: email
+          roles:
+          - isSystemRole: true
+            permissions:
+            - isSystemManaged: true
+              resource: resource
+              roles:
+              - null
+              - null
+              scope: "{}"
+              action: "{}"
+              description: description
+            - isSystemManaged: true
+              resource: resource
+              roles:
+              - null
+              - null
+              scope: "{}"
+              action: "{}"
+              description: description
+            name: name
+            description: description
+            extraAttrs:
+              key: ""
+            orgID: orgID
+            users:
+            - null
+            - null
+          - isSystemRole: true
+            permissions:
+            - isSystemManaged: true
+              resource: resource
+              roles:
+              - null
+              - null
+              scope: "{}"
+              action: "{}"
+              description: description
+            - isSystemManaged: true
+              resource: resource
+              roles:
+              - null
+              - null
+              scope: "{}"
+              action: "{}"
+              description: description
+            name: name
+            description: description
+            extraAttrs:
+              key: ""
+            orgID: orgID
+            users:
+            - null
+            - null
+          mobileVerified: true
+          oauthClient:
+            source: google
+            userID: userID
+          mobileVerification:
+            createdAt: createdAt
+            deletedAt:
+              valid: true
+              time: time
+            mobileNumber: mobileNumber
+            id: 5
+            userID: 2
+            expiresAt: expiresAt
+            token: token
+            updatedAt: updatedAt
+          emailVerified: true
+          forgotPassword:
+            expiry: expiry
+            resetToken: resetToken
+            userID: userID
+          password: password
+          organizations:
+          - null
+          - null
+          status: active
+          username: username
+        - lastLogin:
+            loginAt: loginAt
+            userID: userID
+            attrs:
+              key: ""
+          emailVerification:
+            createdAt: createdAt
+            deletedAt:
+              valid: true
+              time: time
+            id: 1
+            userID: 5
+            email: email
+            expiresAt: expiresAt
+            token: token
+            updatedAt: updatedAt
+          profile:
+            country: country
+            firstName: firstName
+            lastName: lastName
+            file: file
+            phone: phone
+            timezone: timezone
+            bio: bio
+            designation: designation
+            email: email
+          roles:
+          - isSystemRole: true
+            permissions:
+            - isSystemManaged: true
+              resource: resource
+              roles:
+              - null
+              - null
+              scope: "{}"
+              action: "{}"
+              description: description
+            - isSystemManaged: true
+              resource: resource
+              roles:
+              - null
+              - null
+              scope: "{}"
+              action: "{}"
+              description: description
+            name: name
+            description: description
+            extraAttrs:
+              key: ""
+            orgID: orgID
+            users:
+            - null
+            - null
+          - isSystemRole: true
+            permissions:
+            - isSystemManaged: true
+              resource: resource
+              roles:
+              - null
+              - null
+              scope: "{}"
+              action: "{}"
+              description: description
+            - isSystemManaged: true
+              resource: resource
+              roles:
+              - null
+              - null
+              scope: "{}"
+              action: "{}"
+              description: description
+            name: name
+            description: description
+            extraAttrs:
+              key: ""
+            orgID: orgID
+            users:
+            - null
+            - null
+          mobileVerified: true
+          oauthClient:
+            source: google
+            userID: userID
+          mobileVerification:
+            createdAt: createdAt
+            deletedAt:
+              valid: true
+              time: time
+            mobileNumber: mobileNumber
+            id: 5
+            userID: 2
+            expiresAt: expiresAt
+            token: token
+            updatedAt: updatedAt
+          emailVerified: true
+          forgotPassword:
+            expiry: expiry
+            resetToken: resetToken
+            userID: userID
+          password: password
+          organizations:
+          - null
+          - null
+          status: active
+          username: username
+        contact_email: contact_email
+        company_description: company_description
+        updated_at: updated_at
+        website_url: website_url
+        name: name
+        id: id
+        state: state
+        postal_code: postal_code
+        longitude: 6.027456183070403
+      properties:
+        address:
+          type: string
+        city:
+          type: string
+        company_description:
+          type: string
+        contact_email:
+          type: string
+        contact_number:
+          type: string
+        country:
+          type: string
+        created_at:
+          type: string
+        id:
+          type: string
+        latitude:
+          type: number
+        logo_url:
+          type: string
+        longitude:
+          type: number
+        name:
+          type: string
+        postal_code:
+          type: string
+        state:
+          type: string
+        tax_id:
+          type: string
+        updated_at:
+          type: string
+        users:
+          items:
+            $ref: '#/components/schemas/models.User'
+          type: array
+        website_url:
+          type: string
       type: object
     models.Permission:
       example:
@@ -3179,6 +3501,9 @@ components:
           type: string
         description:
           description: Company description
+          type: string
+        tax_id:
+          description: Tax ID
           type: string
       type: object
     _user_updateprofile_post_request:

@@ -6,9 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <title>Set up a new password for [Product Name]</title>
-  <!-- 
+  <!--
     The style block is collapsed on page load to save you some scrolling.
-    Postmark automatically inlines all CSS properties for maximum email client 
+    Postmark automatically inlines all CSS properties for maximum email client
     compatibility. You can just update styles here, and Postmark does the rest.
     -->
   <style type="text/css" rel="stylesheet" media="all">
@@ -415,10 +415,10 @@
                 <!-- Body content -->
                 <tr>
                   <td class="content-cell">
-                    <p>We received a request to reset the password to access [Product Name] with your email address
-                      device using , but we were unable to find an account associated with this address.</p>
-                    <p>If you use {{.Company}} and were expecting this email, consider trying to request a password
-                      reset using the email address associated with your account.</p>
+                    <p>We received a request to reset the password for your {{.Company}} account. Click the button
+                      below to choose a new password.</p>
+                    <p>If you did not make this request, you can safely ignore this email. Your password will not
+                      be changed.</p>
                     <!-- Action -->
                     <table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0">
                       <tr>
@@ -431,7 +431,7 @@
                                 <table border="0" cellspacing="0" cellpadding="0">
                                   <tr>
                                     <td>
-                                      <a href="http://localhost:3000/auth/changepassword/{{.Token}}?u={{.Username}}"
+                                      <a href="{{.Hostname}}/auth/changepassword/{{.Token}}?u={{.Username}}"
                                         class="button button--green" target="_blank">Reset Password</a>
                                     </td>
                                   </tr>
@@ -443,7 +443,7 @@
                       </tr>
                     </table>
                     <p>If you do not use {{.Company}} or did not request a password reset, please ignore this email or
-                      <a href="support_url">contact support</a> if you have questions.
+                      <a href="{{.Hostname}}/support">contact support</a> if you have questions.
                     </p>
                     <p>Thanks,
                       <br>The {{.Company}} Team
@@ -454,7 +454,7 @@
                         <td>
                           <p class="sub">If you’re having trouble with the button above, copy and paste the URL below
                             into your web browser.</p>
-                          <p class="sub">[action_url]</p>
+                          <p class="sub">{{.Hostname}}/auth/changepassword/{{.Token}}?u={{.Username}}</p>
                         </td>
                       </tr>
                     </table>

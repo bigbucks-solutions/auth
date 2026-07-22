@@ -130,6 +130,85 @@ var _ = Describe("Organization API Tests", Ordered, func() {
 		})
 	})
 
+	Context("Get Organization Details", func() {
+		var orgID string
+
+		BeforeAll(func() {
+			payload := map[string]interface{}{
+				"name":        "Details Access Org",
+				"email":       "details@access.org",
+				"address":     "456 Market St",
+				"city":        "Seattle",
+				"postal_code": "98101",
+				"state":       "Washington",
+				"country":     "US",
+				"tax_id":      "US-123456",
+			}
+			body, _ := json.Marshal(payload)
+			request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/organizations", s.URL), bytes.NewBuffer(body))
+			request.Header.Set("Content-Type", "application/json")
+			request.Header.Set("X-Auth", jwt)
+			response, _ := c.Do(request)
+			Ω(response.StatusCode).Should(Equal(200))
+
+			var org models.Organization
+			Ω(models.Dbcon.Where("name = ?", "Details Access Org").First(&org).Error).Should(Succeed())
+			orgID = org.ID
+		})
+
+		It("Should return complete details to an organization member", func() {
+			request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/organizations/%s", s.URL, orgID), nil)
+			request.Header.Set("X-Auth", jwt)
+			response, err := c.Do(request)
+			Ω(err).Should(Succeed())
+			defer response.Body.Close()
+
+			Ω(response.StatusCode).Should(Equal(200))
+			var result models.OrganizationDetails
+			Ω(json.NewDecoder(response.Body).Decode(&result)).Should(Succeed())
+			Ω(result.ID).Should(Equal(orgID))
+			Ω(result.Address).Should(Equal("456 Market St"))
+			Ω(result.TaxID).Should(Equal("US-123456"))
+			Ω(result.Users).ShouldNot(BeEmpty())
+			Ω(result.Users[0].Username).Should(Equal("john@x.com"))
+		})
+
+		It("Should reject an unauthenticated request", func() {
+			request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/organizations/%s", s.URL, orgID), nil)
+			response, err := c.Do(request)
+			Ω(err).Should(Succeed())
+			defer response.Body.Close()
+
+			Ω(response.StatusCode).Should(Equal(http.StatusUnauthorized))
+		})
+
+		It("Should reject a user outside the organization", func() {
+			outsider := &models.User{
+				Username: "outsider@details.org",
+				Password: "outsider123",
+				Profile:  models.Profile{FirstName: "Outside", LastName: "User", Email: "outsider@details.org"},
+			}
+			Ω(models.Dbcon.Create(outsider).Error).Should(Succeed())
+
+			signInBody, _ := json.Marshal(map[string]string{"username": outsider.Username, "password": "outsider123"})
+			signInRequest, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/signin", s.URL), bytes.NewBuffer(signInBody))
+			signInRequest.Header.Set("Content-Type", "application/json")
+			signInResponse, err := c.Do(signInRequest)
+			Ω(err).Should(Succeed())
+			defer signInResponse.Body.Close()
+			Ω(signInResponse.StatusCode).Should(Equal(http.StatusAccepted))
+			outsiderJWT, _ := io.ReadAll(signInResponse.Body)
+
+			request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/organizations/%s", s.URL, orgID), nil)
+			request.Header.Set("X-Auth", string(outsiderJWT))
+			response, err := c.Do(request)
+			Ω(err).Should(Succeed())
+			defer response.Body.Close()
+
+			Ω(response.StatusCode).Should(Equal(http.StatusForbidden))
+		})
+	})
+
 	Context("Create Organization via multipart/form-data", func() {
 		buildMultipart := func(fields map[string]string, logoFilename, logoContent string) (*bytes.Buffer, string) {
 			body := &bytes.Buffer{}

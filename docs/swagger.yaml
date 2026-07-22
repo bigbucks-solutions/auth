@@ -29,6 +29,8 @@ definitions:
         type: string
       state:
         type: string
+      tax_id:
+        type: string
       website:
         type: string
     required:
@@ -313,6 +315,8 @@ definitions:
         type: string
       state:
         type: string
+      taxID:
+        type: string
       users:
         items:
           $ref: '#/definitions/models.User'
@@ -323,6 +327,47 @@ definitions:
     - contactEmail
     - name
     - users
+    type: object
+  models.OrganizationDetails:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      company_description:
+        type: string
+      contact_email:
+        type: string
+      contact_number:
+        type: string
+      country:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      latitude:
+        type: number
+      logo_url:
+        type: string
+      longitude:
+        type: number
+      name:
+        type: string
+      postal_code:
+        type: string
+      state:
+        type: string
+      tax_id:
+        type: string
+      updated_at:
+        type: string
+      users:
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+      website_url:
+        type: string
     type: object
   models.Permission:
     properties:
@@ -1345,6 +1390,10 @@ paths:
         in: formData
         name: description
         type: string
+      - description: Tax ID
+        in: formData
+        name: tax_id
+        type: string
       produces:
       - application/json
       responses:
@@ -1364,6 +1413,42 @@ paths:
       security:
       - JWTAuth: []
       summary: Create a new organization
+      tags:
+      - auth
+  /organizations/{org_id}:
+    get:
+      description: Gets complete organization details, including its users. The authenticated
+        user must belong to the requested organization.
+      parameters:
+      - description: Authorization
+        in: header
+        name: X-Auth
+        required: true
+        type: string
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.OrganizationDetails'
+        "401":
+          description: Unauthorized
+          schema: {}
+        "403":
+          description: Forbidden
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+      security:
+      - JWTAuth: []
+      summary: Get organization details
       tags:
       - auth
   /permissions:

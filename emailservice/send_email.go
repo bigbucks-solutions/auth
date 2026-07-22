@@ -90,7 +90,8 @@ func (e *EmailService) sendEmail(toEmail string, subject string, body string) er
 	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\n", e.config.SMTPFrom, toEmail, subject)
 
 	// Determine content type based on body content
-	if strings.Contains(body, "<html>") || strings.Contains(body, "<HTML>") {
+	lowered := strings.ToLower(body)
+	if strings.Contains(lowered, "<html") {
 		msg += "Content-Type: text/html; charset=UTF-8\r\n"
 	} else {
 		msg += "Content-Type: text/plain; charset=UTF-8\r\n"

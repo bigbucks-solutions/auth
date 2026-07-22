@@ -663,6 +663,82 @@
         "x-codegen-request-body-name": "request"
       }
     },
+    "/organizations/{org_id}": {
+      "get": {
+        "description": "Gets complete organization details, including its users. The authenticated user must belong to the requested organization.",
+        "parameters": [
+          {
+            "description": "Authorization",
+            "in": "header",
+            "name": "X-Auth",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Organization ID",
+            "in": "path",
+            "name": "org_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/models.OrganizationDetails"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Not Found"
+          }
+        },
+        "security": [
+          {
+            "JWTAuth": []
+          }
+        ],
+        "summary": "Get organization details",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/permissions": {
       "post": {
         "description": "Create a new permission in the system",
@@ -2272,6 +2348,9 @@
           "state": {
             "type": "string"
           },
+          "tax_id": {
+            "type": "string"
+          },
           "website": {
             "type": "string"
           }
@@ -2693,6 +2772,9 @@
           "state": {
             "type": "string"
           },
+          "taxID": {
+            "type": "string"
+          },
           "users": {
             "items": {
               "$ref": "#/components/schemas/models.User"
@@ -2708,6 +2790,68 @@
           "name",
           "users"
         ],
+        "type": "object"
+      },
+      "models.OrganizationDetails": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "company_description": {
+            "type": "string"
+          },
+          "contact_email": {
+            "type": "string"
+          },
+          "contact_number": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "logo_url": {
+            "type": "string"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "postal_code": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "tax_id": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/models.User"
+            },
+            "type": "array"
+          },
+          "website_url": {
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "models.Permission": {
@@ -3626,6 +3770,10 @@
           },
           "description": {
             "description": "Company description",
+            "type": "string"
+          },
+          "tax_id": {
+            "description": "Tax ID",
             "type": "string"
           }
         },

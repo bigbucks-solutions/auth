@@ -20,14 +20,16 @@ func GoogleAuthenticate(idtoken, accesstoken string) (success bool, user models.
 	loging.Logger.Debugln("Google OAuth::", zap.String("Logged User", claimSet.Email))
 	username := fmt.Sprintf("%s+%s", claimSet.Email, GOOGLE_SUFFIX)
 	if err := models.Dbcon.First(&user, "username = ?", username).Error; errors.Is(err, gorm.ErrRecordNotFound) {
-		models.Dbcon.Create(&models.User{Username: username, Password: idtoken, Profile: models.Profile{
+		user = models.User{Username: username, Password: idtoken, Profile: models.Profile{
 			FirstName: claimSet.GivenName, LastName: claimSet.FamilyName, Email: claimSet.Email},
 			OAuthClient: models.OAuthClient{Source: GOOGLE_SUFFIX,
 				Details: datatypes.JSON([]byte(fmt.Sprintf(`{"idToken": "%s", "accessToken": "%s"}`, idtoken, accesstoken)))},
-		})
+		}
+		models.Dbcon.Create(&user)
 	} else {
 		user.OAuthClient = models.OAuthClient{Source: GOOGLE_SUFFIX,
 			Details: datatypes.JSON([]byte(fmt.Sprintf(`{"idToken": "%s", "accessToken": "%s"}`, idtoken, accesstoken)))}
+		models.Dbcon.Save(&user)
 
 	}
 	return true, user, nil
