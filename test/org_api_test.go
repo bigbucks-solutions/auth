@@ -161,7 +161,7 @@ var _ = Describe("Organization API Tests", Ordered, func() {
 			request.Header.Set("X-Auth", jwt)
 			response, err := c.Do(request)
 			Ω(err).Should(Succeed())
-			defer response.Body.Close()
+			defer func() { _ = response.Body.Close() }()
 
 			Ω(response.StatusCode).Should(Equal(200))
 			var result models.OrganizationDetails
@@ -177,7 +177,7 @@ var _ = Describe("Organization API Tests", Ordered, func() {
 			request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/organizations/%s", s.URL, orgID), nil)
 			response, err := c.Do(request)
 			Ω(err).Should(Succeed())
-			defer response.Body.Close()
+			defer func() { _ = response.Body.Close() }()
 
 			Ω(response.StatusCode).Should(Equal(http.StatusUnauthorized))
 		})
@@ -195,7 +195,7 @@ var _ = Describe("Organization API Tests", Ordered, func() {
 			signInRequest.Header.Set("Content-Type", "application/json")
 			signInResponse, err := c.Do(signInRequest)
 			Ω(err).Should(Succeed())
-			defer signInResponse.Body.Close()
+			defer func() { _ = signInResponse.Body.Close() }()
 			Ω(signInResponse.StatusCode).Should(Equal(http.StatusAccepted))
 			outsiderJWT, _ := io.ReadAll(signInResponse.Body)
 
@@ -203,7 +203,7 @@ var _ = Describe("Organization API Tests", Ordered, func() {
 			request.Header.Set("X-Auth", string(outsiderJWT))
 			response, err := c.Do(request)
 			Ω(err).Should(Succeed())
-			defer response.Body.Close()
+			defer func() { _ = response.Body.Close() }()
 
 			Ω(response.StatusCode).Should(Equal(http.StatusForbidden))
 		})
