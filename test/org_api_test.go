@@ -384,7 +384,7 @@ var _ = Describe("Organization API Tests", Ordered, func() {
 			Ω(org.Longitude).Should(BeZero())
 		})
 
-		It("Should reject org with invalid logo URL", func() {
+		It("Should accept a non-URL logo_url and store it verbatim", func() {
 			payload := map[string]interface{}{
 				"name":     "Bad Logo Org",
 				"email":    "admin@badlogo.com",
@@ -395,7 +395,12 @@ var _ = Describe("Organization API Tests", Ordered, func() {
 			request.Header.Set("Content-Type", "application/json")
 			request.Header.Set("X-Auth", jwt)
 			response, _ := c.Do(request)
-			Ω(response.StatusCode).Should(Equal(400))
+			Ω(response.StatusCode).Should(Equal(200))
+
+			var org models.Organization
+			err := models.Dbcon.Where("name = ?", "Bad Logo Org").First(&org).Error
+			Ω(err).Should(BeNil())
+			Ω(org.LogoURL).Should(Equal("not-a-valid-url"))
 		})
 
 		It("Should reject org creation without auth", func() {
