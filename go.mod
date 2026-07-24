@@ -19,7 +19,7 @@ require (
 	github.com/huandu/facebook/v2 v2.9.1
 	github.com/jackc/pgconn v1.14.3
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/oklog/ulid/v2 v2.1.1
+	github.com/oklog/ulid/v2 v2.1.2
 	github.com/onsi/ginkgo/v2 v2.32.0
 	github.com/onsi/gomega v1.42.1
 	github.com/ory/dockertest/v3 v3.12.0
