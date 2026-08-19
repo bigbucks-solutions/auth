@@ -62,6 +62,22 @@ install-pre-commit:
 	awk 'NR==1{print;print "export PATH=\"$$PATH:'`go env GOPATH`'/bin\""}NR!=1{print}' .git/hooks/pre-commit > .git/hooks/pre-commit.tmp && mv .git/hooks/pre-commit.tmp .git/hooks/pre-commit
 	chmod +x .git/hooks/pre-commit
 
+.PHONY: bump-tag
+bump-tag:
+	@TYPE ?= patch
+	@current=$$(git tag --sort=-v:refname | head -n 1); \
+	if [ -z "$$current" ]; then current="v0.0.0"; fi; \
+	version=$${current#v}; \
+	IFS='.' read -r major minor patch <<< "$$version"; \
+	case "$(TYPE)" in \
+		major) major=$$((major + 1)); minor=0; patch=0 ;; \
+		minor) minor=$$((minor + 1)); patch=0 ;; \
+		patch|*) patch=$$((patch + 1)) ;; \
+	 esac; \
+	new_tag="v$$major.$$minor.$$patch"; \
+	echo "Creating and pushing tag $$new_tag"; \
+	git tag "$$new_tag" && git push origin "$$new_tag"
+
 .PHONY: run-tests
 run-tests:
 	go run github.com/onsi/ginkgo/v2/ginkgo -r --fail-on-pending --fail-on-empty --keep-going --cover --coverprofile=cover.profile --race --trace --json-report=report.json --poll-progress-after=10s --poll-progress-interval=10s -coverpkg=./... .

@@ -1,6 +1,6 @@
 {
     "key": "qiyeiuyeiqeoiqeuq",
-    "port": "9000",
+    "port": "8000",
     "alg": "ES256",
     "privateKey": "ec_private.pem",
     "publicKey": "ec_public.pem",
@@ -17,13 +17,14 @@
     "logLevel": "debug",
     "smtpHost": "smtp.gmail.com",
     "smtpPort": "587",
-    "smtpUsername": "",
-    "smtpPassword": "",
+    "smtpUsername": "npmedco@gmail.com",
+    "smtpPassword": "zerj tpau wazl jtcb",
     "smtpFrom": "noreply@bigbucks.com",
-    "baseHost": "http://localhost:3000",
+    "baseHost": "https://bigbucks.solutions",
     "webAuthnRPID": "localhost",
     "webAuthnRPName": "BigBucks Auth",
     "webAuthnOrigins": [
-        "http://localhost:3000"
+        "http://localhost:3000",
+        "android:apk-key-hash:jwc7RqzPOf7qoqwuGPmshnC00CZhQDcQ1dEPbi6HJsc"
     ]
 }
