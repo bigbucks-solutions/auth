@@ -1077,6 +1077,8 @@ github.com/hashicorp/golang-lru/v2 v2.0.7 h1:a+bsQ5rvGLjzHuww6tVxozPZFVghXaHOwFs
 github.com/hashicorp/golang-lru/v2 v2.0.7/go.mod h1:QeFd9opnmA6QUJc5vARoKUSoFhyfM2/ZepoAG6RGpeM=
 github.com/huandu/facebook/v2 v2.9.1 h1:REo8wQL2Yo/8J29WiiLRf7LAqwHlr72QnxZiEjvpVxE=
 github.com/huandu/facebook/v2 v2.9.1/go.mod h1:lk/dUK+JQuXylOhO+b6QtNJNpzo/C4wAasE+YHHZUf4=
+github.com/huandu/facebook/v2 v2.9.2 h1:GYaP6jXQwykPMYP3qe4ZhwzZFQBGqtpcwlWZOZp1vDI=
+github.com/huandu/facebook/v2 v2.9.2/go.mod h1:lk/dUK+JQuXylOhO+b6QtNJNpzo/C4wAasE+YHHZUf4=
 github.com/iancoleman/strcase v0.2.0/go.mod h1:iwCmte+B7n89clKwxIoIXy/HfoL7AsD47ZCWhYzw7ho=
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
