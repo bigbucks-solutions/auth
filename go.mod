@@ -16,7 +16,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
-	github.com/huandu/facebook/v2 v2.9.1
+	github.com/huandu/facebook/v2 v2.9.2
 	github.com/jackc/pgconn v1.14.3
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/oklog/ulid/v2 v2.1.2
