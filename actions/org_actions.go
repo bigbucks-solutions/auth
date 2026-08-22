@@ -173,6 +173,10 @@ func CreateOrganisationFromAuthenticatedUser(org *Organization, userName string,
 	if err != nil {
 		return http.StatusConflict, err
 	}
+	err = AssignSystemPermissionToRole(SuperAdminRole.ID, orgModel.ID, "inventory", "all", "write", false, perm_cache, ctx)
+	if err != nil {
+		return http.StatusConflict, err
+	}
 
 	return 0, nil
 }
