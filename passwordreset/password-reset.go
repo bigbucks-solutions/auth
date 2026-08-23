@@ -191,7 +191,7 @@ func VerifyToken(token string, pwdvalFn func(string) ([]byte, error), secret []b
 
 // SendResetEmail Send Password Reset Email
 func SendResetEmail(token string, to string, username string) {
-	if err := emailservice.SendEmail(to, "./passwordreset/template.html", struct {
+	if err := emailservice.SendEmail(to, "./templates/password_reset.html", struct {
 		Hostname string
 		Company  string
 		Token    string
