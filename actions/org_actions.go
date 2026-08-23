@@ -1,8 +1,10 @@
 package actions
 
 import (
+	"bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
+	"bigbucks/solution/auth/settings"
 	valids "bigbucks/solution/auth/validations"
 	"context"
 	"encoding/json"
@@ -125,19 +127,19 @@ func CreateOrganisationFromAuthenticatedUser(org *Organization, userName string,
 	orgModel.TaxID = org.TaxID
 	orgModel.WebsiteURL = org.WebsiteURL
 	orgModel.CompanyDescription = org.CompanyDescription
-	var SuperAdminRole models.Role
+	var ownerRole models.Role
 	err = models.Dbcon.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Omit("Users").Create(&orgModel).Error; err != nil {
 			return err
 		}
 
-		// Create Admin role per organization
-		SuperAdminRole = models.Role{
-			Name:         "Admin",
+		// Create Owner role per organization
+		ownerRole = models.Role{
+			Name:         "Owner",
 			IsSystemRole: true,
 			OrgID:        orgModel.ID,
 		}
-		if err := tx.Create(&SuperAdminRole).Error; err != nil {
+		if err := tx.Create(&ownerRole).Error; err != nil {
 			return err
 		}
 		// Link user to organization with super admin role
@@ -149,7 +151,7 @@ func CreateOrganisationFromAuthenticatedUser(org *Organization, userName string,
 
 		if err := tx.Create(&models.UserOrgRole{OrgID: orgModel.ID,
 			UserID: userID,
-			RoleID: SuperAdminRole.ID}).Error; err != nil {
+			RoleID: ownerRole.ID}).Error; err != nil {
 			return err
 		}
 		return nil
@@ -157,26 +159,34 @@ func CreateOrganisationFromAuthenticatedUser(org *Organization, userName string,
 	if err != nil {
 		return http.StatusConflict, err
 	}
-	err = AssignSystemPermissionToRole(SuperAdminRole.ID, orgModel.ID, "session", "all", "write", false, perm_cache, ctx)
-	if err != nil {
-		return http.StatusConflict, err
-	}
-	err = AssignSystemPermissionToRole(SuperAdminRole.ID, orgModel.ID, "user", "all", "write", false, perm_cache, ctx)
-	if err != nil {
-		return http.StatusConflict, err
-	}
-	err = AssignSystemPermissionToRole(SuperAdminRole.ID, orgModel.ID, "role", "all", "write", false, perm_cache, ctx)
-	if err != nil {
-		return http.StatusConflict, err
-	}
-	err = AssignSystemPermissionToRole(SuperAdminRole.ID, orgModel.ID, "masterdata", "all", "write", false, perm_cache, ctx)
-	if err != nil {
-		return http.StatusConflict, err
-	}
-	err = AssignSystemPermissionToRole(SuperAdminRole.ID, orgModel.ID, "inventory", "all", "write", false, perm_cache, ctx)
-	if err != nil {
-		return http.StatusConflict, err
+	for _, resource := range ownerPermissionResources(settings.Current.ExtraPermResources) {
+		if err := AssignSystemPermissionToRole(ownerRole.ID, orgModel.ID, resource, string(constants.ScopeAll), string(constants.ActionWrite), false, perm_cache, ctx); err != nil {
+			return http.StatusConflict, err
+		}
 	}
 
 	return 0, nil
+}
+
+func ownerPermissionResources(extraResources []string) []string {
+	resources := make([]string, 0, len(constants.Resources)+len(extraResources))
+	seen := make(map[string]struct{}, cap(resources))
+	addResource := func(resource string) {
+		resource = strings.ToLower(strings.TrimSpace(resource))
+		if resource == "" {
+			return
+		}
+		if _, exists := seen[resource]; exists {
+			return
+		}
+		seen[resource] = struct{}{}
+		resources = append(resources, resource)
+	}
+	for _, resource := range constants.Resources {
+		addResource(resource)
+	}
+	for _, resource := range extraResources {
+		addResource(resource)
+	}
+	return resources
 }

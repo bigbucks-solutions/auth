@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"strings"
 
+	"bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/models"
+	"bigbucks/solution/auth/settings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -33,6 +35,10 @@ var _ = Describe("Organization API Tests", Ordered, func() {
 
 	Context("Create Organization via JSON", func() {
 		It("Should create org with all location fields", func() {
+			originalExtraResources := settings.Current.ExtraPermResources
+			settings.Current.ExtraPermResources = []string{"orders", " reports ", "USER"}
+			defer func() { settings.Current.ExtraPermResources = originalExtraResources }()
+
 			payload := map[string]interface{}{
 				"name":        "Acme Corp",
 				"email":       "contact@acme.com",
@@ -66,6 +72,21 @@ var _ = Describe("Organization API Tests", Ordered, func() {
 			Ω(org.Latitude).Should(BeNumerically("~", 37.7749, 0.0001))
 			Ω(org.Longitude).Should(BeNumerically("~", -122.4194, 0.0001))
 			Ω(org.LogoURL).Should(Equal("https://acme.com/logo.png"))
+
+			var ownerRole models.Role
+			Ω(models.Dbcon.Where("org_id = ? AND name = ?", org.ID, "Owner").First(&ownerRole).Error).Should(Succeed())
+			Ω(ownerRole.IsSystemRole).Should(BeTrue())
+
+			var ownerBinding models.UserOrgRole
+			Ω(models.Dbcon.Where("org_id = ? AND role_id = ?", org.ID, ownerRole.ID).First(&ownerBinding).Error).Should(Succeed())
+
+			var resources []string
+			Ω(models.Dbcon.Model(&models.Permission{}).
+				Select("permissions.resource").
+				Joins("JOIN role_permissions ON role_permissions.permission_id = permissions.id").
+				Where("role_permissions.role_id = ? AND permissions.scope = ? AND permissions.action = ? AND role_permissions.is_locked = ?", ownerRole.ID, constants.ScopeAll, constants.ActionWrite, true).
+				Pluck("permissions.resource", &resources).Error).Should(Succeed())
+			Ω(resources).Should(ConsistOf(append(append([]string{}, constants.Resources...), "orders", "reports")))
 		})
 
 		It("Should create org without optional location fields", func() {

@@ -449,13 +449,13 @@ func UnBindUserRole(userID string, roleID string, orgID string) (int, error) {
 			return err
 		}
 		// Check if the user is an admin and if removing this role would leave the org without admins
-		if role.Name == "Super Admin" || role.Name == "Admin" {
+		if role.Name == "Super Admin" || role.Name == "Admin" || role.Name == "Owner" {
 			// Count all admin roles in the organization EXCLUDING the one we're about to remove
 			var remainingAdminCount int64
 			err := tx.Model(&models.UserOrgRole{}).
 				Joins("JOIN roles ON user_org_roles.role_id = roles.id").
 				Where("roles.name IN ? AND user_org_roles.org_id = ? AND NOT (user_org_roles.user_id = ? AND user_org_roles.role_id = ?)",
-					[]string{"Super Admin", "Admin"},
+					[]string{"Super Admin", "Admin", "Owner"},
 					orgID,
 					user.ID,
 					role.ID).

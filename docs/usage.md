@@ -44,6 +44,7 @@ Create `config.docker.json`:
     "smtpUsername": "your-email@example.com",
     "smtpPassword": "your-smtp-password",
     "smtpFrom": "noreply@example.com",
+    "extraPermResources": ["orders", "reports"],
     "baseHost": "http://localhost:3000"
 }
 ```
