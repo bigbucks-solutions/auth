@@ -197,7 +197,7 @@ func SendResetEmail(token string, to string, username string) {
 		Token    string
 		Username string
 	}{
-		Hostname: settings.Current.BaseHost,
+		Hostname: settings.Current.EmailLinkHost(),
 		Company:  "BigBucks",
 		Token:    token,
 		Username: username,

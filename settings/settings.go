@@ -58,6 +58,7 @@ type Settings struct {
 	SecretKey          string   `json:"key" mapstructure:"key"`
 	BaseURL            string   `json:"baseURL"`
 	BaseHost           string   `json:"baseHost"`
+	UIHost             string   `json:"uiHost" mapstructure:"uiHost"`
 	Port               string   `json:"port"`
 	Address            string   `json:"address"`
 	Log                string   `json:"log"`
@@ -88,6 +89,16 @@ type Settings struct {
 // Clean cleans any variables that might need cleaning.
 func (s *Settings) Clean() {
 	s.BaseURL = strings.TrimSuffix(s.BaseURL, "/")
+	s.BaseHost = strings.TrimRight(s.BaseHost, "/")
+	s.UIHost = strings.TrimRight(s.UIHost, "/")
+}
+
+// EmailLinkHost returns the UI origin used for links in user-facing emails.
+func (s *Settings) EmailLinkHost() string {
+	if s.UIHost != "" {
+		return strings.TrimRight(s.UIHost, "/")
+	}
+	return strings.TrimRight(s.BaseHost, "/")
 }
 
 func check(e error) {

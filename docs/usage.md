@@ -45,9 +45,12 @@ Create `config.docker.json`:
     "smtpPassword": "your-smtp-password",
     "smtpFrom": "noreply@example.com",
     "extraPermResources": ["orders", "reports"],
-    "baseHost": "http://localhost:3000"
+    "baseHost": "https://auth-api.example.com",
+    "uiHost": "https://app.example.com"
 }
 ```
+
+  `uiHost` is the frontend origin used for invitation and password-reset links. It falls back to `baseHost` when omitted for backward compatibility. Do not include a trailing slash.
 
 ## Docker Compose
 

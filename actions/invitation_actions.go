@@ -484,8 +484,7 @@ func generateInvitationToken() (string, error) {
 
 // SendInvitationEmail sends an invitation email to the invited user
 func SendInvitationEmail(invitation *models.Invitation) error {
-	// Get base URL from environment or use default
-	baseURL := settings.Current.BaseHost
+	uiHost := settings.Current.EmailLinkHost()
 
 	// Prepare email template parameters
 	params := map[string]interface{}{
@@ -493,7 +492,7 @@ func SendInvitationEmail(invitation *models.Invitation) error {
 		"OrganizationName": invitation.Organization.Name,
 		"RoleName":         invitation.Role.Name,
 		"InviterName":      "Team", // You might want to get the actual inviter name
-		"InvitationLink":   fmt.Sprintf("%s/auth/invitations/accept/%s", baseURL, invitation.Token),
+		"InvitationLink":   fmt.Sprintf("%s/auth/invitations/accept/%s", uiHost, invitation.Token),
 		"ExpirationDate":   invitation.ExpiresAt.Format("January 2, 2006 at 3:04 PM"),
 	}
 
