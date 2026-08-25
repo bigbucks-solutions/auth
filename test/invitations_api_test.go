@@ -301,8 +301,9 @@ var _ = Describe("Invitations API Tests", Ordered, func() {
 
 			// Create the invitee user
 			inviteeUser = &models.User{
-				Username: "acceptme@test.com",
-				Password: "password123",
+				Username:      "acceptme@test.com",
+				Password:      "password123",
+				EmailVerified: true,
 				Profile: models.Profile{
 					FirstName: "Accept",
 					LastName:  "Me",

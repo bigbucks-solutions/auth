@@ -268,9 +268,10 @@ var _ = Describe("User API Tests", Ordered, func() {
 			It("Should require proper permissions", func() {
 				// Create a user without update permissions
 				limitedUser := models.User{
-					Username: "limited@example.com",
-					Password: "limited123",
-					Status:   constants.UserStatusActive,
+					Username:      "limited@example.com",
+					Password:      "limited123",
+					EmailVerified: true,
+					Status:        constants.UserStatusActive,
 					Profile: models.Profile{
 						FirstName: "Limited",
 						LastName:  "User",
@@ -365,9 +366,10 @@ var _ = Describe("User API Tests", Ordered, func() {
 			It("Should require proper permissions", func() {
 				// Create a user without update permissions
 				limitedUser := models.User{
-					Username: "limited2@example.com",
-					Password: "limited123",
-					Status:   constants.UserStatusActive,
+					Username:      "limited2@example.com",
+					Password:      "limited123",
+					EmailVerified: true,
+					Status:        constants.UserStatusActive,
 					Profile: models.Profile{
 						FirstName: "Limited",
 						LastName:  "User2",

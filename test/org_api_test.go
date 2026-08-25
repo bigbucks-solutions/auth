@@ -205,9 +205,10 @@ var _ = Describe("Organization API Tests", Ordered, func() {
 
 		It("Should reject a user outside the organization", func() {
 			outsider := &models.User{
-				Username: "outsider@details.org",
-				Password: "outsider123",
-				Profile:  models.Profile{FirstName: "Outside", LastName: "User", Email: "outsider@details.org"},
+				Username:      "outsider@details.org",
+				Password:      "outsider123",
+				EmailVerified: true,
+				Profile:       models.Profile{FirstName: "Outside", LastName: "User", Email: "outsider@details.org"},
 			}
 			Ω(models.Dbcon.Create(outsider).Error).Should(Succeed())
 
