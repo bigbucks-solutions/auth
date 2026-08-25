@@ -8,6 +8,7 @@ import (
 	oauth "bigbucks/solution/auth/oauthutils"
 	"bigbucks/solution/auth/request_context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	googleAuthIDTokenVerifier "github.com/futurenda/google-auth-id-token-verifier"
@@ -55,6 +56,12 @@ func Signin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context
 	success, user := models.Authenticate(cred.Username, cred.Password)
 	if !success {
 		return http.StatusUnauthorized, nil
+	}
+	if !user.EmailVerified {
+		return http.StatusForbidden, errors.New("email_verification_required")
+	}
+	if user.Status == constants.UserStatusInactive {
+		return http.StatusForbidden, errors.New("account_inactive")
 	}
 	userAgent := r.UserAgent()
 	ip := r.Header.Get("X-Forwarded-For")

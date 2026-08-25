@@ -7,6 +7,7 @@ import (
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/request_context"
 	"bigbucks/solution/auth/rest-api/controllers/types"
+	"bigbucks/solution/auth/validations"
 	"encoding/json"
 	"errors"
 	"mime/multipart"
@@ -161,15 +162,20 @@ func GetMeDetails(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 //	@Produce		json
 //	@Param			request	body		types.SignupRequestBody	true	"User signup details"
 //
-//	@Success		200		{object}	types.SimpleResponse	"Success message"
+//	@Success		202		{object}	types.SimpleResponse	"Verification code sent"
 //	@Failure		400		{object}	error					"Bad request"
 //	@Failure		404		{object}	error					"Not found"
 //	@Failure		500		{object}	error					"Internal server error"
+//	@Failure		503		{object}	error					"Email delivery unavailable"
 //
 //	@Router			/signup [post]
 func Signup(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	var signupRequest types.SignupRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&signupRequest); err != nil {
+		return http.StatusBadRequest, err
+	}
+	signupRequest.Email = actions.NormalizeEmail(signupRequest.Email)
+	if err := validations.Validate.Struct(signupRequest); err != nil {
 		return http.StatusBadRequest, err
 	}
 
@@ -183,17 +189,23 @@ func Signup(w http.ResponseWriter, r *http.Request, ctx *request_context.Context
 		},
 	}
 
-	if err := models.Dbcon.Create(&user).Error; err != nil {
+	if err := emailVerificationService.Register(&user, directClientIP(r)); err != nil {
 		loging.Logger.Warnln("Attempt to register with existing email:")
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
-
 			return http.StatusConflict, errors.New("user with this email already exists")
+		}
+		if errors.Is(err, actions.ErrVerificationEmailSend) {
+			return http.StatusServiceUnavailable, err
+		}
+		if errors.Is(err, actions.ErrVerificationLocked) {
+			return http.StatusTooManyRequests, err
 		}
 		return http.StatusInternalServerError, err
 	}
 
+	w.WriteHeader(http.StatusAccepted)
 	err := json.NewEncoder(w).Encode(&types.SimpleResponse{
-		Message: "User registered successfully",
+		Message: "Verification code sent",
 	})
 	if err != nil {
 		return http.StatusInternalServerError, err

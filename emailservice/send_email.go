@@ -22,6 +22,7 @@ var (
 // EmailSender interface defines the contract for sending emails
 type EmailSender interface {
 	SendEmail(toEmail string, templatePath string, params any) error
+	SendEmailWithSubject(toEmail string, subject string, templatePath string, params any) error
 }
 
 type EmailService struct {
@@ -38,15 +39,16 @@ func NewEmailService(config *settings.Settings) EmailSender {
 
 // SendEmail sends an email using the specified template and parameters
 func (e *EmailService) SendEmail(toEmail string, templatePath string, params any) error {
+	return e.SendEmailWithSubject(toEmail, "Notification", templatePath, params)
+}
+
+func (e *EmailService) SendEmailWithSubject(toEmail string, subject string, templatePath string, params any) error {
 	// Parse and execute template
 	body, err := e.parseTemplate(templatePath, params)
 	if err != nil {
 		loging.Logger.Errorf("Failed to parse email template %s: %v", templatePath, err)
 		return fmt.Errorf("failed to parse email template: %w", err)
 	}
-
-	// Get subject from params or use default
-	subject := "Notification"
 
 	return e.sendEmail(toEmail, subject, body)
 }
@@ -124,4 +126,8 @@ func GetInstance() EmailSender {
 // SendEmail is a package-level function that uses the singleton instance
 func SendEmail(toEmail string, templatePath string, params any) error {
 	return GetInstance().SendEmail(toEmail, templatePath, params)
+}
+
+func SendEmailWithSubject(toEmail string, subject string, templatePath string, params any) error {
+	return GetInstance().SendEmailWithSubject(toEmail, subject, templatePath, params)
 }

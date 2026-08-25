@@ -1,6 +1,9 @@
 package rest
 
 import (
+	"bigbucks/solution/auth/actions"
+	"bigbucks/solution/auth/emailservice"
+	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/request_context"
 	ctr "bigbucks/solution/auth/rest-api/controllers" //Load all controllers methods by deafult
@@ -40,6 +43,11 @@ type handleFunc func(w http.ResponseWriter, r *http.Request, ctx *request_contex
 // NewHandler Provide Http handler
 func NewHandler(settings *settings.Settings, perm_cache *permission_cache.PermissionCache, session_store *sessionstore.SessionStore) (http.Handler, error) {
 	settings.Clean()
+	emailVerificationService, err := actions.NewEmailVerificationService(models.Dbcon, settings, emailservice.NewEmailService(settings))
+	if err != nil {
+		return nil, err
+	}
+	ctr.SetEmailVerificationService(emailVerificationService)
 
 	r := mux.NewRouter()
 
@@ -60,6 +68,8 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	api := r.PathPrefix("/api/v1").Subrouter()
 	api.Handle("/signin", makeHandler(ctr.Signin)).Methods("POST")
 	api.Handle("/signup", makeHandler(ctr.Signup)).Methods("POST")
+	api.Handle("/email-verifications/verify", makeHandler(ctr.VerifyEmail)).Methods("POST")
+	api.Handle("/email-verifications/resend", makeHandler(ctr.ResendEmailVerification)).Methods("POST")
 	api.Handle("/signin/google", makeHandler(ctr.GoogleSignin)).Methods("POST")
 	api.Handle("/signin/facebook", makeHandler(ctr.FbSignin)).Methods("POST")
 	api.Handle("/renew", makeHandler(ctr.RenewToken, WithAuth(true))).Methods("POST")

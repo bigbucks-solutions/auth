@@ -1,6 +1,9 @@
 package settings
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestEmailLinkHost(t *testing.T) {
 	tests := []struct {
@@ -26,5 +29,23 @@ func TestEmailLinkHost(t *testing.T) {
 				t.Fatalf("EmailLinkHost() = %q, want %q", got, test.want)
 			}
 		})
+	}
+}
+
+func TestEmailVerificationPolicyDefaults(t *testing.T) {
+	settings := Settings{EmailVerificationSecret: "test-email-verification-secret-32-bytes"}
+	ttl, attempts, cooldown, hourlyLimit, err := settings.EmailVerificationPolicy()
+	if err != nil {
+		t.Fatalf("EmailVerificationPolicy() error = %v", err)
+	}
+	if ttl != 10*time.Minute || attempts != 5 || cooldown != time.Minute || hourlyLimit != 5 {
+		t.Fatalf("unexpected defaults: ttl=%v attempts=%d cooldown=%v hourlyLimit=%d", ttl, attempts, cooldown, hourlyLimit)
+	}
+}
+
+func TestEmailVerificationPolicyRejectsWeakSecret(t *testing.T) {
+	settings := Settings{EmailVerificationSecret: "too-short"}
+	if _, _, _, _, err := settings.EmailVerificationPolicy(); err == nil {
+		t.Fatal("EmailVerificationPolicy() expected weak-secret error")
 	}
 }

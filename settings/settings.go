@@ -2,9 +2,11 @@ package settings
 
 import (
 	"crypto/rand"
+	"fmt"
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -55,35 +57,65 @@ type AuthToken struct {
 
 // Server specific settings.
 type Settings struct {
-	SecretKey          string   `json:"key" mapstructure:"key"`
-	BaseURL            string   `json:"baseURL"`
-	BaseHost           string   `json:"baseHost"`
-	UIHost             string   `json:"uiHost" mapstructure:"uiHost"`
-	Port               string   `json:"port"`
-	Address            string   `json:"address"`
-	Log                string   `json:"log"`
-	Alg                string   `json:"alg"`
-	PrivateKey         string   `json:"privateKey"`
-	PublicKey          string   `json:"publicKey"`
-	DBUsername         string   `json:"dBUsername"`
-	DBPassword         string   `json:"dBPassword"`
-	DBName             string   `json:"dBName"`
-	DBHost             string   `json:"dBHost"`
-	DBPort             string   `json:"dBPort"`
-	DBSSLMode          string   `json:"dBSSLMode"`
-	RedisAddress       string   `json:"redisAddress"`
-	RedisUsername      string   `json:"redisUsername"`
-	RedisPassword      string   `json:"redisPassword"`
-	LogLevel           string   `json:"logLevel"`
-	SMTPHost           string   `json:"smtpHost"`
-	SMTPPort           string   `json:"smtpPort"`
-	SMTPUsername       string   `json:"smtpUsername"`
-	SMTPPassword       string   `json:"smtpPassword"`
-	SMTPFrom           string   `json:"smtpFrom"`
-	ExtraPermResources []string `json:"extraPermResources" mapstructure:"extraPermResources"`
-	WebAuthnRPID       string   `json:"webAuthnRPID" mapstructure:"webAuthnRPID"`
-	WebAuthnRPName     string   `json:"webAuthnRPName" mapstructure:"webAuthnRPName"`
-	WebAuthnOrigins    []string `json:"webAuthnOrigins" mapstructure:"webAuthnOrigins"`
+	SecretKey                        string   `json:"key" mapstructure:"key"`
+	BaseURL                          string   `json:"baseURL"`
+	BaseHost                         string   `json:"baseHost"`
+	UIHost                           string   `json:"uiHost" mapstructure:"uiHost"`
+	Port                             string   `json:"port"`
+	Address                          string   `json:"address"`
+	Log                              string   `json:"log"`
+	Alg                              string   `json:"alg"`
+	PrivateKey                       string   `json:"privateKey"`
+	PublicKey                        string   `json:"publicKey"`
+	DBUsername                       string   `json:"dBUsername"`
+	DBPassword                       string   `json:"dBPassword"`
+	DBName                           string   `json:"dBName"`
+	DBHost                           string   `json:"dBHost"`
+	DBPort                           string   `json:"dBPort"`
+	DBSSLMode                        string   `json:"dBSSLMode"`
+	RedisAddress                     string   `json:"redisAddress"`
+	RedisUsername                    string   `json:"redisUsername"`
+	RedisPassword                    string   `json:"redisPassword"`
+	LogLevel                         string   `json:"logLevel"`
+	SMTPHost                         string   `json:"smtpHost"`
+	SMTPPort                         string   `json:"smtpPort"`
+	SMTPUsername                     string   `json:"smtpUsername"`
+	SMTPPassword                     string   `json:"smtpPassword"`
+	SMTPFrom                         string   `json:"smtpFrom"`
+	EmailVerificationSecret          string   `json:"emailVerificationSecret" mapstructure:"emailVerificationSecret"`
+	EmailVerificationTTLSeconds      int      `json:"emailVerificationTTLSeconds" mapstructure:"emailVerificationTTLSeconds"`
+	EmailVerificationMaxAttempts     uint     `json:"emailVerificationMaxAttempts" mapstructure:"emailVerificationMaxAttempts"`
+	EmailVerificationResendSeconds   int      `json:"emailVerificationResendSeconds" mapstructure:"emailVerificationResendSeconds"`
+	EmailVerificationHourlySendLimit int64    `json:"emailVerificationHourlySendLimit" mapstructure:"emailVerificationHourlySendLimit"`
+	ExtraPermResources               []string `json:"extraPermResources" mapstructure:"extraPermResources"`
+	WebAuthnRPID                     string   `json:"webAuthnRPID" mapstructure:"webAuthnRPID"`
+	WebAuthnRPName                   string   `json:"webAuthnRPName" mapstructure:"webAuthnRPName"`
+	WebAuthnOrigins                  []string `json:"webAuthnOrigins" mapstructure:"webAuthnOrigins"`
+}
+
+func (s *Settings) EmailVerificationPolicy() (time.Duration, uint, time.Duration, int64, error) {
+	if len(s.EmailVerificationSecret) < 32 {
+		return 0, 0, 0, 0, fmt.Errorf("email verification secret must be at least 32 characters")
+	}
+
+	ttl := time.Duration(s.EmailVerificationTTLSeconds) * time.Second
+	if ttl <= 0 {
+		ttl = 10 * time.Minute
+	}
+	maxAttempts := s.EmailVerificationMaxAttempts
+	if maxAttempts == 0 {
+		maxAttempts = 5
+	}
+	resendCooldown := time.Duration(s.EmailVerificationResendSeconds) * time.Second
+	if resendCooldown <= 0 {
+		resendCooldown = time.Minute
+	}
+	hourlySendLimit := s.EmailVerificationHourlySendLimit
+	if hourlySendLimit <= 0 {
+		hourlySendLimit = 5
+	}
+
+	return ttl, maxAttempts, resendCooldown, hourlySendLimit, nil
 }
 
 // Clean cleans any variables that might need cleaning.

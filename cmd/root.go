@@ -68,6 +68,7 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			loging.Logger.Fatalln(err)
 		}
+		settings.Current.Clean()
 		settings.Current.LoadKeys()
 
 		config := loging.Config{
@@ -75,6 +76,7 @@ var rootCmd = &cobra.Command{
 		}
 		loging.Initialize(config)
 		defer loging.Logger.Sync() //nolint:errcheck
+		loging.Logger.Infof("Email links configured for UI host %s", settings.Current.EmailLinkHost())
 
 		// dsn := "user=bigbucks password=bigbucks DB.name=bigbucks port=5432 host=localhost sslmode=disable"
 		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", settings.Current.DBHost, settings.Current.DBUsername, settings.Current.DBPassword, settings.Current.DBName, settings.Current.DBPort)
@@ -226,10 +228,31 @@ func initConfig() {
 
 	}
 
+	if err := bindEnvironmentVariables(); err != nil {
+		panic(fmt.Errorf("failed to bind configuration environment variables: %w", err))
+	}
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+}
+
+func bindEnvironmentVariables() error {
+	bindings := map[string][]string{
+		"uiHost":                           {"UI_HOST", "UIHOST"},
+		"emailVerificationSecret":          {"EMAIL_VERIFICATION_SECRET"},
+		"emailVerificationTTLSeconds":      {"EMAIL_VERIFICATION_TTL_SECONDS"},
+		"emailVerificationMaxAttempts":     {"EMAIL_VERIFICATION_MAX_ATTEMPTS"},
+		"emailVerificationResendSeconds":   {"EMAIL_VERIFICATION_RESEND_SECONDS"},
+		"emailVerificationHourlySendLimit": {"EMAIL_VERIFICATION_HOURLY_SEND_LIMIT"},
+	}
+	for key, environmentVariables := range bindings {
+		arguments := append([]string{key}, environmentVariables...)
+		if err := viper.BindEnv(arguments...); err != nil {
+			return err
+		}
+	}
+	return nil
 }

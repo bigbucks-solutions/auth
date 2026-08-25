@@ -1,9 +1,11 @@
 package auth_test
 
 import (
+	"bigbucks/solution/auth/actions"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
 	router "bigbucks/solution/auth/rest-api"
+	ctr "bigbucks/solution/auth/rest-api/controllers"
 	sessionstore "bigbucks/solution/auth/session_store"
 	"bigbucks/solution/auth/settings"
 	"context"
@@ -15,6 +17,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 
 	valids "bigbucks/solution/auth/validations"
@@ -35,12 +38,35 @@ func TestDocker(t *testing.T) {
 }
 
 var (
-	DB            *gorm.DB
-	cleanupDocker func()
-	s             *httptest.Server
-	c             *http.Client
-	TestUserID    string
+	DB                 *gorm.DB
+	cleanupDocker      func()
+	s                  *httptest.Server
+	c                  *http.Client
+	TestUserID         string
+	verificationEmails = &fakeVerificationSender{codes: make(map[string]string)}
 )
+
+type fakeVerificationSender struct {
+	mu    sync.Mutex
+	codes map[string]string
+}
+
+func (sender *fakeVerificationSender) SendEmail(string, string, any) error {
+	return nil
+}
+
+func (sender *fakeVerificationSender) SendEmailWithSubject(email, _ string, _ string, params any) error {
+	sender.mu.Lock()
+	defer sender.mu.Unlock()
+	sender.codes[email] = params.(map[string]any)["Code"].(string)
+	return nil
+}
+
+func (sender *fakeVerificationSender) Code(email string) string {
+	sender.mu.Lock()
+	defer sender.mu.Unlock()
+	return sender.codes[email]
+}
 
 var _ = BeforeSuite(func() {
 	// setup *gorm.Db with docker
@@ -72,17 +98,20 @@ var _ = BeforeSuite(func() {
 	settings.SingingKey = pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: ecder})
 	x509EncodedPub, _ := x509.MarshalPKIXPublicKey(&priv.PublicKey)
 	settings.VerifyingKey = pem.EncodeToMemory(&pem.Block{Type: "EC PUBLIC KEY", Bytes: x509EncodedPub})
-	sampleData := &models.User{Username: "john@x.com", Password: "john123", Profile: models.Profile{
+	sampleData := &models.User{Username: "john@x.com", Password: "john123", EmailVerified: true, Profile: models.Profile{
 		FirstName: "John", LastName: "Doe", Email: "john@x.com"},
 	}
 	err = models.Dbcon.Create(sampleData).Error
 	Ω(err).To(Succeed())
 	TestUserID = sampleData.ID
-	settings.Current = &settings.Settings{Alg: "ES256", PrivateKey: "ec_private.pem", PublicKey: "ec_public.pem", LogLevel: "info", WebAuthnRPID: "localhost", WebAuthnRPName: "BigBucks Auth"}
+	settings.Current = &settings.Settings{Alg: "ES256", PrivateKey: "ec_private.pem", PublicKey: "ec_public.pem", LogLevel: "info", WebAuthnRPID: "localhost", WebAuthnRPName: "BigBucks Auth", EmailVerificationSecret: "test-email-verification-secret-32-bytes", EmailVerificationHourlySendLimit: 100}
 	// settings.Current.LoadKeys()
 	handler, err := router.NewHandler(settings.Current, permission_cache.NewPermissionCache(settings.Current), sessionstore.NewSessionStore(settings.Current))
 
 	Ω(err).Should(Succeed())
+	verificationService, err := actions.NewEmailVerificationService(models.Dbcon, settings.Current, verificationEmails)
+	Ω(err).Should(Succeed())
+	ctr.SetEmailVerificationService(verificationService)
 	s = httptest.NewServer(handler)
 	c = s.Client()
 	valids.InitializeValidations()

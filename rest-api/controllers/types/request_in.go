@@ -15,9 +15,18 @@ type CreatePermissionBody struct {
 
 type SignupRequestBody struct {
 	Email     string `json:"email" validate:"required,email"`
-	Password  string `json:"password" validate:"required,min=6"`
+	Password  string `json:"password" validate:"required,min=8"`
 	FirstName string `json:"firstName" validate:"required"`
 	LastName  string `json:"lastName" validate:"required"`
+}
+
+type VerifyEmailRequestBody struct {
+	Email string `json:"email" validate:"required,email"`
+	Code  string `json:"code" validate:"required,len=6,numeric"`
+}
+
+type ResendEmailVerificationRequestBody struct {
+	Email string `json:"email" validate:"required,email"`
 }
 
 type RolePermissionBindingBody struct {
