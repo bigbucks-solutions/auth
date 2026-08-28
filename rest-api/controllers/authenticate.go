@@ -92,7 +92,7 @@ func GoogleSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
-	err = googleIdTokenver.VerifyIDToken(googCred.IdToken, constants.GoogleClientID)
+	err = googleIdTokenver.VerifyIDToken(googCred.IdToken, ctx.Settings.GoogleClientIDs)
 	if err == nil {
 		success, user, _ := oauth.GoogleAuthenticate(googCred.IdToken, googCred.AccessToken)
 		if !success {

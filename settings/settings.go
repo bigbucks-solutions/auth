@@ -88,6 +88,7 @@ type Settings struct {
 	EmailVerificationResendSeconds   int      `json:"emailVerificationResendSeconds" mapstructure:"emailVerificationResendSeconds"`
 	EmailVerificationHourlySendLimit int64    `json:"emailVerificationHourlySendLimit" mapstructure:"emailVerificationHourlySendLimit"`
 	ExtraPermResources               []string `json:"extraPermResources" mapstructure:"extraPermResources"`
+	GoogleClientIDs                  []string `json:"googleClientIDs" mapstructure:"googleClientIDs"`
 	WebAuthnRPID                     string   `json:"webAuthnRPID" mapstructure:"webAuthnRPID"`
 	WebAuthnRPName                   string   `json:"webAuthnRPName" mapstructure:"webAuthnRPName"`
 	WebAuthnOrigins                  []string `json:"webAuthnOrigins" mapstructure:"webAuthnOrigins"`
