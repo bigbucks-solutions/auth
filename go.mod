@@ -1,6 +1,6 @@
 module bigbucks/solution/auth
 
-go 1.25.5
+go 1.26.0
 
 require (
 	ariga.io/atlas-provider-gorm v0.6.1
@@ -31,7 +31,7 @@ require (
 	github.com/swaggo/http-swagger/v2 v2.0.2
 	github.com/swaggo/swag v1.16.6
 	go.uber.org/zap v1.28.0
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.56.0
 	golang.org/x/sync v0.22.0
 	google.golang.org/grpc v1.83.2
 	google.golang.org/protobuf v1.36.12
