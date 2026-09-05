@@ -28,7 +28,7 @@ type Organization struct {
 	City               string  `json:"city"`
 	PostalCode         string  `json:"postal_code"`
 	State              string  `json:"state"`
-	Country            string  `json:"country"`
+	Country            string  `json:"country" validate:"omitempty,iso3166_1_alpha2"`
 	Latitude           float64 `json:"latitude"`
 	Longitude          float64 `json:"longitude"`
 	LogoURL            string  `json:"logo_url"`
@@ -103,14 +103,18 @@ func OrganizationFromRequest(r *http.Request) (*Organization, int, error) {
 			return nil, http.StatusBadRequest, err
 		}
 	}
+	// The ISO-3166 validator matches upper-case codes exactly, and the currency
+	// mapping looks the stored value up the same way, so normalise once here
+	// rather than letting "ae" fail validation or "  AE " miss the map.
+	org.Country = strings.ToUpper(strings.TrimSpace(org.Country))
 	return &org, 0, nil
 }
 
 // CreateOrganization : Create new Organization with a super user attached
-func CreateOrganisationFromAuthenticatedUser(org *Organization, userName string, perm_cache *permission_cache.PermissionCache, ctx context.Context) (int, error) {
+func CreateOrganisationFromAuthenticatedUser(org *Organization, userName string, perm_cache *permission_cache.PermissionCache, ctx context.Context) (*models.OrganizationDetails, int, error) {
 	err := valids.Validate.Struct(org)
 	if err != nil {
-		return http.StatusBadRequest, err
+		return nil, http.StatusBadRequest, err
 	}
 	var orgModel models.Organization
 	orgModel.Name = org.Name
@@ -157,15 +161,16 @@ func CreateOrganisationFromAuthenticatedUser(org *Organization, userName string,
 		return nil
 	})
 	if err != nil {
-		return http.StatusConflict, err
+		return nil, http.StatusConflict, err
 	}
 	for _, resource := range ownerPermissionResources(settings.Current.ExtraPermResources) {
 		if err := AssignSystemPermissionToRole(ownerRole.ID, orgModel.ID, resource, string(constants.ScopeAll), string(constants.ActionWrite), false, perm_cache, ctx); err != nil {
-			return http.StatusConflict, err
+			return nil, http.StatusConflict, err
 		}
 	}
 
-	return 0, nil
+	details := orgModel.Details()
+	return &details, 0, nil
 }
 
 func ownerPermissionResources(extraResources []string) []string {
