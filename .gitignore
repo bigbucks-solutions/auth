@@ -9,3 +9,5 @@ __debug_*
 cover.profile
 report.json
 config.docker.json
+subscriptions.local.json
+subscriptions.generated.json

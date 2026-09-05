@@ -3,14 +3,18 @@ package rest
 import (
 	jwtops "bigbucks/solution/auth/jwt-ops"
 	"bigbucks/solution/auth/loging"
+	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/request_context"
 	sessionstore "bigbucks/solution/auth/session_store"
 	"bigbucks/solution/auth/settings"
+	"bigbucks/solution/auth/subscriptions"
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	//Load all controllers methods by deafult
@@ -78,6 +82,22 @@ func JSONError(responselogger *responseLogger, err interface{}, code int) {
 	}
 }
 
+// checkSubscription applies the entitlement gate for a request.
+//
+// The read paths take no row locks, so this stays cheap enough to run on every
+// gated request. Only licence consumption, which happens inside the actions
+// layer, needs to serialize.
+func checkSubscription(ctx context.Context, orgID, feature string) error {
+	policy := subscriptions.CurrentPolicy()
+	if err := policy.RequireEntitled(ctx, models.Dbcon, orgID); err != nil {
+		return err
+	}
+	if feature == "" {
+		return nil
+	}
+	return policy.RequireFeature(ctx, models.Dbcon, orgID, feature)
+}
+
 func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, perm_cache *permission_cache.PermissionCache, session_store *sessionstore.SessionStore) http.Handler {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -87,7 +107,8 @@ func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, pe
 			loging.Logger.Infow("Request:",
 				zap.String("proto", r.Proto),
 				zap.String("method", r.Method),
-				zap.String("endpoint", r.URL.String()),
+				zap.String("endpoint", r.URL.EscapedPath()),
+				zap.Any("query-params", accessLogQueryParams(r.URL.Query())),
 				zap.String("user-agent", r.UserAgent()),
 				zap.String("remote-addr", r.RemoteAddr),
 				zap.Int("status", _responseLogger.Status()),
@@ -113,6 +134,22 @@ func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, pe
 				orgID = r.PathValue("org_id")
 			}
 			ctx.CurrentOrgID = orgID
+
+			if config.requireSubscription {
+				if err := checkSubscription(ctx.Context, orgID, config.feature); err != nil {
+					if subscriptions.IsDenial(err) {
+						JSONError(_responseLogger, map[string]string{
+							"error":  err.Error(),
+							"reason": "subscription_required",
+						}, subscriptions.HTTPStatus(err))
+						return
+					}
+					loging.Logger.Errorw("subscription check failed",
+						"org_id", orgID, "error", err.Error())
+					http.Error(_responseLogger, "Could not verify subscription", http.StatusInternalServerError)
+					return
+				}
+			}
 
 			if config.resource != "" && config.scope != "" && config.action != "" {
 				valid, _, err := session_store.ValidateSession(ctx.Auth.ID)
@@ -141,4 +178,23 @@ func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, pe
 
 	})
 	return http.StripPrefix(config.prefix, handler)
+}
+
+func accessLogQueryParams(values url.Values) map[string][]string {
+	params := make(map[string][]string, len(values))
+	for key, entries := range values {
+		if sensitiveQueryParam(key) {
+			params[key] = []string{"[REDACTED]"}
+			continue
+		}
+		params[key] = append([]string(nil), entries...)
+	}
+	return params
+}
+
+func sensitiveQueryParam(key string) bool {
+	key = strings.ToLower(strings.TrimSpace(key))
+	return key == "code" || key == "key" || key == "api_key" || key == "apikey" ||
+		strings.Contains(key, "token") || strings.Contains(key, "password") ||
+		strings.Contains(key, "secret") || strings.Contains(key, "signature")
 }

@@ -404,6 +404,12 @@ func BindUserRole(userID string, roleID string, orgID string) (int, error) {
 			return errors.New("user already has the role")
 		}
 
+		// Binding a role to someone outside the organization admits a new member
+		// and therefore consumes a licence. Existing members are unaffected.
+		if err := requireMembershipLicense(context.Background(), tx, orgID, user.ID); err != nil {
+			return err
+		}
+
 		// Create user-org-role binding
 		userOrgRole = models.UserOrgRole{
 			UserID: user.ID,
@@ -420,6 +426,9 @@ func BindUserRole(userID string, roleID string, orgID string) (int, error) {
 	if err != nil {
 		loging.Logger.Error(err)
 		customerr.Errors["Error"] = err.Error()
+		if status, denied := subscriptionStatus(err); denied {
+			return status, customerr
+		}
 		return http.StatusConflict, customerr
 	}
 

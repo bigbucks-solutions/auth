@@ -56,6 +56,18 @@ Create `config.docker.json`:
 
   `uiHost` is the frontend origin used for invitation and password-reset links. It falls back to `baseHost` when omitted for backward compatibility. Do not include a trailing slash.
 
+  Subscription configuration can be kept out of the main application file with:
+
+```json
+{
+  "subscriptionsConfigFile": "subscriptions.local.json"
+}
+```
+
+  Copy `subscriptions.example.json` to `subscriptions.local.json` for local development. The local file is ignored by Git. In QA and production, set `SUBSCRIPTIONS_CONFIG_JSON` to the complete subscription JSON object. Precedence is `SUBSCRIPTIONS_CONFIG_JSON`, then `subscriptionsConfigFile`, then the legacy inline `subscriptions` object. The selected object is replaced rather than merged, while `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `STRIPE_WEBHOOK_PATH` remain explicit final overrides.
+
+  Stripe Checkout grants a seven-day trial by default. Set `options.trialPeriodDays` to another number of days, or `"0"` to disable it. Use `contrib/stripe/scripts/provision-default-catalog.sh` to create or reuse the default Stripe products and prices and generate a matching subscription config.
+
   Set `UI_HOST` to override this value in deployments, for example `UI_HOST=https://app.example.com`. The effective host is logged once when the service starts.
 
   Set `EMAIL_VERIFICATION_SECRET` to an independently generated secret of at least 32 characters. The service refuses to start without it. Generate one with `openssl rand -base64 32`; do not commit the generated value. Optional policy overrides are `EMAIL_VERIFICATION_TTL_SECONDS`, `EMAIL_VERIFICATION_MAX_ATTEMPTS`, `EMAIL_VERIFICATION_RESEND_SECONDS`, and `EMAIL_VERIFICATION_HOURLY_SEND_LIMIT`.

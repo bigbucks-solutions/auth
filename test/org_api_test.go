@@ -60,10 +60,16 @@ var _ = Describe("Organization API Tests", Ordered, func() {
 			request.Header.Set("X-Auth", jwt)
 			response, _ := c.Do(request)
 			Ω(response.StatusCode).Should(Equal(200))
+			defer func() { _ = response.Body.Close() }()
+
+			var created models.OrganizationDetails
+			Ω(json.NewDecoder(response.Body).Decode(&created)).Should(Succeed())
+			Ω(created.ID).ShouldNot(BeEmpty())
 
 			var org models.Organization
 			err := models.Dbcon.Where("name = ?", "Acme Corp").First(&org).Error
 			Ω(err).Should(BeNil())
+			Ω(created.ID).Should(Equal(org.ID))
 			Ω(org.Name).Should(Equal("Acme Corp"))
 			Ω(org.City).Should(Equal("San Francisco"))
 			Ω(org.PostalCode).Should(Equal("94105"))

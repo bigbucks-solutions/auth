@@ -1,0 +1,97 @@
+{
+    "enabled": true,
+    "mode": "enforce",
+    "provider": "stripe",
+    "options": {
+        "secretKey": "sk_test_replace_me",
+        "webhookSecret": "whsec_replace_me",
+        "trialPeriodDays": "7"
+    },
+    "currencies": {
+        "default": "usd",
+        "byCountry": {
+            "AE": "aed",
+            "IN": "inr"
+        }
+    },
+    "features": {
+        "cloud_access": {
+            "label": "Cloud access & sync"
+        },
+        "advanced_reporting": {
+            "label": "Advanced reporting",
+            "order": 1
+        }
+    },
+    "limits": {
+        "invoices": {
+            "label": "Invoices"
+        },
+        "skus": {
+            "label": "Products (SKUs)",
+            "order": 1
+        }
+    },
+    "catalog": {
+        "price_replace_with_starter_monthly": {
+            "name": "Starter",
+            "tier": "starter",
+            "licensesPerUnit": 1,
+            "features": [
+                "cloud_access"
+            ],
+            "monthlyQuotas": {
+                "invoices": 5000
+            },
+            "caps": {
+                "skus": 5000
+            }
+        },
+        "price_replace_with_starter_yearly": {
+            "name": "Starter",
+            "tier": "starter",
+            "licensesPerUnit": 1,
+            "features": [
+                "cloud_access"
+            ],
+            "monthlyQuotas": {
+                "invoices": 5000
+            },
+            "caps": {
+                "skus": 5000
+            }
+        },
+        "price_replace_with_growth_monthly": {
+            "name": "Growth",
+            "tier": "growth",
+            "order": 1,
+            "licensesPerUnit": 1,
+            "features": [
+                "cloud_access",
+                "advanced_reporting"
+            ],
+            "monthlyQuotas": {
+                "invoices": 10000
+            },
+            "caps": {
+                "skus": 10000
+            }
+        },
+        "price_replace_with_growth_yearly": {
+            "name": "Growth",
+            "tier": "growth",
+            "order": 1,
+            "licensesPerUnit": 1,
+            "features": [
+                "cloud_access",
+                "advanced_reporting"
+            ],
+            "monthlyQuotas": {
+                "invoices": 10000
+            },
+            "caps": {
+                "skus": 10000
+            }
+        }
+    }
+}

@@ -5,7 +5,9 @@ import (
 	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/settings"
+	"bigbucks/solution/auth/subscriptions"
 	valids "bigbucks/solution/auth/validations"
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
@@ -117,6 +119,17 @@ func InviteUserToOrg(params InviteUserParams) (*models.Invitation, int, error) {
 			}
 		}
 
+		// Reserve a licence up front. Pending invitations count towards usage, so
+		// the administrator is told here rather than letting the invitee discover
+		// the organization is full when they try to accept.
+		policy := subscriptions.CurrentPolicy()
+		if err := policy.RequireEntitled(context.Background(), tx, params.OrgID); err != nil {
+			return err
+		}
+		if err := policy.RequireLicenses(context.Background(), tx, params.OrgID, 1); err != nil {
+			return err
+		}
+
 		// Generate unique token
 		token, err := generateInvitationToken()
 		if err != nil {
@@ -147,6 +160,11 @@ func InviteUserToOrg(params InviteUserParams) (*models.Invitation, int, error) {
 	})
 
 	if err != nil {
+		if status, denied := subscriptionStatus(err); denied {
+			loging.Logger.Warnw("invitation blocked by subscription",
+				"org_id", params.OrgID, "error", err.Error())
+			return nil, status, err
+		}
 		loging.Logger.Error("Error inviting user to organization", err)
 		return nil, http.StatusBadRequest, err
 	}
@@ -221,6 +239,12 @@ func AcceptInvitation(token string, userID string) (int, error) {
 			return customerr
 		}
 
+		// Consume a licence in the same transaction that records the membership,
+		// so concurrent acceptances cannot both take the last one.
+		if err := requireMembershipLicense(context.Background(), tx, invitation.OrgID, user.ID); err != nil {
+			return err
+		}
+
 		// Create user-org-role binding
 		userOrgRole := models.UserOrgRole{
 			UserID: user.ID,
@@ -247,6 +271,11 @@ func AcceptInvitation(token string, userID string) (int, error) {
 	//check error type and return appropriate status code
 
 	if err != nil {
+		if status, denied := subscriptionStatus(err); denied {
+			loging.Logger.Warnw("invitation acceptance blocked by subscription",
+				"user_id", userID, "error", err.Error())
+			return status, err
+		}
 		switch err := err.(type) {
 		case *valids.ValidationErrors:
 			loging.Logger.Error("Validation error accepting invitation", err)

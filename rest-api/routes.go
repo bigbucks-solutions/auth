@@ -9,7 +9,9 @@ import (
 	ctr "bigbucks/solution/auth/rest-api/controllers" //Load all controllers methods by deafult
 	sessionstore "bigbucks/solution/auth/session_store"
 	"bigbucks/solution/auth/settings"
+	"bigbucks/solution/auth/subscriptions"
 	webauthnservice "bigbucks/solution/auth/webauthn"
+	"fmt"
 	"net/http"
 
 	_ "bigbucks/solution/auth/docs"
@@ -48,6 +50,15 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 		return nil, err
 	}
 	ctr.SetEmailVerificationService(emailVerificationService)
+
+	// The subscription layer is optional. A disabled configuration yields a
+	// module with no provider and an allow-all policy, so nothing below changes
+	// behaviour until it is switched on.
+	subscriptionModule, err := subscriptions.NewModule(settings.Subscriptions, models.Dbcon)
+	if err != nil {
+		return nil, err
+	}
+	subscriptions.SetModule(subscriptionModule)
 
 	r := mux.NewRouter()
 
@@ -148,6 +159,36 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	api.Handle("/invitations/{invitation_id}/resend",
 		makeHandler(ctr.ResendInvitation, WithAuth(true), WithPermission("user:*:write")),
 	).Methods("POST")
+
+	// Billing. These routes are always mounted so the frontend can ask whether
+	// billing applies; they report "not managed" while subscriptions are off.
+	api.Handle("/billing/plans",
+		makeHandler(ctr.GetBillingPlans, WithAuth(true)),
+	).Methods("GET")
+	api.Handle("/billing/catalog",
+		makeHandler(ctr.GetBillingCatalog, WithAuth(true)),
+	).Methods("GET")
+	api.Handle("/billing/subscription",
+		makeHandler(ctr.GetBillingSubscription, WithAuth(true)),
+	).Methods("GET")
+	api.Handle("/billing/checkout-session",
+		makeHandler(ctr.CreateBillingCheckoutSession, WithAuth(true), WithPermission("billing:*:write")),
+	).Methods("POST")
+	api.Handle("/billing/invoices",
+		makeHandler(ctr.GetBillingInvoices, WithAuth(true), WithPermission("billing:*:read")),
+	).Methods("GET")
+	api.Handle("/billing/portal-session",
+		makeHandler(ctr.CreateBillingPortalSession, WithAuth(true), WithPermission("billing:*:write")),
+	).Methods("POST")
+
+	// Provider webhooks authenticate themselves by signature, so they are
+	// mounted outside the session-based handler chain.
+	for _, route := range subscriptionModule.Webhooks() {
+		if route.Handler == nil || route.Method == "" || route.Path == "" {
+			return nil, fmt.Errorf("subscription provider %q returned an invalid route", subscriptionModule.Provider.Name())
+		}
+		r.Handle(route.Path, route.Handler).Methods(route.Method)
+	}
 
 	// Master data
 	api.Handle("/master-data/resources",

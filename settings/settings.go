@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"bigbucks/solution/auth/subscriptions"
 	"crypto/rand"
 	"fmt"
 	"os"
@@ -92,6 +93,10 @@ type Settings struct {
 	WebAuthnRPID                     string   `json:"webAuthnRPID" mapstructure:"webAuthnRPID"`
 	WebAuthnRPName                   string   `json:"webAuthnRPName" mapstructure:"webAuthnRPName"`
 	WebAuthnOrigins                  []string `json:"webAuthnOrigins" mapstructure:"webAuthnOrigins"`
+	SubscriptionsConfigFile          string   `json:"subscriptionsConfigFile" mapstructure:"subscriptionsConfigFile"`
+	// Subscriptions is optional. When absent or disabled the billing layer is
+	// inert: every entitlement check passes and no billing endpoint is mounted.
+	Subscriptions subscriptions.Config `json:"subscriptions" mapstructure:"subscriptions"`
 }
 
 func (s *Settings) EmailVerificationPolicy() (time.Duration, uint, time.Duration, int64, error) {

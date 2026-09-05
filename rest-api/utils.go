@@ -13,6 +13,11 @@ type handlerConfig struct {
 	action   string
 	resource string
 	scope    string
+	// requireSubscription gates the route on the organization holding an active
+	// subscription. It is a no-op while subscriptions are disabled.
+	requireSubscription bool
+	// feature additionally requires the plan to include a named capability.
+	feature string
 }
 type HandlerOption func(*handlerConfig)
 
@@ -25,6 +30,25 @@ func WithPrefix(prefix string) HandlerOption {
 func WithAuth(auth bool) HandlerOption {
 	return func(c *handlerConfig) {
 		c.auth = auth
+	}
+}
+
+// WithActiveSubscription requires the caller's organization to hold an active
+// subscription. It implies WithAuth, since the check needs an organization.
+func WithActiveSubscription() HandlerOption {
+	return func(c *handlerConfig) {
+		c.auth = true
+		c.requireSubscription = true
+	}
+}
+
+// WithFeature requires the organization's plan to include a named feature, as
+// listed against a price in the subscription catalog.
+func WithFeature(feature string) HandlerOption {
+	return func(c *handlerConfig) {
+		c.auth = true
+		c.requireSubscription = true
+		c.feature = strings.TrimSpace(feature)
 	}
 }
 

@@ -16,13 +16,19 @@ limitations under the License.
 package cmd
 
 import (
+	// Registers the Stripe subscription adapter. It stays dormant unless
+	// configuration selects it.
+	_ "bigbucks/solution/auth/contrib/stripe"
 	grpc_auth "bigbucks/solution/auth/grpc-auth"
 	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
 	router "bigbucks/solution/auth/rest-api"
 	sessionstore "bigbucks/solution/auth/session_store"
+	"bigbucks/solution/auth/subscriptions"
 	"context"
+	"encoding/json"
+	"errors"
 	"os/signal"
 	"syscall"
 	"time"
@@ -33,9 +39,10 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
-
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -68,6 +75,10 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			loging.Logger.Fatalln(err)
 		}
+		if err = loadSubscriptionConfig(settings.Current, viper.ConfigFileUsed()); err != nil {
+			loging.Logger.Fatalln(err)
+		}
+		applySubscriptionOptions(settings.Current)
 		settings.Current.Clean()
 		settings.Current.LoadKeys()
 
@@ -121,7 +132,7 @@ func startHttpServer(settings *settings.Settings) (err error) {
 	session_store := sessionstore.NewSessionStore(settings)
 	handler, err := router.NewHandler(settings, perm_cache, session_store)
 	if err != nil {
-		return
+		return fmt.Errorf("initialize HTTP handler: %w", err)
 	}
 	// loggedRouter := handlers.LoggingHandler(loging.ZapWrapper, handler)
 	httpServer = &http.Server{
@@ -154,10 +165,11 @@ func startGrpcServer(settings *settings.Settings) (err error) {
 	reflection.Register(grpcServer)
 	grpc_auth.RegisterAuthServer(grpcServer, auth_server)
 	loging.Logger.Infoln("GRPC Server Started at ", listener.Addr().String())
-	if err = grpcServer.Serve(listener); err != nil {
+	if err = grpcServer.Serve(listener); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
 		loging.Logger.Errorln(err)
+		return err
 	}
-	return
+	return nil
 }
 
 func HandleGracefulShutdown(g *errgroup.Group) {
@@ -166,12 +178,10 @@ func HandleGracefulShutdown(g *errgroup.Group) {
 	defer signal.Stop(interrupt)
 
 	select {
-	case <-interrupt:
-		break
+	case receivedSignal := <-interrupt:
+		loging.Logger.Warnf("Received %s, attempting graceful shutdown...", receivedSignal)
 	case <-ctx.Done():
-		break
 	}
-	loging.Logger.Warn("Interupt recieved, Attempting graceful shutdown...")
 	cancel()
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
@@ -248,6 +258,13 @@ func bindEnvironmentVariables() error {
 		"emailVerificationMaxAttempts":     {"EMAIL_VERIFICATION_MAX_ATTEMPTS"},
 		"emailVerificationResendSeconds":   {"EMAIL_VERIFICATION_RESEND_SECONDS"},
 		"emailVerificationHourlySendLimit": {"EMAIL_VERIFICATION_HOURLY_SEND_LIMIT"},
+		"subscriptions.enabled":            {"SUBSCRIPTIONS_ENABLED"},
+		"subscriptions.mode":               {"SUBSCRIPTIONS_MODE"},
+		"subscriptions.provider":           {"SUBSCRIPTIONS_PROVIDER"},
+		"subscriptionsConfigFile":          {"SUBSCRIPTIONS_CONFIG_FILE"},
+	}
+	for option, environmentVariables := range subscriptionOptionEnv {
+		bindings[subscriptionOptionKey(option)] = environmentVariables
 	}
 	for key, environmentVariables := range bindings {
 		arguments := append([]string{key}, environmentVariables...)
@@ -256,4 +273,99 @@ func bindEnvironmentVariables() error {
 		}
 	}
 	return nil
+}
+
+// subscriptionOptionEnv maps a provider option to the environment variables that
+// can supply it. Billing credentials are kept out of config.json entirely.
+var subscriptionOptionEnv = map[string][]string{
+	"secretKey":     {"STRIPE_SECRET_KEY"},
+	"webhookSecret": {"STRIPE_WEBHOOK_SECRET"},
+	"webhookPath":   {"STRIPE_WEBHOOK_PATH"},
+}
+
+func subscriptionOptionKey(option string) string {
+	return "subscriptions.options." + option
+}
+
+// applySubscriptionOptions copies environment-supplied provider options into the
+// decoded settings.
+//
+// Provider options live in a map[string]string. Viper resolves environment
+// bindings for such keys through Get, but does not include them in the tree it
+// hands to Unmarshal, so map entries silently stay empty unless copied across
+// here. See TestSubscriptionSecretsEnvironmentBinding.
+func applySubscriptionOptions(config *settings.Settings) {
+	if config == nil {
+		return
+	}
+	for option := range subscriptionOptionEnv {
+		value := strings.TrimSpace(viper.GetString(subscriptionOptionKey(option)))
+		if value == "" {
+			continue
+		}
+		if config.Subscriptions.Options == nil {
+			config.Subscriptions.Options = make(map[string]string, len(subscriptionOptionEnv))
+		}
+		config.Subscriptions.Options[option] = value
+	}
+}
+
+func loadSubscriptionConfig(config *settings.Settings, mainConfigFile string) error {
+	if config == nil {
+		return nil
+	}
+
+	if raw := strings.TrimSpace(os.Getenv("SUBSCRIPTIONS_CONFIG_JSON")); raw != "" {
+		loaded, err := decodeSubscriptionConfig([]byte(raw))
+		if err != nil {
+			return fmt.Errorf("decode SUBSCRIPTIONS_CONFIG_JSON: %w", err)
+		}
+		config.Subscriptions = loaded
+		return nil
+	}
+
+	if configFile := strings.TrimSpace(config.SubscriptionsConfigFile); configFile != "" {
+		if !filepath.IsAbs(configFile) && mainConfigFile != "" {
+			configFile = filepath.Join(filepath.Dir(mainConfigFile), configFile)
+		}
+		data, err := os.ReadFile(configFile)
+		if err != nil {
+			return fmt.Errorf("read subscription config %q: %w", configFile, err)
+		}
+		loaded, err := decodeSubscriptionConfig(data)
+		if err != nil {
+			return fmt.Errorf("decode subscription config %q: %w", configFile, err)
+		}
+		config.Subscriptions = loaded
+		return nil
+	}
+
+	if mainConfigFile == "" {
+		return nil
+	}
+	data, err := os.ReadFile(mainConfigFile)
+	if err != nil {
+		return fmt.Errorf("read inline subscription config: %w", err)
+	}
+	var inline struct {
+		Subscriptions json.RawMessage `json:"subscriptions"`
+	}
+	if err := json.Unmarshal(data, &inline); err != nil {
+		return nil
+	}
+	if len(inline.Subscriptions) == 0 {
+		return nil
+	}
+	loaded, err := decodeSubscriptionConfig(inline.Subscriptions)
+	if err != nil {
+		return fmt.Errorf("decode inline subscription config: %w", err)
+	}
+	config.Subscriptions = loaded
+	return nil
+}
+
+func decodeSubscriptionConfig(data []byte) (subscriptions.Config, error) {
+	var config subscriptions.Config
+	err := json.Unmarshal(data, &config)
+	return config, err
 }

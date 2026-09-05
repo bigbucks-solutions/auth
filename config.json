@@ -18,13 +18,22 @@
     "smtpHost": "smtp.gmail.com",
     "smtpPort": "587",
     "smtpUsername": "npmedco@gmail.com",
-    "smtpPassword": "zerj tpau wazl jtcb",
+    "smtpPassword": "<>",
     "smtpFrom": "noreply@bigbucks.com",
+    "emailVerificationSecret": "local-development-email-verification-key",
     "baseHost": "https://bigbucks.solutions",
     "webAuthnRPID": "localhost",
     "webAuthnRPName": "BigBucks Auth",
     "webAuthnOrigins": [
         "http://localhost:3000",
         "android:apk-key-hash:jwc7RqzPOf7qoqwuGPmshnC00CZhQDcQ1dEPbi6HJsc"
-    ]
+    ],
+    "googleClientIDs": [
+        "861393961889-8q3a55ad1arfnbp99og8f0fdv06ojku6.apps.googleusercontent.com"
+    ],
+    "extraPermResources": [
+        "inventory",
+        "billing"
+    ],
+    "subscriptionsConfigFile": "subscriptions.local.json"
 }

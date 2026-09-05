@@ -17,16 +17,18 @@ type Organization struct {
 	City                string
 	PostalCode          string
 	State               string
-	Country             string
-	Latitude            float64
-	Longitude           float64
-	LogoURL             string
-	TaxID               string
-	ContactEmail        string  `validate:"required,email"`
-	ContactNumber       string  `validate:"omitempty,min=5"`
-	WebsiteURL          string  `validate:"omitempty,url"`
-	CompanyDescription  string  `gorm:"type:text" validate:"omitempty,max=500"`
-	Users               []*User `gorm:"many2many:UserOrgRole;JoinForeignKey:OrgID;JoinReferences:UserID;" validate:"required,len=1,dive"`
+	// Country is an ISO-3166 alpha-2 code, stored upper-case. The billing
+	// layer maps it to a currency; see subscriptions.CurrencyConfig.
+	Country            string `validate:"omitempty,iso3166_1_alpha2"`
+	Latitude           float64
+	Longitude          float64
+	LogoURL            string
+	TaxID              string
+	ContactEmail       string  `validate:"required,email"`
+	ContactNumber      string  `validate:"omitempty,min=5"`
+	WebsiteURL         string  `validate:"omitempty,url"`
+	CompanyDescription string  `gorm:"type:text" validate:"omitempty,max=500"`
+	Users              []*User `gorm:"many2many:UserOrgRole;JoinForeignKey:OrgID;JoinReferences:UserID;" validate:"required,len=1,dive"`
 }
 
 // OrganizationDetails is the complete organization representation returned by

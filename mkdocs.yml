@@ -1,5 +1,15 @@
 site_name: Auth Docs
 
+nav:
+  - Home: index.markdown
+  - Usage: usage.md
+  - REST API: rest_api.md
+  - Contrib:
+      - Subscribers:
+        - Stripe:
+          - Overview: contrib/subscribers/stripe/index.md
+          - Billing frontend: contrib/subscribers/stripe/billing-frontend.md
+
 plugins:
   - search
   - neoteroi.mkdocsoad:
@@ -12,7 +22,11 @@ plugins:
 
 markdown_extensions:
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
 

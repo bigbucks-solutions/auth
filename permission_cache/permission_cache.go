@@ -112,9 +112,6 @@ func (pc *PermissionCache) CheckPermission(ctx *context.Context, resource, scope
 	resource = strings.ToUpper(strings.TrimSpace(resource))
 	scopes := pc.expandScope(scope)
 	actions := pc.getTransientActions(strings.ToUpper(action))
-	if len(userInfo.Roles) == 0 {
-		return false, nil
-	}
 
 	// Collect org-specific role names once, uppercased
 	orgRoles := make([]string, 0, len(userInfo.Roles))
@@ -127,7 +124,25 @@ func (pc *PermissionCache) CheckPermission(ctx *context.Context, resource, scope
 		}
 	}
 	if len(orgRoles) == 0 {
-		return false, nil
+		var currentRoles []string
+		err := models.Dbcon.WithContext(*ctx).
+			Model(&models.Role{}).
+			Select("roles.name").
+			Joins("INNER JOIN user_org_roles uor ON uor.role_id = roles.id AND uor.org_id = roles.org_id").
+			Joins("INNER JOIN users u ON u.id = uor.user_id").
+			Where("roles.org_id = ? AND u.username = ?", orgID, userInfo.Username).
+			Pluck("roles.name", &currentRoles).Error
+		if err != nil {
+			return false, err
+		}
+		for _, roleName := range currentRoles {
+			upper := strings.ToUpper(roleName)
+			orgRoles = append(orgRoles, upper)
+			orgRoleOriginal[upper] = roleName
+		}
+		if len(orgRoles) == 0 {
+			return false, nil
+		}
 	}
 
 	// Phase 1: Pipelined Redis check — batch all SIsMember calls into one round-trip

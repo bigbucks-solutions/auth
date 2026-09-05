@@ -92,5 +92,13 @@ func CreateOrg(w http.ResponseWriter, r *http.Request, ctx *request_context.Cont
 		return code, err
 	}
 	loging.Logger.Debug("User ID", ctx.Auth)
-	return actions.CreateOrganisationFromAuthenticatedUser(org, ctx.Auth.User.Username, ctx.PermCache, ctx.Context)
+	created, code, err := actions.CreateOrganisationFromAuthenticatedUser(org, ctx.Auth.User.Username, ctx.PermCache, ctx.Context)
+	if err != nil {
+		return code, err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(created); err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return 0, nil
 }
