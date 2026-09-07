@@ -1,0 +1,1726 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Billing frontend - Auth Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../css/neoteroi-mkdocs.css">
+    
+      <link rel="stylesheet" href="../../../../css/extras.css">
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="673AB7" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#billing-licensing-frontend-integration-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="Auth Docs" class="md-header__button md-logo" aria-label="Auth Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Auth Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Billing frontend
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="673AB7" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="673AB7" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../usage/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Usage
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../../rest_api/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  REST API
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+  Contrib
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="Auth Docs" class="md-nav__button md-logo" aria-label="Auth Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Auth Docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../rest_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contrib
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contrib
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_1" id="__nav_4_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Subscribers
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Subscribers
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_1_1" id="__nav_4_1_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stripe
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_1_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Stripe
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Billing frontend
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Billing frontend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-the-model-in-one-paragraph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. The model in one paragraph
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Authentication
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-get-billingsubscription" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. GET /billing/subscription
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. GET /billing/subscription">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#field-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Field reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#status-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        status values
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3a-get-billingplans-the-pricing-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3a. GET /billing/plans — the pricing page
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3a. GET /billing/plans — the pricing page">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rendering-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rendering rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#currency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Currency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#degraded-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Degraded mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Labels
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-get-billingcatalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. GET /billing/catalog
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-post-billingcheckout-session-buying" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. POST /billing/checkout-session — buying
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. POST /billing/checkout-session — buying">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#critical-do-not-trust-the-success-redirect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critical: do not trust the success redirect
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-the-billing-page-managing-an-existing-subscription" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. The billing page — managing an existing subscription
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. The billing page — managing an existing subscription">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#post-billingportal-session" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POST /billing/portal-session
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-billinginvoices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GET /billing/invoices
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#suggested-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suggested page
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#one-thing-you-cannot-prevent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One thing you cannot prevent
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-licence-enforcement-on-member-endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Licence enforcement on member endpoints
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-status-code-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Status code summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-conditional-banners" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Conditional banners
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-backend-configuration-context-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Backend configuration (context only)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="billing-licensing-frontend-integration-guide">Billing &amp; Licensing — Frontend Integration Guide</h1>
+<p>This document is the complete contract for building the billing UI against the
+bigbucks auth service. It is written to be handed to an agent or developer with
+no other context.</p>
+<p>Base path for every endpoint below: <code>/api/v1</code>.</p>
+<hr />
+<h2 id="1-the-model-in-one-paragraph">1. The model in one paragraph</h2>
+<p>An <strong>organization</strong> buys a subscription. The organization — not the user — is the
+billing customer; the owner's email only receives receipts. A subscription grants
+two things: <strong>entitlement</strong> (may this organization use the app at all) and
+<strong>licenses</strong> (how many members it may have). Purchases happen on Stripe-hosted
+pages, so you never handle card details. All plan changes are made in the Stripe
+billing portal, not in your UI.</p>
+<p><strong>Billing is optional.</strong> A deployment may run with it switched off. Your UI must
+handle that: see <a href="#3-get-billingsubscription"><code>managed_externally</code></a>.</p>
+<hr />
+<h2 id="2-authentication">2. Authentication</h2>
+<p>Every billing endpoint requires the standard session headers:</p>
+<table>
+<thead>
+<tr>
+<th>Header</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>X-Auth</code></td>
+<td>The JWT, as for all other authenticated calls</td>
+</tr>
+<tr>
+<td><code>X-Organization-Id</code></td>
+<td>The ULID of the organization being viewed or purchased for</td>
+</tr>
+</tbody>
+</table>
+<p><code>X-Organization-Id</code> is mandatory. Without it these endpoints return <code>403</code>.</p>
+<p>The two mutating endpoints additionally require the <code>billing:*:write</code> permission.
+In practice that means <strong>only the Owner (and roles you have granted equivalent
+permission) can start a purchase or open the portal.</strong> Hide those buttons for
+everyone else; a member without the permission gets <code>403</code>.</p>
+<hr />
+<h2 id="3-get-billingsubscription">3. <code>GET /billing/subscription</code></h2>
+<p>The endpoint your billing screen is built from. Call it on page load, and again
+after returning from Stripe.</p>
+<p><strong>Response <code>200</code>:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;org_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;01HZY3K8Q2N4T5V6W7X8Y9Z0AB&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;entitled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;active&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;licenses&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;licenses_used&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;licenses_available&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;over_limit&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;features&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;advanced_reporting&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;cloud_access&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;plans&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;price_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;price_1QxTeamMonthly&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Team&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;quantity&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;licenses&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;active&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;cancel_at_period_end&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;current_period_end&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-10-05T09:41:00Z&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;current_period_end&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-10-05T09:41:00Z&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;cancel_at_period_end&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;managed_externally&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="field-reference">Field reference</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning / how to use it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>entitled</code></td>
+<td><code>false</code> → the organization has no active subscription. Show a paywall.</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>Raw provider status. <code>"none"</code> when nothing is held. See the table below.</td>
+</tr>
+<tr>
+<td><code>licenses</code></td>
+<td>Total members the plan allows.</td>
+</tr>
+<tr>
+<td><code>licenses_used</code></td>
+<td>Current members <strong>plus unexpired pending invitations</strong>.</td>
+</tr>
+<tr>
+<td><code>licenses_available</code></td>
+<td><code>licenses - licenses_used</code>, never negative. <code>0</code> → disable "Invite".</td>
+</tr>
+<tr>
+<td><code>over_limit</code></td>
+<td><code>true</code> after a downgrade left more members than licences. Existing members keep working; adding more is blocked. Show a persistent warning telling the admin to remove members or buy more licences.</td>
+</tr>
+<tr>
+<td><code>features</code></td>
+<td>Capability strings the plan unlocks. Gate optional UI on these.</td>
+</tr>
+<tr>
+<td><code>plans</code></td>
+<td>One entry per purchased line, for display.</td>
+</tr>
+<tr>
+<td><code>current_period_end</code></td>
+<td>Earliest renewal date across active lines. ISO 8601.</td>
+</tr>
+<tr>
+<td><code>cancel_at_period_end</code></td>
+<td><code>true</code> → subscription lapses at <code>current_period_end</code>. Show "Cancels on {date}" with a "Resume" link to the portal.</td>
+</tr>
+<tr>
+<td><strong><code>managed_externally</code></strong></td>
+<td><strong><code>false</code> → billing is disabled in this deployment. Hide the entire billing UI, and never show licence limits.</strong> In this case <code>entitled</code> is <code>true</code> and <code>status</code> is <code>"not_managed"</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="status-values"><code>status</code> values</h3>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+<th>Suggested UI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>none</code></td>
+<td>Never subscribed</td>
+<td>Paywall / plan picker</td>
+</tr>
+<tr>
+<td><code>trialing</code></td>
+<td>In trial</td>
+<td>Badge with <code>current_period_end</code></td>
+</tr>
+<tr>
+<td><code>active</code></td>
+<td>Healthy</td>
+<td>Normal</td>
+</tr>
+<tr>
+<td><code>past_due</code></td>
+<td>Payment failed, Stripe is retrying</td>
+<td><strong>Amber banner: "Update your payment method"</strong> linking to the portal. Access continues by default.</td>
+</tr>
+<tr>
+<td><code>unpaid</code> / <code>canceled</code></td>
+<td>Access ended</td>
+<td>Paywall</td>
+</tr>
+<tr>
+<td><code>paused</code></td>
+<td>Paused</td>
+<td>Paywall</td>
+</tr>
+<tr>
+<td><code>incomplete</code></td>
+<td>First payment never completed</td>
+<td>Prompt to retry checkout</td>
+</tr>
+<tr>
+<td><code>not_managed</code></td>
+<td>Billing disabled in this deployment</td>
+<td>Hide billing UI</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><code>past_due</code> still grants access (the server default is a grace period). Warn the
+user, do not lock them out.</p>
+</blockquote>
+<hr />
+<h2 id="3a-get-billingplans-the-pricing-page">3a. <code>GET /billing/plans</code> — the pricing page</h2>
+<p>Everything a pricing or upgrade screen needs, shaped as a <strong>comparison table</strong>.
+Use this, not <code>/billing/catalog</code>.</p>
+<p><code>features</code> and <code>limits</code> list every key across the <em>whole</em> catalog, so each is a
+table row; each plan then reports which of them it includes. A tier that lacks a
+feature therefore renders a cross rather than the row vanishing.</p>
+<p><strong>Query parameters:</strong></p>
+<ul>
+<li><code>?country=IN</code> — the organization's ISO-3166 alpha-2 country code. The server
+  maps it through <code>subscriptions.currencies.byCountry</code> (<code>IN</code> → <code>inr</code>, for
+  example). When omitted, the server reads the country of
+  <code>X-Organization-Id</code>; an unmapped country uses the configured default.</li>
+<li><code>?currency=usd</code> — optional ISO-4217 override for a currency switcher. It wins
+  over <code>country</code> and is ignored if every configured plan cannot sell in it.</li>
+</ul>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code><span class="err">GET /api/v1/billing/plans?country=IN</span>
+<span class="err">X-Organization-Id: 01H...</span>
+</code></pre></div>
+<p><strong>Response <code>200</code>:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;available&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;trial_period_days&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;currency&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;aed&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;currencies&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;aed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;usd&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;currency_locked&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;features&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cloud_access&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cloud access &amp; sync&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Use BigBucks from any device…&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;advanced_reporting&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Advanced reporting&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Custom report builder…&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;api_access&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;API access&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Programmatic access…&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;limits&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;invoices&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Invoices&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;unit&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;invoices per month&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;period&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;month&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;skus&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Products (SKUs)&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;unit&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;SKUs&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;period&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;total&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;plans&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;tier&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;starter&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Starter&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;For small teams getting started.&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;highlight&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;features&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;cloud_access&quot;</span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;limits&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;invoices&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5000</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;skus&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5000</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;pricing&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;month&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;price_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;price_…&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;interval&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;month&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;default_currency&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;aed&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;amounts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;aed&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;currency&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;aed&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;first_unit_amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5000</span><span class="p">,</span><span class="w">  </span><span class="nt">&quot;additional_unit_amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;tiered&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">            </span><span class="nt">&quot;usd&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;currency&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;usd&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;first_unit_amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1400</span><span class="p">,</span><span class="w">  </span><span class="nt">&quot;additional_unit_amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">550</span><span class="p">,</span><span class="w">  </span><span class="nt">&quot;tiered&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;year&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;price_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;price_…&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;interval&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;year&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;default_currency&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;aed&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;amounts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;aed&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;currency&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;aed&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;first_unit_amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">49900</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;additional_unit_amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">19900</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;tiered&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">            </span><span class="nt">&quot;usd&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;currency&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;usd&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;first_unit_amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">13900</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;additional_unit_amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5500</span><span class="p">,</span><span class="w">  </span><span class="nt">&quot;tiered&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="w">          </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;tier&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;growth&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Growth&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;highlight&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;…&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;…&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="rendering-rules">Rendering rules</h3>
+<ul>
+<li><strong><code>available: false</code></strong> → billing is disabled. Do not render the page at all.</li>
+<li><strong><code>trial_period_days</code></strong> is the trial Checkout grants to a new subscription.
+  Use it for trial copy such as <em>"Start your 7-day free trial"</em>. A value of <code>0</code>
+  means trials are disabled, so do not show trial messaging.</li>
+<li><strong>Plans arrive pre-sorted</strong> cheapest first. Render in order; don't re-sort.</li>
+<li><strong><code>highlight: true</code></strong> → the "most popular" treatment.</li>
+<li><strong>Amounts are in the currency's smallest unit</strong> — fils for AED. Divide by 100.
+  <code>5000</code> is <strong>50.00 AED</strong>, not 5000.</li>
+<li><strong><code>pricing</code> is keyed by interval</strong> (<code>month</code>, <code>year</code>). Drive your monthly/annual
+  toggle off these keys; a tier may offer only one.</li>
+<li><strong>Then index by currency:</strong> <code>plan.pricing[interval].amounts[page.currency]</code>.</li>
+<li><strong><code>first_unit_amount</code> vs <code>additional_unit_amount</code></strong> — the plan includes one
+  user at the first price, and each extra user costs the second. Render as
+  <em>"50 AED/month, includes 1 user · +20 AED per extra user"</em>.
+  When <code>tiered</code> is <code>false</code> both are equal; just show the one figure.</li>
+</ul>
+<h3 id="currency">Currency</h3>
+<ul>
+<li><strong><code>currency</code></strong> is the code to display. It is resolved from <code>?currency=</code>, then
+  <code>?country=</code>, then the stored organization country, and finally the configured
+  default. An existing Stripe customer currency lock takes precedence over all
+  of them.</li>
+<li><strong><code>currencies</code></strong> is every code the organization may actually buy in, for your
+  switcher. A currency only some plans carry is deliberately excluded, so
+  switching can never blank a column. If it has one entry, hide the switcher.</li>
+<li><strong><code>currency_locked: true</code></strong> → the organization has already been invoiced and
+  the provider has pinned it to one currency. <code>currencies</code> holds only that one.
+  <strong>Hide the switcher</strong> and, if useful, explain: <em>"Billing currency is fixed to
+  AED for your account."</em> Sending anything else to checkout returns <code>400</code>.</li>
+<li>Selecting from the switcher: re-request with <code>?currency=</code>, or just re-index
+  <code>amounts[chosen]</code> client-side — both work, since every currency is returned.</li>
+<li><strong>Pass the same currency to checkout.</strong> <code>POST /billing/checkout-session</code>
+  accepts <code>"currency"</code>; omitting it charges the price's default, which may not
+  be what you displayed. Sending one the price doesn't carry returns <code>400</code>.</li>
+</ul>
+<p><div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">amount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">pricing</span><span class="p">[</span><span class="nx">interval</span><span class="p">].</span><span class="nx">amounts</span><span class="p">[</span><span class="nx">selectedCurrency</span><span class="p">];</span>
+<span class="c1">// → { currency: &quot;usd&quot;, first_unit_amount: 1400, additional_unit_amount: 550 }</span>
+</code></pre></div>
+- <strong>Feature ticks:</strong> <code>page.features</code> are the rows, <code>plan.features</code> (an array of
+  keys) decides tick or cross.
+- <strong>Limit values:</strong> look up <code>plan.limits[key]</code>. <strong><code>-1</code> means unlimited.</strong> A key
+  <em>missing</em> from <code>plan.limits</code> means that tier does not offer it at all.
+- <strong><code>limits[].period</code></strong> — <code>"month"</code> resets each month (say "5,000 / month"),
+  <code>"total"</code> is a standing cap (say "5,000 SKUs"). An annual subscriber still gets
+  the monthly allowance monthly, not multiplied by twelve.</p>
+<h3 id="degraded-mode">Degraded mode</h3>
+<p>If the billing provider is unreachable, plans still return with features, limits
+and <code>price_id</code>, but <code>amounts</code> is an <strong>empty object</strong> and <code>currencies</code> is empty.
+Detect it with <code>Object.keys(detail.amounts).length === 0</code> and show "Contact us"
+or a spinner in the price slot rather than "0 AED". Checkout still works, because
+<code>price_id</code> survives.</p>
+<h3 id="labels">Labels</h3>
+<p><code>label</code> and <code>description</code> come from backend config. If you need i18n, treat
+<code>key</code> as the stable identifier and keep your own translation map, falling back to
+the supplied <code>label</code>. Keys never change; labels are copy and may.</p>
+<hr />
+<h2 id="4-get-billingcatalog">4. <code>GET /billing/catalog</code></h2>
+<p>The raw catalog, keyed by Stripe price id. <strong>Prefer <code>/billing/plans</code></strong> for
+anything user-facing — this endpoint carries no amounts, no display labels and no
+tier grouping. It remains useful for debugging what the backend thinks a given
+price grants.</p>
+<p><strong>Response <code>200</code>:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;price_1QxTeamMonthly&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Team&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;features&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;cloud_access&quot;</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;licensesPerUnit&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;includedLicenses&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;price_1QxBusinessMonthly&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Business&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;features&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;cloud_access&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;advanced_reporting&quot;</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;licensesPerUnit&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;includedLicenses&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Licences granted by a plan = <code>includedLicenses + licensesPerUnit × quantity</code>.
+So the Business example at quantity 10 gives <code>5 + 1×10 = 15</code>.</p>
+<p>An <strong>empty object <code>{}</code></strong> means billing is disabled. Same handling as
+<code>managed_externally: false</code>.</p>
+<hr />
+<h2 id="5-post-billingcheckout-session-buying">5. <code>POST /billing/checkout-session</code> — buying</h2>
+<p>Requires <code>billing:*:write</code>.</p>
+<p><strong>Request:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;price_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;price_1QxTeamMonthly&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;quantity&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">25</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;currency&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;aed&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;success_url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/settings/billing?checkout=success&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;cancel_url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/settings/billing?checkout=cancelled&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>price_id</code></td>
+<td>yes</td>
+<td>From the catalog endpoint.</td>
+</tr>
+<tr>
+<td><code>quantity</code></td>
+<td>no</td>
+<td>Number of licences. Defaults to <code>1</code>. Capped server-side.</td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td>no</td>
+<td>Must match what the page displayed. Omitting it charges the price's default. <code>400</code> if the price does not carry it, or if the organization is already locked to a different one.</td>
+</tr>
+<tr>
+<td><code>success_url</code></td>
+<td>no</td>
+<td><strong>Path</strong> on your UI origin.</td>
+</tr>
+<tr>
+<td><code>cancel_url</code></td>
+<td>no</td>
+<td><strong>Path</strong> on your UI origin.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>URLs are validated.</strong> Only paths (<code>/settings/billing</code>) or absolute URLs on the
+configured UI origin are accepted. Anything pointing elsewhere is silently
+replaced with a default — this prevents the authenticated redirect being used as
+an open redirect. Always send a path.</p>
+</blockquote>
+<p><strong>Response <code>200</code>:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cs_test_a1B2c3&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://checkout.stripe.com/c/pay/cs_test_a1B2c3&quot;</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p><strong>Then redirect the browser to <code>url</code>:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;/api/v1/billing/checkout-session&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;POST&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s1">&#39;Content-Type&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;X-Auth&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">token</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;X-Organization-Id&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">orgId</span><span class="p">,</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nx">body</span><span class="o">:</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">price_id</span><span class="o">:</span><span class="w"> </span><span class="nx">priceId</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">quantity</span><span class="o">:</span><span class="w"> </span><span class="nx">seats</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">currency</span><span class="o">:</span><span class="w"> </span><span class="nx">selectedCurrency</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">success_url</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;/settings/billing?checkout=success&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">cancel_url</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;/settings/billing?checkout=cancelled&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="p">}),</span>
+<span class="p">});</span>
+<span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">url</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">assign</span><span class="p">(</span><span class="nx">url</span><span class="p">);</span><span class="w"> </span><span class="c1">// full navigation, not fetch — Stripe hosts this page</span>
+</code></pre></div>
+<p>The buyer can adjust the licence count on Stripe's page (enabled by default), so
+<code>quantity</code> is a starting value, not a ceiling.</p>
+<h3 id="critical-do-not-trust-the-success-redirect">Critical: do not trust the success redirect</h3>
+<p>Landing on <code>success_url</code> means <em>Stripe finished</em>, <strong>not</strong> that the backend has
+recorded the subscription — that arrives moments later over a webhook. On return:</p>
+<ol>
+<li>Show an optimistic "Finalising your subscription…" state.</li>
+<li>Poll <code>GET /billing/subscription</code> every ~2s until <code>entitled</code> becomes <code>true</code>.</li>
+<li>Give up after ~30s with "This is taking longer than usual — refresh shortly."</li>
+</ol>
+<p>Never write the plan into your own state from the redirect parameters.</p>
+<hr />
+<h2 id="6-the-billing-page-managing-an-existing-subscription">6. The billing page — managing an existing subscription</h2>
+<p>Everything an admin needs after purchase. <strong>You build the page; Stripe hosts the
+forms.</strong> Each action is one POST that returns a URL to redirect to.</p>
+<h3 id="post-billingportal-session"><code>POST /billing/portal-session</code></h3>
+<p>Requires <code>billing:*:write</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">&quot;flow&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cancel&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;return_url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/settings/billing&quot;</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th><code>flow</code></th>
+<th>Lands the admin on</th>
+<th>Needs an active subscription</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>(omitted)</em></td>
+<td>Portal home — invoices, plan, payment method, cancel</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>"update_plan"</code></td>
+<td><strong>Change plan <em>and</em> seat count</strong> — one screen does both</td>
+<td>yes → <code>409</code></td>
+</tr>
+<tr>
+<td><code>"cancel"</code></td>
+<td>Cancellation, with any retention offer you configured</td>
+<td>yes → <code>409</code></td>
+</tr>
+<tr>
+<td><code>"payment_method"</code></td>
+<td>Card entry</td>
+<td>no</td>
+</tr>
+</tbody>
+</table>
+<p>Response is the same <code>{ "id", "url" }</code> as checkout — redirect to <code>url</code>.</p>
+<p>The <code>update_plan</code> deep link requires <strong>Allow customers to update
+subscriptions</strong> in Stripe Customer Portal settings, with both price and quantity
+updates enabled. The catalog provisioning script configures this on the active
+default portal configuration. If it is disabled, Stripe rejects session creation
+and this endpoint returns <code>502</code>.</p>
+<blockquote>
+<p><strong>Buying additional seats is <code>update_plan</code>.</strong> Stripe's update screen shows the
+quantity selector next to the plan list, so there is no separate "add seats"
+flow. Label your button "Manage licences" and send <code>update_plan</code>.</p>
+</blockquote>
+<p>Seat and plan changes are <strong>prorated automatically</strong> by Stripe and arrive back as
+a webhook. On return, re-poll <code>GET /billing/subscription</code> — the same
+<a href="#critical-do-not-trust-the-success-redirect">race as checkout</a> applies.</p>
+<h3 id="get-billinginvoices"><code>GET /billing/invoices</code></h3>
+<p>Requires <code>billing:*:read</code>. Renders billing history <strong>inside your page</strong>, so the
+admin sees recent invoices without being bounced to Stripe.</p>
+<p><code>?limit=</code> — default 12, max 100.</p>
+<div class="highlight"><pre><span></span><code><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;in_1Qx…&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;number&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;BB-0042&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;paid&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;currency&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;aed&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;total&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">13000</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;amount_paid&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">13000</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;created&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-09-05T09:41:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;period_start&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-09-05T09:41:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;period_end&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-10-05T09:41:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;hosted_url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://invoice.stripe.com/i/…&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;pdf_url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://pay.stripe.com/invoice/…/pdf&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+<ul>
+<li>Amounts are in the smallest unit — <code>13000</code> is <strong>130.00 AED</strong>.</li>
+<li><code>status</code>: <code>paid</code>, <code>open</code>, <code>void</code>, <code>uncollectible</code>. Drafts are excluded.</li>
+<li><code>open</code> means unpaid — link <code>hosted_url</code> so they can pay it.</li>
+<li><code>pdf_url</code> for a download button.</li>
+<li>An org that never purchased returns <code>[]</code>, not an error.</li>
+</ul>
+<h3 id="suggested-page">Suggested page</h3>
+<div class="highlight"><pre><span></span><code>Billing
+├── Plan: Growth (annual) · Renews 5 Oct 2026
+│   [Change plan or licences] → portal flow &quot;update_plan&quot;
+│   [Update payment method]   → portal flow &quot;payment_method&quot;
+│
+├── Licences  18 of 25 used            ← GET /billing/subscription
+│   [Add licences] ──────────────────→ portal flow &quot;update_plan&quot;
+│
+├── Invoices                            ← GET /billing/invoices
+│   BB-0042  5 Sep 2026  130.00 AED  Paid  [PDF]
+│   BB-0041  5 Aug 2026  130.00 AED  Paid  [PDF]
+│   [View all in billing portal] ─────→ portal, no flow
+│
+└── [Cancel subscription] ────────────→ portal flow &quot;cancel&quot;
+</code></pre></div>
+<h3 id="one-thing-you-cannot-prevent">One thing you cannot prevent</h3>
+<p>The portal lets an admin <strong>reduce seats below the current member count</strong> —
+Stripe has no idea how many members you have. The webhook lands, licences drop,
+and <code>GET /billing/subscription</code> returns <code>over_limit: true</code>. Existing members keep
+working; adding more is blocked. Show the persistent warning and prompt them to
+either remove members or buy licences back.</p>
+<hr />
+<h2 id="7-licence-enforcement-on-member-endpoints">7. Licence enforcement on member endpoints</h2>
+<p>Licences are consumed by <strong>members plus pending invitations</strong>. Two existing
+endpoints now enforce this:</p>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Behaviour when out of licences</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST /invitations</code></td>
+<td><code>409 Conflict</code></td>
+</tr>
+<tr>
+<td><code>POST /roles/bind-user</code></td>
+<td><code>409 Conflict</code></td>
+</tr>
+</tbody>
+</table>
+<p>And when the organization has no active subscription at all: <strong><code>402 Payment
+Required</code></strong>.</p>
+<p>Handle both:</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">409</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">showDialog</span><span class="p">(</span><span class="s1">&#39;No licences available. Add more to invite this person.&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">action</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Manage licences&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">onClick</span><span class="o">:</span><span class="w"> </span><span class="nx">openBillingPortal</span><span class="p">,</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">402</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">showDialog</span><span class="p">(</span><span class="s1">&#39;Your subscription is inactive.&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">action</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;View plans&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">onClick</span><span class="o">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">navigate</span><span class="p">(</span><span class="s1">&#39;/settings/billing&#39;</span><span class="p">),</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div>
+<blockquote>
+<p>Because pending invitations reserve a licence, the administrator is told at
+<strong>invite time</strong> rather than the invitee hitting a wall at accept time. Revoking
+a pending invitation frees its licence immediately.</p>
+</blockquote>
+<p>Gated feature routes return <code>402</code> with a JSON body:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">&quot;error&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;organization plan does not include this feature: advanced_reporting&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;subscription_required&quot;</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<hr />
+<h2 id="8-status-code-summary">8. Status code summary</h2>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Meaning</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>200</code></td>
+<td>OK</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>400</code></td>
+<td>Malformed body or unknown <code>price_id</code></td>
+<td>Fix the request</td>
+</tr>
+<tr>
+<td><code>401</code></td>
+<td>Missing/invalid session</td>
+<td>Re-authenticate</td>
+</tr>
+<tr>
+<td><code>403</code></td>
+<td>No <code>X-Organization-Id</code>, or lacks <code>billing:*:write</code></td>
+<td>Hide the control</td>
+</tr>
+<tr>
+<td><code>402</code></td>
+<td>No active subscription, or feature not in plan</td>
+<td>Paywall / upsell</td>
+</tr>
+<tr>
+<td><code>409</code></td>
+<td>No licences available</td>
+<td>Upsell licences</td>
+</tr>
+<tr>
+<td><code>409</code></td>
+<td>Portal flow needs an active subscription, or no licences left</td>
+<td>Send them to checkout / upsell</td>
+</tr>
+<tr>
+<td><code>501</code></td>
+<td>Billing not enabled in this deployment</td>
+<td>Hide billing UI</td>
+</tr>
+<tr>
+<td><code>502</code></td>
+<td>Provider unreachable</td>
+<td>"Try again shortly"</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-conditional-banners">9. Conditional banners</h2>
+<p>Drive these off <code>GET /billing/subscription</code>, on every billing-related screen:</p>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Treatment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>over_limit</code></td>
+<td><strong>Red</strong>, persistent: "You have 3 more members than licences." → <code>update_plan</code></td>
+</tr>
+<tr>
+<td><code>status === "past_due"</code></td>
+<td><strong>Amber</strong>: "Payment failed — update your card." → <code>payment_method</code></td>
+</tr>
+<tr>
+<td><code>cancel_at_period_end</code></td>
+<td><strong>Amber</strong>: "Cancels on 5 Oct." → <code>update_plan</code> to resume</td>
+</tr>
+<tr>
+<td><code>!entitled</code></td>
+<td>Paywall with the plan picker from <code>GET /billing/plans</code></td>
+</tr>
+<tr>
+<td><code>!managed_externally</code></td>
+<td>Hide the billing UI entirely</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Build order:</strong> <code>GET /billing/subscription</code> and the <code>managed_externally</code> /
+<code>entitled</code> branches first; then the <code>409</code>/<code>402</code> handlers on invite; then the
+pricing page and checkout; then the billing page — the portal buttons are one
+redirect each, so they are the cheapest part.</p>
+<hr />
+<h2 id="10-backend-configuration-context-only">10. Backend configuration (context only)</h2>
+<p>Not your concern to set, but useful to know when something misbehaves:</p>
+<ul>
+<li>Enabled via <code>subscriptions.enabled</code> / <code>subscriptions.mode</code> in <code>config.json</code>.</li>
+<li><code>mode: "observe"</code> evaluates every check and logs what <em>would</em> have been denied
+  while allowing everything. If limits appear not to be enforced, this is why.</li>
+<li>Stripe credentials come from <code>STRIPE_SECRET_KEY</code> and <code>STRIPE_WEBHOOK_SECRET</code>.</li>
+<li>Webhook endpoint: <code>POST /api/v1/billing/stripe/webhook</code>, verified by signature.
+  Locally: <code>stripe listen --forward-to localhost:8000/api/v1/billing/stripe/webhook</code>.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "toc.integrate", "navigation.top"], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
