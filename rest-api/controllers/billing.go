@@ -54,7 +54,7 @@ func GetBillingCatalog(w http.ResponseWriter, r *http.Request, ctx *request_cont
 // GetBillingPlans godoc
 //
 //	@Summary		Get the pricing page
-//	@Description	Returns everything a pricing or upgrade screen needs: every feature and limit in the catalog as comparison rows, one plan per tier with the features and limits it includes, and live amounts read from the billing provider. `available: false` means billing is disabled and the page should not be rendered.
+//	@Description	Returns everything a pricing or upgrade screen needs: every feature and limit in the catalog as comparison rows, one plan per tier with the features and limits it includes, the effective trial duration, and live amounts read from the billing provider. `available: false` means billing is disabled and the page should not be rendered.
 //	@Tags			billing
 //	@Produce		json
 //	@Param			X-Auth	header	string	true	"Authorization"

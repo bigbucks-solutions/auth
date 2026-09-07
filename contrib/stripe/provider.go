@@ -67,6 +67,7 @@ type Provider struct {
 var (
 	_ subscriptions.Provider      = (*Provider)(nil)
 	_ subscriptions.BillingPortal = (*Provider)(nil)
+	_ subscriptions.TrialProvider = (*Provider)(nil)
 )
 
 func init() {
@@ -163,6 +164,9 @@ func intOption(options map[string]string, key string, fallback int64) int64 {
 
 // Name identifies the adapter.
 func (provider *Provider) Name() string { return ProviderName }
+
+// TrialPeriodDays reports the trial Checkout applies to new subscriptions.
+func (provider *Provider) TrialPeriodDays() int64 { return provider.config.TrialPeriodDays }
 
 // Webhooks exposes the signature-verified Stripe endpoint. It must stay outside
 // the authenticated handler chain: Stripe presents a signature, not a session.

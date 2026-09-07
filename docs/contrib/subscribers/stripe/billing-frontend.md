@@ -138,6 +138,7 @@ X-Organization-Id: 01H...
 ```json
 {
   "available": true,
+  "trial_period_days": 7,
   "currency": "aed",
   "currencies": ["aed", "usd"],
   "currency_locked": false,
@@ -183,6 +184,9 @@ X-Organization-Id: 01H...
 ### Rendering rules
 
 - **`available: false`** → billing is disabled. Do not render the page at all.
+- **`trial_period_days`** is the trial Checkout grants to a new subscription.
+  Use it for trial copy such as *"Start your 7-day free trial"*. A value of `0`
+  means trials are disabled, so do not show trial messaging.
 - **Plans arrive pre-sorted** cheapest first. Render in order; don't re-sort.
 - **`highlight: true`** → the "most popular" treatment.
 - **Amounts are in the currency's smallest unit** — fils for AED. Divide by 100.

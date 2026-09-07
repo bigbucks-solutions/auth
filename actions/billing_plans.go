@@ -33,6 +33,9 @@ type PricingPage struct {
 	Limits []PricingLimit `json:"limits"`
 	// Plans is one entry per tier, cheapest first.
 	Plans []PricingPlan `json:"plans"`
+	// TrialPeriodDays is the trial Checkout grants to a new subscription. Zero
+	// means no trial is available.
+	TrialPeriodDays int64 `json:"trial_period_days"`
 	// Available is false when billing is disabled for this deployment, in which
 	// case the pricing page should not be rendered at all.
 	Available bool `json:"available"`
@@ -90,6 +93,7 @@ func BillingPlans(ctx context.Context, request PricingRequest) PricingPage {
 		return page
 	}
 	page.Available = true
+	page.TrialPeriodDays = module.TrialPeriodDays()
 
 	page.Features = pricingFeatures(config)
 	page.Limits = pricingLimits(config)

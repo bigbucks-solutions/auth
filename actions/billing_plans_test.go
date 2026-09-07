@@ -12,10 +12,12 @@ import (
 type fakeProvider struct {
 	details map[string]subscriptions.PriceDetail
 	err     error
+	trial   int64
 }
 
 func (provider *fakeProvider) Name() string                    { return "fake" }
 func (provider *fakeProvider) Webhooks() []subscriptions.Route { return nil }
+func (provider *fakeProvider) TrialPeriodDays() int64          { return provider.trial }
 func (provider *fakeProvider) InspectPrices(context.Context, []string) (map[string]subscriptions.PriceDetail, error) {
 	if provider.err != nil {
 		return nil, provider.err
@@ -75,7 +77,7 @@ func installModule(t *testing.T, config subscriptions.Config, provider subscript
 // The two prices of a tier must collapse into one column with both intervals
 // hanging off it, or the pricing page grows a column per billing period.
 func TestBillingPlansGroupsIntervalsIntoOneTier(t *testing.T) {
-	installModule(t, twoTierConfig(), &fakeProvider{details: multiCurrencyDetails()})
+	installModule(t, twoTierConfig(), &fakeProvider{details: multiCurrencyDetails(), trial: 7})
 
 	page := BillingPlans(context.Background(), PricingRequest{})
 
@@ -87,6 +89,9 @@ func TestBillingPlansGroupsIntervalsIntoOneTier(t *testing.T) {
 	}
 	if page.Currency != "aed" {
 		t.Fatalf("Currency = %q, want aed", page.Currency)
+	}
+	if page.TrialPeriodDays != 7 {
+		t.Fatalf("TrialPeriodDays = %d, want 7", page.TrialPeriodDays)
 	}
 
 	starter := page.Plans[0]

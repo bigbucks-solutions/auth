@@ -431,6 +431,12 @@ type PriceInspector interface {
 	InspectPrices(ctx context.Context, priceIDs []string) (map[string]PriceDetail, error)
 }
 
+// TrialProvider is implemented by providers that grant a trial when checkout
+// creates a subscription. A zero duration means no trial is available.
+type TrialProvider interface {
+	TrialPeriodDays() int64
+}
+
 // CurrencyLocker is implemented by providers that pin a customer to a single
 // currency once recurring billing has started.
 //
@@ -556,6 +562,18 @@ func (module *Module) Prices() (PriceInspector, bool) {
 	}
 	inspector, ok := module.Provider.(PriceInspector)
 	return inspector, ok
+}
+
+// TrialPeriodDays returns the provider's effective checkout trial duration.
+func (module *Module) TrialPeriodDays() int64 {
+	if !module.Enabled() {
+		return 0
+	}
+	provider, ok := module.Provider.(TrialProvider)
+	if !ok {
+		return 0
+	}
+	return provider.TrialPeriodDays()
 }
 
 // CurrencyLock returns the provider's currency-pinning capability, if it has one.
