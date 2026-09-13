@@ -73,6 +73,18 @@ func (provider *Provider) StartCheckout(ctx context.Context, request subscriptio
 		return session, err
 	}
 
+	// Checkout always creates a new subscription, so an organization that
+	// already holds one would be billed twice. Changes go through the portal.
+	history, err := provider.subscriptionHistory(ctx, customerID)
+	if err != nil {
+		return session, err
+	}
+	if history.CurrentID != "" {
+		return session, fmt.Errorf("%w (%s is %s); change plan or licences from the billing portal instead",
+			subscriptions.ErrAlreadySubscribed, history.CurrentID, history.CurrentStatus)
+	}
+	provider.expireOpenCheckoutSessions(ctx, customerID)
+
 	lineItem := &stripesdk.CheckoutSessionCreateLineItemParams{
 		Price:    stripesdk.String(request.PriceID),
 		Quantity: stripesdk.Int64(quantity),
@@ -106,7 +118,9 @@ func (provider *Provider) StartCheckout(ctx context.Context, request subscriptio
 	if provider.config.AllowPromotionCodes {
 		params.AllowPromotionCodes = stripesdk.Bool(true)
 	}
-	if provider.config.TrialPeriodDays > 0 {
+	// A trial is offered once per organization: cancelling and buying again must
+	// not start another free period.
+	if provider.config.TrialPeriodDays > 0 && !history.Subscribed {
 		params.SubscriptionData.TrialPeriodDays = stripesdk.Int64(provider.config.TrialPeriodDays)
 	}
 

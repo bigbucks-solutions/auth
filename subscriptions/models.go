@@ -45,6 +45,14 @@ type SubscriptionItem struct {
 
 	CurrentPeriodStart *time.Time `json:"current_period_start"`
 	CurrentPeriodEnd   *time.Time `gorm:"index" json:"current_period_end"`
+	// TrialEnd is when the subscription's trial converts to paid. It stays set
+	// after the trial is over.
+	TrialEnd *time.Time `json:"trial_end"`
+	// BillingCycleAnchor is the instant renewals repeat from. Monthly quota
+	// windows are anchored to it.
+	BillingCycleAnchor *time.Time `json:"billing_cycle_anchor"`
+	// EndedAt is when the provider ended the subscription, if it has.
+	EndedAt *time.Time `json:"ended_at"`
 	// EventAt is the provider timestamp of the event that produced this row. It
 	// guards against out-of-order webhook delivery.
 	EventAt time.Time `gorm:"not null" json:"event_at"`

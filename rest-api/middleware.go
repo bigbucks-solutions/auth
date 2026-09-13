@@ -135,6 +135,20 @@ func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, pe
 			}
 			ctx.CurrentOrgID = orgID
 
+			if config.requireOrgMembership && orgID != "" {
+				member, err := models.IsOrganizationMember(orgID, ctx.Auth.User.Username)
+				if err != nil {
+					loging.Logger.Errorw("organization membership check failed",
+						"org_id", orgID, "error", err.Error())
+					http.Error(_responseLogger, "Could not verify organization membership", http.StatusInternalServerError)
+					return
+				}
+				if !member {
+					http.Error(_responseLogger, "Forbidden", http.StatusForbidden)
+					return
+				}
+			}
+
 			if config.requireSubscription {
 				if err := checkSubscription(ctx.Context, orgID, config.feature); err != nil {
 					if subscriptions.IsDenial(err) {

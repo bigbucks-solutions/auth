@@ -42,6 +42,9 @@ var (
 	ErrFeatureUnavailable = errors.New("organization plan does not include this feature")
 	// ErrProviderUnsupported means the configured provider cannot serve the request.
 	ErrProviderUnsupported = errors.New("subscription provider does not support this operation")
+	// ErrAlreadySubscribed means a new checkout would bill the organization for
+	// a second subscription. Plan and licence changes go through the portal.
+	ErrAlreadySubscribed = errors.New("organization already has a subscription")
 )
 
 // Product describes what one catalog entry grants. Entries are keyed by the
@@ -129,8 +132,24 @@ type Config struct {
 	// licence limit, so an administrator is told at invite time rather than
 	// letting invitees fail at accept time. Defaults to true.
 	ReservePendingInvitations *bool `json:"reservePendingInvitations" mapstructure:"reservePendingInvitations"`
+	// PeriodEndGraceHours keeps a line granting for this long after its period
+	// ends, so a delayed renewal webhook does not lock a paying organization out
+	// at every renewal. Reconciliation normally corrects the state well within
+	// it. Defaults to 48.
+	PeriodEndGraceHours *int `json:"periodEndGraceHours" mapstructure:"periodEndGraceHours"`
 	// Options carries provider-specific settings.
 	Options map[string]string `json:"options" mapstructure:"options"`
+}
+
+// DefaultPeriodEndGrace applies when PeriodEndGraceHours is unset.
+const DefaultPeriodEndGrace = 48 * time.Hour
+
+// PeriodEndGrace resolves PeriodEndGraceHours.
+func (config Config) PeriodEndGrace() time.Duration {
+	if config.PeriodEndGraceHours == nil {
+		return DefaultPeriodEndGrace
+	}
+	return time.Duration(max(*config.PeriodEndGraceHours, 0)) * time.Hour
 }
 
 // EffectiveMode resolves Mode, falling back to Enabled for configurations that
@@ -301,6 +320,27 @@ func (config Config) Validate() error {
 					priceID, limit))
 			}
 		}
+	}
+
+	// A key must mean one thing: a service counts a cap as stored records and a
+	// quota as records created this period, and cannot do both for one key.
+	capKeys, quotaKeys := map[string]struct{}{}, map[string]struct{}{}
+	for _, product := range config.Catalog {
+		for key := range product.Caps {
+			capKeys[key] = struct{}{}
+		}
+		for key := range product.MonthlyQuotas {
+			quotaKeys[key] = struct{}{}
+		}
+	}
+	for key := range capKeys {
+		if _, alsoQuota := quotaKeys[key]; alsoQuota {
+			problems = append(problems, fmt.Sprintf(
+				"limit %q is a cap on one price and a monthly quota on another; use one kind per key", key))
+		}
+	}
+	if config.PeriodEndGraceHours != nil && *config.PeriodEndGraceHours < 0 {
+		problems = append(problems, "periodEndGraceHours cannot be negative")
 	}
 
 	if len(problems) > 0 {
@@ -576,6 +616,71 @@ func (module *Module) TrialPeriodDays() int64 {
 	return provider.TrialPeriodDays()
 }
 
+// TrialPeriodDaysFor returns the trial an organization would receive at
+// checkout. Trials are offered once, so an organization that has held a
+// subscription before gets none.
+func (module *Module) TrialPeriodDaysFor(ctx context.Context, tx *gorm.DB, orgID string) (int64, error) {
+	days := module.TrialPeriodDays()
+	if days == 0 || orgID == "" || tx == nil {
+		return days, nil
+	}
+	subscribed, err := HasSubscriptionHistory(ctx, tx, orgID)
+	if err != nil {
+		return days, err
+	}
+	if subscribed {
+		return 0, nil
+	}
+	return days, nil
+}
+
+// Reconciler is implemented by providers that can repair the local projection
+// when webhooks were missed.
+type Reconciler interface {
+	Reconcile(ctx context.Context) error
+	// ReconcileInterval is how often Reconcile should run. Zero disables it.
+	ReconcileInterval() time.Duration
+}
+
+// reconcileStartDelay lets the process finish starting before the first run.
+var reconcileStartDelay = time.Minute
+
+// Run performs background maintenance until ctx is cancelled. It returns
+// immediately when the provider needs none, so it is always safe to start.
+func (module *Module) Run(ctx context.Context) error {
+	if !module.Enabled() {
+		return nil
+	}
+	reconciler, ok := module.Provider.(Reconciler)
+	if !ok || reconciler.ReconcileInterval() <= 0 {
+		return nil
+	}
+	interval := reconciler.ReconcileInterval()
+
+	timer := time.NewTimer(reconcileStartDelay)
+	defer timer.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-timer.C:
+		}
+
+		runCtx, cancel := context.WithTimeout(ctx, interval)
+		started := time.Now()
+		err := reconciler.Reconcile(runCtx)
+		cancel()
+		if err != nil && ctx.Err() == nil {
+			loging.Logger.Errorw("subscription reconciliation finished with errors",
+				"provider", module.Provider.Name(), "duration", time.Since(started).String(), "error", err.Error())
+		} else if err == nil {
+			loging.Logger.Infow("subscription reconciliation finished",
+				"provider", module.Provider.Name(), "duration", time.Since(started).String())
+		}
+		timer.Reset(interval)
+	}
+}
+
 // CurrencyLock returns the provider's currency-pinning capability, if it has one.
 func (module *Module) CurrencyLock() (CurrencyLocker, bool) {
 	if !module.Enabled() {
@@ -647,7 +752,7 @@ func HTTPStatus(err error) int {
 	switch {
 	case errors.Is(err, ErrNotEntitled), errors.Is(err, ErrFeatureUnavailable):
 		return http.StatusPaymentRequired
-	case errors.Is(err, ErrNoLicenses):
+	case errors.Is(err, ErrNoLicenses), errors.Is(err, ErrAlreadySubscribed):
 		return http.StatusConflict
 	case errors.Is(err, ErrProviderUnsupported):
 		return http.StatusNotImplemented

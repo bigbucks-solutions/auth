@@ -9,6 +9,7 @@ nav:
         - Stripe:
           - Overview: contrib/subscribers/stripe/index.md
           - Billing frontend: contrib/subscribers/stripe/billing-frontend.md
+        - Entitlements over gRPC: contrib/subscribers/entitlements-grpc.md
 
 plugins:
   - search

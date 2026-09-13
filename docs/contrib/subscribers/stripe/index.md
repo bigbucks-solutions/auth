@@ -68,6 +68,22 @@ the provider sends `subscription_data[trial_period_days]` to Stripe. The default
 is seven days; `"0"` disables it. The current option applies to every new
 Checkout subscription in the configured catalog.
 
+Trials are granted once per organization. Before creating a session the provider
+lists the customer's subscriptions directly from Stripe, not from the local
+projection, which can lag a checkout completed moments earlier:
+
+- If one is `active`, `trialing`, `past_due`, `unpaid` or `paused`, checkout is
+  refused with `409`. Plan and licence changes go through the portal, so an
+  organization is never billed for two subscriptions.
+- If any subscription ever got past its first payment, the new session carries no
+  trial. `incomplete` and `incomplete_expired` subscriptions do not count.
+- Checkout sessions the customer left open are expired first, so a buyer with two
+  tabs cannot complete both.
+
+`GET /billing/plans` reports `trial_period_days: 0` for an organization that has
+subscribed before, so the pricing page does not advertise a trial it will not
+get.
+
 ## Provision the catalog
 
 Install the [Stripe CLI](https://docs.stripe.com/stripe-cli) and `jq`, then
@@ -146,8 +162,10 @@ The complete subscription object has this shape:
     "allowPromotionCodes": "false",
     "allowQuantityAdjustment": "true",
     "maxQuantity": "999",
-    "graceOnPastDue": "true"
+    "graceOnPastDue": "true",
+    "reconcileIntervalMinutes": "60"
   },
+  "periodEndGraceHours": 48,
   "currencies": {
     "default": "aed",
     "byCountry": {"AE": "aed"}
@@ -187,6 +205,44 @@ Subscription modes are:
 Use `observe` for a controlled production rollout before switching to
 `enforce`.
 
+## Lifecycle and reconciliation
+
+Each organization resolves to a provider-neutral `state`, which REST clients and
+other services branch on instead of Stripe's raw status:
+
+| Stripe status | Grants access | `state` |
+| --- | --- | --- |
+| `active` | Yes | `active` |
+| `trialing` | Yes | `trialing` |
+| `past_due` | While `graceOnPastDue` is on (the default) | `past_due`, or `expired` with grace off |
+| `canceled` | No | `canceled` |
+| `unpaid`, `paused` | No | `expired` |
+| `incomplete`, `incomplete_expired` | No | `none` |
+| Period ended more than `periodEndGraceHours` ago with no renewal observed | No | `expired` |
+
+A line keeps granting for `periodEndGraceHours` (48 by default) after its period
+ends. Stripe reports a renewal only through a webhook, and without the grace a
+delayed delivery would lock a paying organization out at every renewal.
+
+Webhooks are not the only path into the projection. Every
+`reconcileIntervalMinutes` (60 by default; `"0"` disables it) the service:
+
+1. Lists subscription and checkout events from the Stripe Events API, from at
+   least 72 hours back (Stripe's retry window), or from the last processed event
+   after a longer outage, within Stripe's 30-day retention. Events already
+   processed are skipped by the same idempotency check the webhook uses.
+2. Re-reads every subscription still marked active whose period has ended, which
+   either records the renewal or records that it lapsed.
+
+Both steps are idempotent, so running several instances only costs duplicate
+Stripe API calls. The first run starts a minute after boot.
+
+| Setting | Where | Default | Purpose |
+| --- | --- | --- | --- |
+| `periodEndGraceHours` | Subscription object | `48` | Grace after a period ends before access lapses. |
+| `reconcileIntervalMinutes` | `options` | `"60"` | Reconciliation interval; `"0"` disables it. |
+| `graceOnPastDue` | `options` | `"true"` | Keep access while Stripe retries a failed payment. |
+
 ## Stripe webhook
 
 Create a Stripe webhook endpoint using the public HTTPS URL:
@@ -206,7 +262,8 @@ Copy that endpoint's signing secret to `STRIPE_WEBHOOK_SECRET`. Test-mode and
 live-mode webhook endpoints have different signing secrets. The endpoint must
 receive the original request body through the ingress or reverse proxy so the
 signature can be verified. Stripe retries transient non-2xx responses; event
-processing is idempotent.
+processing is idempotent. Deliveries missed anyway are replayed by
+[reconciliation](#lifecycle-and-reconciliation).
 
 ## CI/CD
 
@@ -222,7 +279,7 @@ as separate operations:
    configuration. Do not substitute test Price IDs into production.
 4. Store Stripe API and webhook secrets in the deployment platform's secret
    manager.
-5. Apply the subscription database migration before starting the new image.
+5. Apply the subscription database migrations before starting the new image.
 6. Deploy initially with `mode: "observe"`, verify Checkout and webhook
    processing, then promote the same catalog to `mode: "enforce"`.
 
@@ -247,6 +304,8 @@ The runtime requires these values for Stripe subscriptions:
 | `STRIPE_WEBHOOK_SECRET` | Yes | Signing secret for the production webhook endpoint. |
 | `STRIPE_WEBHOOK_PATH` | No | Overrides `/api/v1/billing/stripe/webhook`. |
 | `SUBSCRIPTIONS_CONFIG_FILE` | Alternative | Mounted config file when JSON injection is not used. |
+| `GRPC_ADDRESS` | For other services | gRPC listen address. Defaults to `127.0.0.1:8080`, reachable only from the same host. |
+| `GRPC_SERVICE_KEYS` | For other services | Service keys for the Entitlements gRPC service, as `name=key,other=key`. See [Entitlements over gRPC](../entitlements-grpc.md). |
 
 `SUBSCRIPTIONS_ENABLED`, `SUBSCRIPTIONS_MODE`, and `SUBSCRIPTIONS_PROVIDER` are
 available for simple overrides, but they do not replace the required catalog.
@@ -261,6 +320,9 @@ Production also requires:
 - Live-mode Product and Price IDs in the catalog
 - A stable webhook signing secret from the live endpoint
 - Monitoring for webhook failures and Stripe subscription state changes
+- For a restricted key (`rk_...`), read access to Events and Subscriptions and
+  write access to Checkout Sessions, used by reconciliation and the
+  duplicate-subscription check
 
 Before enabling enforcement, create a real Checkout Session in the intended
 Stripe mode, confirm the subscription shows `trialing`, verify the webhook

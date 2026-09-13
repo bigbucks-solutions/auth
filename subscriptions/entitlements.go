@@ -4,7 +4,6 @@ import (
 	"bigbucks/solution/auth/loging"
 	"context"
 	"fmt"
-	"sort"
 	"time"
 
 	"gorm.io/gorm"
@@ -12,13 +11,18 @@ import (
 )
 
 // Entitlements is the resolved billing state of one organization. It is the
-// payload the frontend renders its billing screens from.
+// payload the frontend renders its billing screens from, and what other
+// services read over gRPC to apply their own limits.
 type Entitlements struct {
 	OrgID string `json:"org_id"`
 	// Entitled reports whether the organization may use the application.
 	Entitled bool `json:"entitled"`
-	// Status is the most relevant provider status across active lines
-	// ("active", "trialing", "past_due", ...), or "none" when nothing is held.
+	// State is the provider-neutral lifecycle state. Branch on this rather than
+	// Status.
+	State State `json:"state"`
+	// Status is the provider's raw status for the most relevant line
+	// ("active", "trialing", "past_due", "canceled", ...), or "none" when the
+	// organization has never held a subscription. Kept for display.
 	Status string `json:"status"`
 	// Licenses is the total number of members the plan allows.
 	Licenses int64 `json:"licenses"`
@@ -33,21 +37,36 @@ type Entitlements struct {
 	OverLimit bool `json:"over_limit"`
 	// Features is the union of features granted by all active lines.
 	Features []string `json:"features"`
+	// Limits is every cap and monthly quota the active lines grant, keyed by
+	// limit key. A key absent here is not offered on the current plan.
+	Limits map[string]LimitGrant `json:"limits"`
 	// Plans describes each active line for display.
 	Plans []PlanSummary `json:"plans"`
-	// CurrentPeriodEnd is the earliest renewal date across active lines.
-	CurrentPeriodEnd *time.Time `json:"current_period_end"`
+	// TrialEndsAt is when the current trial converts to paid. Set only while
+	// trialing.
+	TrialEndsAt *time.Time `json:"trial_ends_at"`
+	// CurrentPeriodStart and CurrentPeriodEnd bound the earliest-renewing active
+	// line's billing period.
+	CurrentPeriodStart *time.Time `json:"current_period_start"`
+	CurrentPeriodEnd   *time.Time `json:"current_period_end"`
+	// EndedAt is when access ended. Set only for the canceled and expired
+	// states.
+	EndedAt *time.Time `json:"ended_at"`
 	// CancelAtPeriodEnd is true when any active line is set to lapse.
 	CancelAtPeriodEnd bool `json:"cancel_at_period_end"`
 	// ManagedExternally is false when subscriptions are disabled, telling the
 	// frontend to hide billing UI entirely.
 	ManagedExternally bool `json:"managed_externally"`
+	// ResolvedAt is when this snapshot was computed, so a caller holding a
+	// cached copy can judge its age.
+	ResolvedAt time.Time `json:"resolved_at"`
 }
 
 // PlanSummary describes one purchased line.
 type PlanSummary struct {
 	PriceID           string     `json:"price_id"`
 	Name              string     `json:"name"`
+	Tier              string     `json:"tier"`
 	Quantity          int64      `json:"quantity"`
 	Licenses          int64      `json:"licenses"`
 	Status            string     `json:"status"`
@@ -70,59 +89,19 @@ func (entitlements Entitlements) HasFeature(feature string) bool {
 // It takes no locks and is safe on request hot paths. Use RequireLicenses when
 // a decision must be serialized against concurrent membership changes.
 func Resolve(ctx context.Context, tx *gorm.DB, config Config, orgID string) (Entitlements, error) {
-	entitlements := Entitlements{
-		OrgID:             orgID,
-		Status:            "none",
-		Features:          []string{},
-		Plans:             []PlanSummary{},
-		ManagedExternally: true,
-	}
+	now := time.Now().UTC()
 
-	items, err := activeItems(ctx, tx, orgID)
+	items, err := activeItems(ctx, tx, orgID, now.Add(-config.PeriodEndGrace()))
 	if err != nil {
-		return entitlements, err
+		return summarize(config, orgID, nil, nil, now), err
 	}
-
-	features := make(map[string]struct{})
-	for _, item := range items {
-		product, configured := config.Catalog[item.PriceID]
-		if !configured {
-			// An unmapped price still proves the organization is paying, but it
-			// cannot grant licences or features until the catalog describes it.
-			loging.Logger.Warnw("subscription price is not in the catalog",
-				"org_id", orgID, "price_id", item.PriceID)
+	var latest *SubscriptionItem
+	if len(items) == 0 {
+		if latest, err = latestItem(ctx, tx, orgID); err != nil {
+			return summarize(config, orgID, nil, nil, now), err
 		}
-		licenses := product.Licenses(item.Quantity)
-		entitlements.Entitled = true
-		entitlements.Licenses += licenses
-		for _, feature := range product.Features {
-			features[feature] = struct{}{}
-		}
-		if item.CancelAtPeriodEnd {
-			entitlements.CancelAtPeriodEnd = true
-		}
-		if entitlements.Status == "none" || item.Status == "active" {
-			entitlements.Status = item.Status
-		}
-		if item.CurrentPeriodEnd != nil &&
-			(entitlements.CurrentPeriodEnd == nil || item.CurrentPeriodEnd.Before(*entitlements.CurrentPeriodEnd)) {
-			entitlements.CurrentPeriodEnd = item.CurrentPeriodEnd
-		}
-		entitlements.Plans = append(entitlements.Plans, PlanSummary{
-			PriceID:           item.PriceID,
-			Name:              product.Name,
-			Quantity:          item.Quantity,
-			Licenses:          licenses,
-			Status:            item.Status,
-			CancelAtPeriodEnd: item.CancelAtPeriodEnd,
-			CurrentPeriodEnd:  item.CurrentPeriodEnd,
-		})
 	}
-
-	for feature := range features {
-		entitlements.Features = append(entitlements.Features, feature)
-	}
-	sort.Strings(entitlements.Features)
+	entitlements := summarize(config, orgID, items, latest, now)
 
 	used, err := licensesUsed(ctx, tx, orgID, config.ReservesPendingInvitations())
 	if err != nil {
@@ -138,7 +117,11 @@ func Resolve(ctx context.Context, tx *gorm.DB, config Config, orgID string) (Ent
 }
 
 // activeItems returns the organization's currently-granting subscription lines.
-func activeItems(ctx context.Context, tx *gorm.DB, orgID string) ([]SubscriptionItem, error) {
+//
+// A line whose period ended after periodEndedAfter still counts. Renewal is
+// only observed when the provider's webhook arrives, and a delayed delivery must
+// not lock a paying organization out at every renewal.
+func activeItems(ctx context.Context, tx *gorm.DB, orgID string, periodEndedAfter time.Time) ([]SubscriptionItem, error) {
 	var items []SubscriptionItem
 	err := tx.WithContext(ctx).
 		Model(&SubscriptionItem{}).
@@ -146,10 +129,42 @@ func activeItems(ctx context.Context, tx *gorm.DB, orgID string) ([]Subscription
 			" AND billing_accounts.deleted_at IS NULL").
 		Where("billing_accounts.org_id = ?", orgID).
 		Where("subscription_items.active = ?", true).
-		Where("subscription_items.current_period_end IS NULL OR subscription_items.current_period_end > ?", time.Now().UTC()).
+		Where("subscription_items.current_period_end IS NULL OR subscription_items.current_period_end > ?", periodEndedAfter).
 		Order("subscription_items.created_at").
 		Find(&items).Error
 	return items, err
+}
+
+// latestItem returns the organization's most recently changed line of any
+// status, or nil if it has never held one.
+func latestItem(ctx context.Context, tx *gorm.DB, orgID string) (*SubscriptionItem, error) {
+	var items []SubscriptionItem
+	err := tx.WithContext(ctx).
+		Model(&SubscriptionItem{}).
+		Joins("JOIN billing_accounts ON billing_accounts.id = subscription_items.account_id"+
+			" AND billing_accounts.deleted_at IS NULL").
+		Where("billing_accounts.org_id = ?", orgID).
+		Order("subscription_items.updated_at DESC").
+		Limit(1).
+		Find(&items).Error
+	if err != nil || len(items) == 0 {
+		return nil, err
+	}
+	return &items[0], nil
+}
+
+// HasSubscriptionHistory reports whether an organization has ever held a
+// subscription that got past its first payment. Such an organization is no
+// longer eligible for a trial.
+func HasSubscriptionHistory(ctx context.Context, tx *gorm.DB, orgID string) (bool, error) {
+	var count int64
+	err := tx.WithContext(ctx).
+		Model(&SubscriptionItem{}).
+		Joins("JOIN billing_accounts ON billing_accounts.id = subscription_items.account_id").
+		Where("billing_accounts.org_id = ?", orgID).
+		Where("subscription_items.status NOT IN ?", []string{"incomplete", "incomplete_expired"}).
+		Count(&count).Error
+	return count > 0, err
 }
 
 // licensesUsed counts distinct members, plus unexpired pending invitations for
@@ -218,10 +233,13 @@ func (AllowAllPolicy) Entitlements(_ context.Context, _ *gorm.DB, orgID string) 
 	return Entitlements{
 		OrgID:             orgID,
 		Entitled:          true,
+		State:             StateNotManaged,
 		Status:            "not_managed",
 		Features:          []string{},
+		Limits:            map[string]LimitGrant{},
 		Plans:             []PlanSummary{},
 		ManagedExternally: false,
+		ResolvedAt:        time.Now().UTC(),
 	}, nil
 }
 

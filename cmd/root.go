@@ -121,8 +121,18 @@ var rootCmd = &cobra.Command{
 
 		// defer models.Dbcon.Close()
 
+		// Build the subscription layer once, before either server accepts
+		// traffic. Both answer entitlement questions from it, and a server that
+		// started first would otherwise answer from the allow-all default.
+		subscriptionModule, err := subscriptions.NewModule(settings.Current.Subscriptions, models.Dbcon)
+		if err != nil {
+			loging.Logger.Fatalln(fmt.Errorf("initialize subscriptions: %w", err))
+		}
+		subscriptions.SetModule(subscriptionModule)
+
 		g.Go(func() error { return startGrpcServer(settings.Current) })
 		g.Go(func() error { return startHttpServer(settings.Current) })
+		g.Go(func() error { return subscriptionModule.Run(ctx) })
 		HandleGracefulShutdown(g)
 	},
 }
@@ -149,22 +159,37 @@ func startHttpServer(settings *settings.Settings) (err error) {
 	return nil
 }
 
+// defaultGRPCAddress is reachable only from the same host. Set grpcAddress (or
+// GRPC_ADDRESS) for services running elsewhere.
+const defaultGRPCAddress = "127.0.0.1:8080"
+
 func startGrpcServer(settings *settings.Settings) (err error) {
-	listener, err := net.Listen("tcp", "127.0.0.1:8080")
+	serviceKeys, err := grpc_auth.ParseServiceKeys(settings.GRPCServiceKeys)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("parse grpc service keys: %w", err)
+	}
+	address := strings.TrimSpace(settings.GRPCAddress)
+	if address == "" {
+		address = defaultGRPCAddress
+	}
+	listener, err := net.Listen("tcp", address)
+	if err != nil {
+		return fmt.Errorf("listen for grpc on %s: %w", address, err)
 	}
 	perm_cache := permission_cache.NewPermissionCache(settings)
 	session_store := sessionstore.NewSessionStore(settings)
 	auth_server := grpc_auth.NewGRPCServer(settings, *perm_cache, *session_store)
+	authInterceptor := grpc_auth.NewAuthInterceptor(serviceKeys)
 	grpcServer = grpc.NewServer(grpc.ChainUnaryInterceptor(
 		grpc_zap.UnaryServerInterceptor(loging.InterceptorLogger(loging.Logger.Desugar())),
-		auth_server.JWTInterceptor,
+		authInterceptor.Unary,
 	))
 
 	reflection.Register(grpcServer)
 	grpc_auth.RegisterAuthServer(grpcServer, auth_server)
-	loging.Logger.Infoln("GRPC Server Started at ", listener.Addr().String())
+	grpc_auth.RegisterEntitlementsServer(grpcServer, grpc_auth.NewEntitlementsService())
+	loging.Logger.Infow("GRPC Server Started",
+		"address", listener.Addr().String(), "service_keys", serviceKeys.Len())
 	if err = grpcServer.Serve(listener); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
 		loging.Logger.Errorln(err)
 		return err
@@ -262,6 +287,8 @@ func bindEnvironmentVariables() error {
 		"subscriptions.mode":               {"SUBSCRIPTIONS_MODE"},
 		"subscriptions.provider":           {"SUBSCRIPTIONS_PROVIDER"},
 		"subscriptionsConfigFile":          {"SUBSCRIPTIONS_CONFIG_FILE"},
+		"grpcAddress":                      {"GRPC_ADDRESS"},
+		"grpcServiceKeys":                  {"GRPC_SERVICE_KEYS"},
 	}
 	for option, environmentVariables := range subscriptionOptionEnv {
 		bindings[subscriptionOptionKey(option)] = environmentVariables

@@ -139,6 +139,9 @@ func StartBillingCheckout(ctx context.Context, orgID, priceID, currency string, 
 		// A currency the price does not carry, or one the organization is no
 		// longer free to choose, is the caller's mistake rather than the
 		// provider being unreachable.
+		if errors.Is(err, subscriptions.ErrAlreadySubscribed) {
+			return session, http.StatusConflict, err
+		}
 		if strings.Contains(err.Error(), "is not available in") ||
 			strings.Contains(err.Error(), "currency is fixed once billing has started") {
 			return session, http.StatusBadRequest, err

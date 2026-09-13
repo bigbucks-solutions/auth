@@ -2,6 +2,7 @@ package actions
 
 import (
 	"bigbucks/solution/auth/loging"
+	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/subscriptions"
 	"context"
 	"sort"
@@ -94,6 +95,16 @@ func BillingPlans(ctx context.Context, request PricingRequest) PricingPage {
 	}
 	page.Available = true
 	page.TrialPeriodDays = module.TrialPeriodDays()
+	// Trials are offered once per organization, so one that has subscribed
+	// before is shown no trial messaging.
+	if request.OrgID != "" && page.TrialPeriodDays > 0 {
+		if days, err := module.TrialPeriodDaysFor(ctx, models.Dbcon, request.OrgID); err != nil {
+			loging.Logger.Warnw("could not check trial eligibility for pricing",
+				"org_id", request.OrgID, "error", err.Error())
+		} else {
+			page.TrialPeriodDays = days
+		}
+	}
 
 	page.Features = pricingFeatures(config)
 	page.Limits = pricingLimits(config)

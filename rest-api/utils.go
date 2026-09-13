@@ -18,6 +18,9 @@ type handlerConfig struct {
 	requireSubscription bool
 	// feature additionally requires the plan to include a named capability.
 	feature string
+	// requireOrgMembership rejects callers who do not belong to the requested
+	// organization, for routes that carry no permission of their own.
+	requireOrgMembership bool
 }
 type HandlerOption func(*handlerConfig)
 
@@ -49,6 +52,16 @@ func WithFeature(feature string) HandlerOption {
 		c.auth = true
 		c.requireSubscription = true
 		c.feature = strings.TrimSpace(feature)
+	}
+}
+
+// WithOrgMembership requires the caller to belong to the organization named by
+// X-Organization-Id or the org_id path value. WithPermission already implies
+// membership; use this on routes that carry no permission.
+func WithOrgMembership() HandlerOption {
+	return func(c *handlerConfig) {
+		c.auth = true
+		c.requireOrgMembership = true
 	}
 }
 

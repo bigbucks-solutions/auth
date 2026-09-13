@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	stripesdk "github.com/stripe/stripe-go/v82"
 	"gorm.io/gorm"
@@ -52,6 +53,9 @@ type Config struct {
 	// GraceOnPastDue keeps access while Stripe retries a failed payment.
 	// Disable it to cut access the moment an invoice goes past due.
 	GraceOnPastDue bool
+	// ReconcileInterval is how often missed webhooks are repaired from the
+	// Stripe API. Zero disables reconciliation.
+	ReconcileInterval time.Duration
 }
 
 // Provider implements subscriptions.Provider and subscriptions.BillingPortal.
@@ -112,6 +116,7 @@ func parseConfig(config subscriptions.Config) (Config, error) {
 		MaxQuantity:             intOption(options, "maxQuantity", 999),
 		TrialPeriodDays:         intOption(options, "trialPeriodDays", 7),
 		GraceOnPastDue:          boolOption(options, "graceOnPastDue", true),
+		ReconcileInterval:       time.Duration(intOption(options, "reconcileIntervalMinutes", 60)) * time.Minute,
 	}
 
 	if adapterConfig.SecretKey == "" {
@@ -134,6 +139,9 @@ func parseConfig(config subscriptions.Config) (Config, error) {
 	}
 	if adapterConfig.TrialPeriodDays < 0 {
 		return Config{}, errors.New("options.trialPeriodDays cannot be negative")
+	}
+	if adapterConfig.ReconcileInterval < 0 {
+		return Config{}, errors.New("options.reconcileIntervalMinutes cannot be negative")
 	}
 	return adapterConfig, nil
 }

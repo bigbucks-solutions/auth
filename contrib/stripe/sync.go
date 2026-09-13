@@ -61,6 +61,9 @@ func (provider *Provider) syncSubscription(ctx context.Context, subscriptionID s
 				CancelAtPeriodEnd:  subscription.CancelAtPeriodEnd,
 				CurrentPeriodStart: unixToTime(line.CurrentPeriodStart),
 				CurrentPeriodEnd:   unixToTime(line.CurrentPeriodEnd),
+				TrialEnd:           unixToTime(subscription.TrialEnd),
+				BillingCycleAnchor: unixToTime(subscription.BillingCycleAnchor),
+				EndedAt:            unixToTime(subscription.EndedAt),
 				EventAt:            observedAt,
 			}
 
@@ -71,6 +74,7 @@ func (provider *Provider) syncSubscription(ctx context.Context, subscriptionID s
 				DoUpdates: clause.AssignmentColumns([]string{
 					"subscription_id", "price_id", "status", "active", "quantity",
 					"cancel_at_period_end", "current_period_start", "current_period_end",
+					"trial_end", "billing_cycle_anchor", "ended_at",
 					"event_at", "updated_at",
 				}),
 				// Never let an older observation overwrite a newer one.
@@ -89,7 +93,10 @@ func (provider *Provider) syncSubscription(ctx context.Context, subscriptionID s
 		// access here, otherwise a downgrade would keep its licences forever.
 		deactivate := tx.Model(&subscriptions.SubscriptionItem{}).
 			Where("account_id = ? AND provider = ? AND subscription_id = ?",
-				account.ID, ProviderName, subscription.ID)
+				account.ID, ProviderName, subscription.ID).
+			// Same ordering guard as the upsert: an older observation must not
+			// deactivate a line a newer one re-added.
+			Where("event_at <= ?", observedAt)
 		if len(liveItemIDs) > 0 {
 			deactivate = deactivate.Where("external_id NOT IN ?", liveItemIDs)
 		}

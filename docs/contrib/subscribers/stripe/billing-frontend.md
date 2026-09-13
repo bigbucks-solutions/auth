@@ -31,7 +31,8 @@ Every billing endpoint requires the standard session headers:
 | `X-Auth` | The JWT, as for all other authenticated calls |
 | `X-Organization-Id` | The ULID of the organization being viewed or purchased for |
 
-`X-Organization-Id` is mandatory. Without it these endpoints return `403`.
+`X-Organization-Id` is mandatory. Without it, or when the caller is not a member
+of that organization, these endpoints return `403`.
 
 The two mutating endpoints additionally require the `billing:*:write` permission.
 In practice that means **only the Owner (and roles you have granted equivalent
@@ -51,16 +52,27 @@ after returning from Stripe.
 {
   "org_id": "01HZY3K8Q2N4T5V6W7X8Y9Z0AB",
   "entitled": true,
+  "state": "active",
   "status": "active",
   "licenses": 25,
   "licenses_used": 18,
   "licenses_available": 7,
   "over_limit": false,
   "features": ["advanced_reporting", "cloud_access"],
+  "limits": {
+    "invoices": {
+      "kind": "monthly_quota",
+      "limit": 10000,
+      "period_start": "2026-09-05T09:41:00Z",
+      "period_end": "2026-10-05T09:41:00Z"
+    },
+    "skus": { "kind": "cap", "limit": -1 }
+  },
   "plans": [
     {
       "price_id": "price_1QxTeamMonthly",
       "name": "Team",
+      "tier": "team",
       "quantity": 25,
       "licenses": 25,
       "status": "active",
@@ -68,9 +80,13 @@ after returning from Stripe.
       "current_period_end": "2026-10-05T09:41:00Z"
     }
   ],
+  "trial_ends_at": null,
+  "current_period_start": "2026-09-05T09:41:00Z",
   "current_period_end": "2026-10-05T09:41:00Z",
+  "ended_at": null,
   "cancel_at_period_end": false,
-  "managed_externally": true
+  "managed_externally": true,
+  "resolved_at": "2026-09-13T08:00:00Z"
 }
 ```
 
@@ -78,33 +94,39 @@ after returning from Stripe.
 
 | Field | Meaning / how to use it |
 | --- | --- |
-| `entitled` | `false` → the organization has no active subscription. Show a paywall. |
-| `status` | Raw provider status. `"none"` when nothing is held. See the table below. |
+| `entitled` | `false` → the organization has no usable subscription. Show a paywall. |
+| `state` | **Branch on this.** Provider-neutral lifecycle state; see the table below. |
+| `status` | Raw provider status, for display only. `"none"` when nothing was ever held. |
 | `licenses` | Total members the plan allows. |
 | `licenses_used` | Current members **plus unexpired pending invitations**. |
 | `licenses_available` | `licenses - licenses_used`, never negative. `0` → disable "Invite". |
 | `over_limit` | `true` after a downgrade left more members than licences. Existing members keep working; adding more is blocked. Show a persistent warning telling the admin to remove members or buy more licences. |
 | `features` | Capability strings the plan unlocks. Gate optional UI on these. |
+| `limits` | Caps and monthly quotas the plan grants, keyed like `GET /billing/plans` limits. `-1` means unlimited; a missing key is not offered. Monthly quotas carry the current `period_start`/`period_end` window, which resets on the billing-cycle day. |
 | `plans` | One entry per purchased line, for display. |
-| `current_period_end` | Earliest renewal date across active lines. ISO 8601. |
+| `trial_ends_at` | When the trial converts to paid. Set only while `state` is `trialing`. |
+| `current_period_start` / `current_period_end` | Bounds of the earliest-renewing active line's billing period. ISO 8601. |
+| `ended_at` | When access ended. Set only for `canceled` and `expired`. |
 | `cancel_at_period_end` | `true` → subscription lapses at `current_period_end`. Show "Cancels on {date}" with a "Resume" link to the portal. |
-| **`managed_externally`** | **`false` → billing is disabled in this deployment. Hide the entire billing UI, and never show licence limits.** In this case `entitled` is `true` and `status` is `"not_managed"`. |
+| **`managed_externally`** | **`false` → billing is disabled in this deployment. Hide the entire billing UI, and never show licence limits.** In this case `entitled` is `true` and `state` is `"not_managed"`. |
+| `resolved_at` | When the server computed this snapshot. |
 
-### `status` values
+### `state` values
 
-| Status | Meaning | Suggested UI |
+| State | Meaning | Suggested UI |
 | --- | --- | --- |
-| `none` | Never subscribed | Paywall / plan picker |
-| `trialing` | In trial | Badge with `current_period_end` |
+| `none` | Never subscribed, or the first payment never completed | Paywall / plan picker |
+| `trialing` | In trial | Badge: "Trial ends {trial_ends_at}" |
 | `active` | Healthy | Normal |
 | `past_due` | Payment failed, Stripe is retrying | **Amber banner: "Update your payment method"** linking to the portal. Access continues by default. |
-| `unpaid` / `canceled` | Access ended | Paywall |
-| `paused` | Paused | Paywall |
-| `incomplete` | First payment never completed | Prompt to retry checkout |
+| `canceled` | Cancelled; access ended at `ended_at` | "Your subscription ended on {date}" with the plan picker. No trial is offered again. |
+| `expired` | Access lapsed for another reason: unpaid, paused, or not renewed | "Your subscription has lapsed" → portal `payment_method` |
 | `not_managed` | Billing disabled in this deployment | Hide billing UI |
 
 > `past_due` still grants access (the server default is a grace period). Warn the
-> user, do not lock them out.
+> user, do not lock them out. Likewise, access continues for up to 48 hours past
+> `current_period_end` while a renewal is confirmed, so do not show a lapsed state
+> from the date alone.
 
 ---
 
@@ -186,7 +208,9 @@ X-Organization-Id: 01H...
 - **`available: false`** → billing is disabled. Do not render the page at all.
 - **`trial_period_days`** is the trial Checkout grants to a new subscription.
   Use it for trial copy such as *"Start your 7-day free trial"*. A value of `0`
-  means trials are disabled, so do not show trial messaging.
+  means no trial is available, so do not show trial messaging. It is `0` both
+  when trials are disabled and for an organization that has subscribed before:
+  the trial is granted once per organization.
 - **Plans arrive pre-sorted** cheapest first. Render in order; don't re-sort.
 - **`highlight: true`** → the "most popular" treatment.
 - **Amounts are in the currency's smallest unit** — fils for AED. Divide by 100.
@@ -339,6 +363,13 @@ window.location.assign(url); // full navigation, not fetch — Stripe hosts this
 
 The buyer can adjust the licence count on Stripe's page (enabled by default), so
 `quantity` is a starting value, not a ceiling.
+
+**One subscription per organization.** If the organization already holds a
+subscription that is active, trialing, past due, unpaid or paused, this endpoint
+returns `409` rather than opening a second checkout. Send the admin to the portal
+instead (`update_plan`, or `payment_method` when `state` is `expired`). Starting
+a checkout also closes any checkout page the organization left open, so two tabs
+cannot both complete.
 
 ### Critical: do not trust the success redirect
 
@@ -496,9 +527,10 @@ Gated feature routes return `402` with a JSON body:
 | `200` | OK | — |
 | `400` | Malformed body or unknown `price_id` | Fix the request |
 | `401` | Missing/invalid session | Re-authenticate |
-| `403` | No `X-Organization-Id`, or lacks `billing:*:write` | Hide the control |
+| `403` | No `X-Organization-Id`, not a member of that organization, or lacks `billing:*:write` | Hide the control |
 | `402` | No active subscription, or feature not in plan | Paywall / upsell |
 | `409` | No licences available | Upsell licences |
+| `409` | Checkout while the organization already has a subscription | Open the portal instead |
 | `409` | Portal flow needs an active subscription, or no licences left | Send them to checkout / upsell |
 | `501` | Billing not enabled in this deployment | Hide billing UI |
 | `502` | Provider unreachable | "Try again shortly" |
@@ -512,7 +544,9 @@ Drive these off `GET /billing/subscription`, on every billing-related screen:
 | Condition | Treatment |
 | --- | --- |
 | `over_limit` | **Red**, persistent: "You have 3 more members than licences." → `update_plan` |
-| `status === "past_due"` | **Amber**: "Payment failed — update your card." → `payment_method` |
+| `state === "past_due"` | **Amber**: "Payment failed — update your card." → `payment_method` |
+| `state === "trialing"` | **Neutral**: "Trial ends {trial_ends_at}." |
+| `state === "expired"` | **Red**: "Your subscription has lapsed." → `payment_method` |
 | `cancel_at_period_end` | **Amber**: "Cancels on 5 Oct." → `update_plan` to resume |
 | `!entitled` | Paywall with the plan picker from `GET /billing/plans` |
 | `!managed_externally` | Hide the billing UI entirely |
@@ -534,3 +568,7 @@ Not your concern to set, but useful to know when something misbehaves:
 - Stripe credentials come from `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`.
 - Webhook endpoint: `POST /api/v1/billing/stripe/webhook`, verified by signature.
   Locally: `stripe listen --forward-to localhost:8000/api/v1/billing/stripe/webhook`.
+- Missed webhooks are repaired by a periodic reconciliation, so a stale state
+  corrects itself within the reconcile interval (hourly by default).
+- Other backend services read the same state over gRPC; see
+  [Entitlements over gRPC](../entitlements-grpc.md).

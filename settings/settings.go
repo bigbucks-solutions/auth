@@ -94,6 +94,13 @@ type Settings struct {
 	WebAuthnRPName                   string   `json:"webAuthnRPName" mapstructure:"webAuthnRPName"`
 	WebAuthnOrigins                  []string `json:"webAuthnOrigins" mapstructure:"webAuthnOrigins"`
 	SubscriptionsConfigFile          string   `json:"subscriptionsConfigFile" mapstructure:"subscriptionsConfigFile"`
+	// GRPCAddress is where the gRPC server listens. The default,
+	// 127.0.0.1:8080, is reachable only from the same host.
+	GRPCAddress string `json:"grpcAddress" mapstructure:"grpcAddress"`
+	// GRPCServiceKeys authenticates service-to-service gRPC calls, formatted as
+	// "name=key,other=key". Supply it through GRPC_SERVICE_KEYS rather than
+	// config.json.
+	GRPCServiceKeys string `json:"grpcServiceKeys" mapstructure:"grpcServiceKeys"`
 	// Subscriptions is optional. When absent or disabled the billing layer is
 	// inert: every entitlement check passes and no billing endpoint is mounted.
 	Subscriptions subscriptions.Config `json:"subscriptions" mapstructure:"subscriptions"`

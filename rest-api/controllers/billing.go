@@ -57,12 +57,14 @@ func GetBillingCatalog(w http.ResponseWriter, r *http.Request, ctx *request_cont
 //	@Description	Returns everything a pricing or upgrade screen needs: every feature and limit in the catalog as comparison rows, one plan per tier with the features and limits it includes, the effective trial duration, and live amounts read from the billing provider. `available: false` means billing is disabled and the page should not be rendered.
 //	@Tags			billing
 //	@Produce		json
-//	@Param			X-Auth	header	string	true	"Authorization"
-//	@Param			country	query	string	false	"Organization ISO-3166 alpha-2 country code"
-//	@Param			currency	query	string	false	"Explicit ISO-4217 currency override"
+//	@Param			X-Auth				header	string	true	"Authorization"
+//	@Param			X-Organization-Id	header	string	false	"Organization being quoted; applies its currency lock and trial eligibility"
+//	@Param			country				query	string	false	"Organization ISO-3166 alpha-2 country code"
+//	@Param			currency			query	string	false	"Explicit ISO-4217 currency override"
 //	@Security		JWTAuth
 //	@Success		200	{object}	actions.PricingPage
 //	@Failure		401	{object}	error
+//	@Failure		403	{object}	error	"Caller is not a member of X-Organization-Id"
 //	@Router			/billing/plans [get]
 func GetBillingPlans(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	// A country supplied by the frontend is authoritative. BillingPlans falls
@@ -87,7 +89,7 @@ func billingPricingRequest(r *http.Request, ctx *request_context.Context) action
 // GetBillingSubscription godoc
 //
 //	@Summary		Get the current organization's subscription
-//	@Description	Returns entitlement state: whether the organization may use the app, how many licences the plan allows, how many are consumed, and which features are unlocked. When billing is disabled, managed_externally is false and the frontend should hide billing UI.
+//	@Description	Returns entitlement state: whether the organization may use the app, its provider-neutral lifecycle state (none, trialing, active, past_due, canceled, expired, not_managed), how many licences the plan allows and how many are consumed, which features are unlocked, and the caps and monthly quotas the plan grants. When billing is disabled, managed_externally is false and the frontend should hide billing UI.
 //	@Tags			billing
 //	@Produce		json
 //	@Param			X-Auth				header	string	true	"Authorization"
@@ -95,7 +97,7 @@ func billingPricingRequest(r *http.Request, ctx *request_context.Context) action
 //	@Security		JWTAuth
 //	@Success		200	{object}	subscriptions.Entitlements
 //	@Failure		401	{object}	error
-//	@Failure		403	{object}	error
+//	@Failure		403	{object}	error	"X-Organization-Id is missing, or the caller is not a member of that organization"
 //	@Router			/billing/subscription [get]
 func GetBillingSubscription(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	if ctx.CurrentOrgID == "" {
@@ -128,6 +130,8 @@ func GetBillingSubscription(w http.ResponseWriter, r *http.Request, ctx *request
 //	@Success		200	{object}	subscriptions.RedirectSession
 //	@Failure		400	{object}	error
 //	@Failure		401	{object}	error
+//	@Failure		403	{object}	error	"X-Organization-Id is missing, or the caller lacks billing:*:write in that organization"
+//	@Failure		409	{object}	error	"The organization already has a subscription; change it through the billing portal"
 //	@Failure		501	{object}	error
 //	@Router			/billing/checkout-session [post]
 func CreateBillingCheckoutSession(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {

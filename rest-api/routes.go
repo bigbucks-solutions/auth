@@ -169,7 +169,7 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 		makeHandler(ctr.GetBillingCatalog, WithAuth(true)),
 	).Methods("GET")
 	api.Handle("/billing/subscription",
-		makeHandler(ctr.GetBillingSubscription, WithAuth(true)),
+		makeHandler(ctr.GetBillingSubscription, WithAuth(true), WithPermission("billing:*:read")),
 	).Methods("GET")
 	api.Handle("/billing/checkout-session",
 		makeHandler(ctr.CreateBillingCheckoutSession, WithAuth(true), WithPermission("billing:*:write")),

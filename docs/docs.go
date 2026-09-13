@@ -24,6 +24,441 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/billing/catalog": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Returns the configured plan catalog keyed by provider price id. An empty object means billing is disabled for this deployment.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "billing"
+                ],
+                "summary": "List purchasable plans",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/billing/checkout-session": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Creates a provider-hosted checkout session and returns the URL the browser must be redirected to. The organization becomes the billing customer; the owner's email receives receipts.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "billing"
+                ],
+                "summary": "Start a subscription purchase",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Organization ID",
+                        "name": "X-Organization-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Checkout options",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.checkoutRequestBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/subscriptions.RedirectSession"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "403": {
+                        "description": "X-Organization-Id is missing, or the caller lacks billing:*:write in that organization",
+                        "schema": {}
+                    },
+                    "409": {
+                        "description": "The organization already has a subscription; change it through the billing portal",
+                        "schema": {}
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/billing/invoices": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Returns the organization's billing history, newest first, for rendering in your own UI. Drafts are excluded. Each entry carries a hosted page and a PDF link. An organization that has never purchased returns an empty list.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "billing"
+                ],
+                "summary": "List past invoices",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Organization ID",
+                        "name": "X-Organization-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Maximum invoices to return (default 12, max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/subscriptions.Invoice"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {}
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/billing/plans": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Returns everything a pricing or upgrade screen needs: every feature and limit in the catalog as comparison rows, one plan per tier with the features and limits it includes, the effective trial duration, and live amounts read from the billing provider. ` + "`" + `available: false` + "`" + ` means billing is disabled and the page should not be rendered.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "billing"
+                ],
+                "summary": "Get the pricing page",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Organization being quoted; applies its currency lock and trial eligibility",
+                        "name": "X-Organization-Id",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Organization ISO-3166 alpha-2 country code",
+                        "name": "country",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Explicit ISO-4217 currency override",
+                        "name": "currency",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/actions.PricingPage"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "403": {
+                        "description": "Caller is not a member of X-Organization-Id",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/billing/portal-session": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Creates a provider-hosted portal session where an administrator can change licence counts, switch plan, update payment details, download invoices and cancel. Pass ` + "`" + `flow` + "`" + ` to deep-link straight to one of those tasks. Licence changes made there are prorated by the provider and arrive back over webhook.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "billing"
+                ],
+                "summary": "Open the billing management portal",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Organization ID",
+                        "name": "X-Organization-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Portal options",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.portalRequestBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/subscriptions.RedirectSession"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {}
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/billing/subscription": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "description": "Returns entitlement state: whether the organization may use the app, its provider-neutral lifecycle state (none, trialing, active, past_due, canceled, expired, not_managed), how many licences the plan allows and how many are consumed, which features are unlocked, and the caps and monthly quotas the plan grants. When billing is disabled, managed_externally is false and the frontend should hide billing UI.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "billing"
+                ],
+                "summary": "Get the current organization's subscription",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "X-Auth",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Organization ID",
+                        "name": "X-Organization-Id",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/subscriptions.Entitlements"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "403": {
+                        "description": "X-Organization-Id is missing, or the caller is not a member of that organization",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/email-verifications/resend": {
+            "post": {
+                "description": "Returns a generic response for unknown and already-verified accounts.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Resend a signup email verification code",
+                "parameters": [
+                    {
+                        "description": "Account email",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.ResendEmailVerificationRequestBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.SimpleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {}
+                    },
+                    "429": {
+                        "description": "Send limit or cooldown reached",
+                        "schema": {}
+                    },
+                    "503": {
+                        "description": "Email delivery unavailable",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/email-verifications/verify": {
+            "post": {
+                "description": "Consumes a six-digit email verification code. Verification does not create a session.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Verify a signup email",
+                "parameters": [
+                    {
+                        "description": "Email and verification code",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/types.VerifyEmailRequestBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.SimpleResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request or code",
+                        "schema": {}
+                    },
+                    "403": {
+                        "description": "Expired, consumed, or locked code",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/invitations": {
             "get": {
                 "description": "Get paginated list of invitations for the current organization with sorting support",
@@ -1260,8 +1695,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Success message",
+                    "202": {
+                        "description": "Verification code sent",
                         "schema": {
                             "$ref": "#/definitions/types.SimpleResponse"
                         }
@@ -1276,6 +1711,10 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal server error",
+                        "schema": {}
+                    },
+                    "503": {
+                        "description": "Email delivery unavailable",
                         "schema": {}
                     }
                 }
@@ -2032,6 +2471,126 @@ const docTemplate = `{
                 }
             }
         },
+        "actions.PricingFeature": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
+        "actions.PricingLimit": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "period": {
+                    "description": "Period is \"month\" for allowances that reset, \"total\" for standing caps.",
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                }
+            }
+        },
+        "actions.PricingPage": {
+            "type": "object",
+            "properties": {
+                "available": {
+                    "description": "Available is false when billing is disabled for this deployment, in which\ncase the pricing page should not be rendered at all.",
+                    "type": "boolean"
+                },
+                "currencies": {
+                    "description": "Currencies is every code the organization may actually buy in, sorted. A\ncurrency offered by only some plans is excluded, since a switcher that\nblanks one column is worse than not offering it.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "currency": {
+                    "description": "Currency is the ISO-4217 code the page should display by default,\nresolved from the organization's country unless explicitly requested.",
+                    "type": "string"
+                },
+                "currency_locked": {
+                    "description": "CurrencyLocked is true once the organization has billed and the provider\nhas pinned it to a single currency. Currencies then holds only that one\nand the frontend should hide the switcher rather than offer a choice that\nwould fail at checkout.",
+                    "type": "boolean"
+                },
+                "features": {
+                    "description": "Features is every capability in the catalog, ordered for display.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/actions.PricingFeature"
+                    }
+                },
+                "limits": {
+                    "description": "Limits is every quota and cap in the catalog, ordered for display.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/actions.PricingLimit"
+                    }
+                },
+                "plans": {
+                    "description": "Plans is one entry per tier, cheapest first.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/actions.PricingPlan"
+                    }
+                },
+                "trial_period_days": {
+                    "description": "TrialPeriodDays is the trial Checkout grants to a new subscription. Zero\nmeans no trial is available.",
+                    "type": "integer"
+                }
+            }
+        },
+        "actions.PricingPlan": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "features": {
+                    "description": "Features lists the capability keys this tier includes. Keys absent from\nthis list but present in PricingPage.Features are not included.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "highlight": {
+                    "type": "boolean"
+                },
+                "limits": {
+                    "description": "Limits maps a limit key to its value for this tier. -1 means unlimited.\nA key missing here is not offered at all on this tier.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pricing": {
+                    "description": "Pricing is keyed by billing interval, \"month\" and/or \"year\".",
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/subscriptions.PriceDetail"
+                    }
+                },
+                "tier": {
+                    "type": "string"
+                }
+            }
+        },
         "actions.UserListResponse": {
             "type": "object",
             "properties": {
@@ -2272,6 +2831,42 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.checkoutRequestBody": {
+            "type": "object",
+            "properties": {
+                "cancel_url": {
+                    "type": "string"
+                },
+                "currency": {
+                    "description": "Currency is the ISO-4217 code to charge in. Must be one the price offers,\nas listed by GET /billing/plans. Empty uses the price's default.",
+                    "type": "string"
+                },
+                "price_id": {
+                    "description": "PriceID identifies the plan, as listed by the catalog endpoint.",
+                    "type": "string"
+                },
+                "quantity": {
+                    "description": "Quantity is the number of licences to buy. Defaults to 1.",
+                    "type": "integer"
+                },
+                "success_url": {
+                    "description": "SuccessURL and CancelURL are paths on the configured UI origin. Absolute\nURLs pointing elsewhere are rejected and replaced with defaults.",
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.portalRequestBody": {
+            "type": "object",
+            "properties": {
+                "flow": {
+                    "description": "Flow deep-links to one task: \"cancel\", \"update_plan\" or \"payment_method\".\nEmpty opens the portal home, which also lists past invoices.",
+                    "type": "string"
+                },
+                "return_url": {
+                    "type": "string"
+                }
+            }
+        },
         "controllers.webAuthnLoginRequest": {
             "type": "object",
             "properties": {
@@ -2313,6 +2908,15 @@ const docTemplate = `{
         "models.EmailVerification": {
             "type": "object",
             "properties": {
+                "codeDigest": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "consumedAt": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "string"
                 },
@@ -2325,17 +2929,26 @@ const docTemplate = `{
                 "expiresAt": {
                     "type": "string"
                 },
+                "failedAttempts": {
+                    "type": "integer"
+                },
                 "id": {
                     "type": "integer"
                 },
-                "token": {
+                "lastSentAt": {
+                    "type": "string"
+                },
+                "sendCount": {
+                    "type": "integer"
+                },
+                "sendWindowAt": {
                     "type": "string"
                 },
                 "updatedAt": {
                     "type": "string"
                 },
                 "userID": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -2426,6 +3039,7 @@ const docTemplate = `{
                     "minLength": 5
                 },
                 "country": {
+                    "description": "Country is an ISO-3166 alpha-2 code, stored upper-case. The billing\nlayer maps it to a currency; see subscriptions.CurrencyConfig.",
                     "type": "string"
                 },
                 "latitude": {
@@ -2731,7 +3345,83 @@ const docTemplate = `{
         },
         "protocol.AuthenticationExtensions": {
             "type": "object",
-            "additionalProperties": {}
+            "properties": {
+                "appid": {
+                    "description": "AppID is the FIDO AppID Extension input. Authentication only.",
+                    "type": "string"
+                },
+                "appidExclude": {
+                    "description": "AppIDExclude is the FIDO AppID Exclusion Extension input. Registration only.",
+                    "type": "string"
+                },
+                "credBlob": {
+                    "description": "CredBlob is the blob to store with the credential. Registration only.",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "credProps": {
+                    "description": "CredProps requests the Credential Properties Extension. Registration only.",
+                    "type": "boolean"
+                },
+                "credentialProtectionPolicy": {
+                    "description": "CredentialProtectionPolicy is the CTAP credProtect policy. Registration only.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/protocol.CredentialProtectionPolicy"
+                        }
+                    ]
+                },
+                "enforceCredentialProtectionPolicy": {
+                    "description": "EnforceCredentialProtectionPolicy requires the credProtect policy is honoured. Registration only.",
+                    "type": "boolean"
+                },
+                "getCredBlob": {
+                    "description": "GetCredBlob requests the blob stored with the credential. Authentication only.",
+                    "type": "boolean"
+                },
+                "hmacCreateSecret": {
+                    "description": "HMACCreateSecret requests provisioning of the CTAP hmac-secret. Registration only.",
+                    "type": "boolean"
+                },
+                "hmacGetSecret": {
+                    "description": "HMACGetSecret requests evaluation of the CTAP hmac-secret. Authentication only.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/protocol.HMACGetSecretInputs"
+                        }
+                    ]
+                },
+                "largeBlob": {
+                    "description": "LargeBlob is the Large blob storage Extension input.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/protocol.LargeBlobInputs"
+                        }
+                    ]
+                },
+                "minPinLength": {
+                    "description": "MinPinLength requests the authenticator minimum PIN length. Registration only.",
+                    "type": "boolean"
+                },
+                "prf": {
+                    "description": "PRF is the Pseudo-random function Extension input. It is a pointer because an empty dictionary is a\nmeaningful input for this extension and only this extension: a Relying Party sends \"prf\":{} at registration\nto ask whether the pseudo-random function is available for the credential being created, and the client\nanswers with the 'enabled' output. A value type combined with omitzero cannot express the difference between\nan absent member and a member present but empty, so a non-nil pointer to a zero value is what carries the\nbare availability probe.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/protocol.PRFInputs"
+                        }
+                    ]
+                },
+                "remoteClientDataJSON": {
+                    "description": "RemoteClientDataJSON is the Remote Client Data JSON Extension input. This member is set by a remote desktop\nweb client and a Relying Party should not normally set it. See [ExtensionRemoteClientDataJSON], which records\nthat this extension is not yet ratified.",
+                    "type": "string"
+                },
+                "uvm": {
+                    "description": "UVM requests the user verification methods used for the operation.",
+                    "type": "boolean"
+                }
+            }
         },
         "protocol.AuthenticatorAttachment": {
             "type": "string",
@@ -2888,6 +3578,19 @@ const docTemplate = `{
                 }
             }
         },
+        "protocol.CredentialProtectionPolicy": {
+            "type": "string",
+            "enum": [
+                "userVerificationOptional",
+                "userVerificationOptionalWithCredentialIDList",
+                "userVerificationRequired"
+            ],
+            "x-enum-varnames": [
+                "CredentialProtectionPolicyUserVerificationOptional",
+                "CredentialProtectionPolicyUserVerificationOptionalWithCredentialIDList",
+                "CredentialProtectionPolicyUserVerificationRequired"
+            ]
+        },
         "protocol.CredentialType": {
             "type": "string",
             "enum": [
@@ -2896,6 +3599,82 @@ const docTemplate = `{
             "x-enum-varnames": [
                 "PublicKeyCredentialType"
             ]
+        },
+        "protocol.HMACGetSecretInputs": {
+            "type": "object",
+            "properties": {
+                "salt1": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "salt2": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "protocol.LargeBlobInputs": {
+            "type": "object",
+            "properties": {
+                "read": {
+                    "type": "boolean"
+                },
+                "support": {
+                    "$ref": "#/definitions/protocol.LargeBlobSupport"
+                },
+                "write": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "protocol.LargeBlobSupport": {
+            "type": "string",
+            "enum": [
+                "required",
+                "preferred"
+            ],
+            "x-enum-varnames": [
+                "LargeBlobSupportRequired",
+                "LargeBlobSupportPreferred"
+            ]
+        },
+        "protocol.PRFInputs": {
+            "type": "object",
+            "properties": {
+                "eval": {
+                    "$ref": "#/definitions/protocol.PRFValues"
+                },
+                "evalByCredential": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/protocol.PRFValues"
+                    }
+                }
+            }
+        },
+        "protocol.PRFValues": {
+            "type": "object",
+            "properties": {
+                "first": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "second": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
         },
         "protocol.PublicKeyCredentialCreationOptions": {
             "type": "object",
@@ -3061,6 +3840,272 @@ const docTemplate = `{
                 "VerificationDiscouraged"
             ]
         },
+        "subscriptions.Amount": {
+            "type": "object",
+            "properties": {
+                "additional_unit_amount": {
+                    "description": "AdditionalUnitAmount is what each licence beyond the first costs. Equal to\nFirstUnitAmount on a flat per-unit price.",
+                    "type": "integer"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "first_unit_amount": {
+                    "description": "FirstUnitAmount is what the first licence costs. For a graduated price\nthis is tier one; for a flat price it is the unit amount.",
+                    "type": "integer"
+                },
+                "tiered": {
+                    "description": "Tiered reports whether the price uses graduated tiers, so a pricing page\nknows whether to show \"from X\" plus a per-seat line.",
+                    "type": "boolean"
+                }
+            }
+        },
+        "subscriptions.Entitlements": {
+            "type": "object",
+            "properties": {
+                "cancel_at_period_end": {
+                    "description": "CancelAtPeriodEnd is true when any active line is set to lapse.",
+                    "type": "boolean"
+                },
+                "current_period_end": {
+                    "type": "string"
+                },
+                "current_period_start": {
+                    "description": "CurrentPeriodStart and CurrentPeriodEnd bound the earliest-renewing active\nline's billing period.",
+                    "type": "string"
+                },
+                "ended_at": {
+                    "description": "EndedAt is when access ended. Set only for the canceled and expired\nstates.",
+                    "type": "string"
+                },
+                "entitled": {
+                    "description": "Entitled reports whether the organization may use the application.",
+                    "type": "boolean"
+                },
+                "features": {
+                    "description": "Features is the union of features granted by all active lines.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "licenses": {
+                    "description": "Licenses is the total number of members the plan allows.",
+                    "type": "integer"
+                },
+                "licenses_available": {
+                    "description": "LicensesAvailable is Licenses-LicensesUsed, floored at zero.",
+                    "type": "integer"
+                },
+                "licenses_used": {
+                    "description": "LicensesUsed counts current members plus, when configured, unexpired\npending invitations.",
+                    "type": "integer"
+                },
+                "limits": {
+                    "description": "Limits is every cap and monthly quota the active lines grant, keyed by\nlimit key. A key absent here is not offered on the current plan.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/subscriptions.LimitGrant"
+                    }
+                },
+                "managed_externally": {
+                    "description": "ManagedExternally is false when subscriptions are disabled, telling the\nfrontend to hide billing UI entirely.",
+                    "type": "boolean"
+                },
+                "org_id": {
+                    "type": "string"
+                },
+                "over_limit": {
+                    "description": "OverLimit is true when more licences are consumed than the plan allows,\nwhich happens after a downgrade. Existing members keep working; adding\nmore is blocked.",
+                    "type": "boolean"
+                },
+                "plans": {
+                    "description": "Plans describes each active line for display.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/subscriptions.PlanSummary"
+                    }
+                },
+                "resolved_at": {
+                    "description": "ResolvedAt is when this snapshot was computed, so a caller holding a\ncached copy can judge its age.",
+                    "type": "string"
+                },
+                "state": {
+                    "description": "State is the provider-neutral lifecycle state. Branch on this rather than\nStatus.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/subscriptions.State"
+                        }
+                    ]
+                },
+                "status": {
+                    "description": "Status is the provider's raw status for the most relevant line\n(\"active\", \"trialing\", \"past_due\", \"canceled\", ...), or \"none\" when the\norganization has never held a subscription. Kept for display.",
+                    "type": "string"
+                },
+                "trial_ends_at": {
+                    "description": "TrialEndsAt is when the current trial converts to paid. Set only while\ntrialing.",
+                    "type": "string"
+                }
+            }
+        },
+        "subscriptions.Invoice": {
+            "type": "object",
+            "properties": {
+                "amount_paid": {
+                    "type": "integer"
+                },
+                "created": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "hosted_url": {
+                    "description": "HostedURL is the provider-hosted invoice page.",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "pdf_url": {
+                    "description": "PDFURL downloads the invoice.",
+                    "type": "string"
+                },
+                "period_end": {
+                    "type": "string"
+                },
+                "period_start": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Status is the provider's raw status: paid, open, draft, void, uncollectible.",
+                    "type": "string"
+                },
+                "total": {
+                    "description": "Total and AmountPaid are in the currency's smallest unit.",
+                    "type": "integer"
+                }
+            }
+        },
+        "subscriptions.LimitGrant": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "$ref": "#/definitions/subscriptions.LimitKind"
+                },
+                "limit": {
+                    "description": "Limit is the allowance, or Unlimited.",
+                    "type": "integer"
+                },
+                "period_end": {
+                    "type": "string"
+                },
+                "period_start": {
+                    "description": "PeriodStart and PeriodEnd bound the window a monthly quota is counted\nover, as [start, end). They are unset for caps.",
+                    "type": "string"
+                }
+            }
+        },
+        "subscriptions.LimitKind": {
+            "type": "string",
+            "enum": [
+                "cap",
+                "monthly_quota"
+            ],
+            "x-enum-varnames": [
+                "LimitKindCap",
+                "LimitKindMonthlyQuota"
+            ]
+        },
+        "subscriptions.PlanSummary": {
+            "type": "object",
+            "properties": {
+                "cancel_at_period_end": {
+                    "type": "boolean"
+                },
+                "current_period_end": {
+                    "type": "string"
+                },
+                "licenses": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price_id": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tier": {
+                    "type": "string"
+                }
+            }
+        },
+        "subscriptions.PriceDetail": {
+            "type": "object",
+            "properties": {
+                "amounts": {
+                    "description": "Amounts is keyed by lower-case ISO-4217 code.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/subscriptions.Amount"
+                    }
+                },
+                "default_currency": {
+                    "description": "DefaultCurrency is what the provider charges when none is requested.",
+                    "type": "string"
+                },
+                "interval": {
+                    "description": "Interval is \"month\" or \"year\".",
+                    "type": "string"
+                },
+                "price_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "subscriptions.RedirectSession": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "ID is the provider's session identifier, useful for logging.",
+                    "type": "string"
+                },
+                "url": {
+                    "description": "URL is the destination the frontend must redirect to.",
+                    "type": "string"
+                }
+            }
+        },
+        "subscriptions.State": {
+            "type": "string",
+            "enum": [
+                "not_managed",
+                "none",
+                "trialing",
+                "active",
+                "past_due",
+                "canceled",
+                "expired"
+            ],
+            "x-enum-varnames": [
+                "StateNotManaged",
+                "StateNone",
+                "StateTrialing",
+                "StateActive",
+                "StatePastDue",
+                "StateCanceled",
+                "StateExpired"
+            ]
+        },
         "types.AuthorizeResponse": {
             "type": "object",
             "properties": {
@@ -3204,6 +4249,17 @@ const docTemplate = `{
                 }
             }
         },
+        "types.ResendEmailVerificationRequestBody": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
         "types.RolePermissionBindingBody": {
             "type": "object",
             "properties": {
@@ -3252,7 +4308,7 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string",
-                    "minLength": 6
+                    "minLength": 8
                 }
             }
         },
@@ -3345,6 +4401,21 @@ const docTemplate = `{
                 }
             }
         },
+        "types.VerifyEmailRequestBody": {
+            "type": "object",
+            "required": [
+                "code",
+                "email"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
         "webauthncose.COSEAlgorithmIdentifier": {
             "type": "integer",
             "enum": [
@@ -3358,9 +4429,6 @@ const docTemplate = `{
                 -38,
                 -39,
                 -47,
-                -48,
-                -49,
-                -50,
                 -51,
                 -52,
                 -257,
@@ -3379,9 +4447,6 @@ const docTemplate = `{
                 "AlgPS384",
                 "AlgPS512",
                 "AlgES256K",
-                "AlgMLDSA44",
-                "AlgMLDSA65",
-                "AlgMLDSA87",
                 "AlgESP384",
                 "AlgESP512",
                 "AlgRS256",
