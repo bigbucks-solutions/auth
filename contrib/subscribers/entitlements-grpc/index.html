@@ -1,0 +1,1393 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../stripe/billing-frontend/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Entitlements over gRPC - Auth Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../css/neoteroi-mkdocs.css">
+    
+      <link rel="stylesheet" href="../../../css/extras.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="673AB7" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#entitlements-over-grpc" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Auth Docs" class="md-header__button md-logo" aria-label="Auth Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Auth Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Entitlements over gRPC
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="673AB7" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="673AB7" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../usage/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Usage
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../rest_api/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  REST API
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../stripe/" class="md-tabs__link">
+          
+  
+  
+  Contrib
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Auth Docs" class="md-nav__button md-logo" aria-label="Auth Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Auth Docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../rest_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contrib
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contrib
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_1" id="__nav_4_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Subscribers
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Subscribers
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_1_1" id="__nav_4_1_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stripe
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Stripe
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stripe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stripe/billing-frontend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Billing frontend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Entitlements over gRPC
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Entitlements over gRPC
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#connecting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connecting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Connecting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authentication
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rpcs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RPCs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RPCs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#states" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        States
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limits
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#applying-the-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Applying the rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Applying the rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shared-test-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shared test cases
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-go" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example (Go)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caching-and-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caching and failures
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regenerating-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regenerating code
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="entitlements-over-grpc">Entitlements over gRPC</h1>
+<p>Other backend services use the <code>Entitlements</code> gRPC service to read an
+organization's subscription state, plan features, licences and limits, and then
+apply their own business rules. The auth service answers from its local billing
+projection, so calls never reach Stripe.</p>
+<p>The service returns <strong>read-only snapshots</strong>. There is no "check" RPC: the calling
+service owns the usage counts, so it compares them with the snapshot itself using
+the <a href="#applying-the-rules">rules below</a>.</p>
+<p>The contract is <code>grpc-auth/entitlements.proto</code> (proto package
+<code>entitlements.v1</code>). Generate a client from it in your service's language.</p>
+<h2 id="connecting">Connecting</h2>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Environment variable</th>
+<th>Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>grpcAddress</code></td>
+<td><code>GRPC_ADDRESS</code></td>
+<td><code>127.0.0.1:8080</code></td>
+<td>Listen address. The default is reachable only from the same host; use <code>0.0.0.0:8080</code> in a container.</td>
+</tr>
+<tr>
+<td><code>grpcServiceKeys</code></td>
+<td><code>GRPC_SERVICE_KEYS</code></td>
+<td>none</td>
+<td>Keys for service callers, as <code>name=key,other=key</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>The server does not terminate TLS, and service keys and user tokens are bearer
+credentials. Expose the port only on a private network, or behind a mesh or proxy
+that provides TLS.</p>
+<h3 id="authentication">Authentication</h3>
+<p>Send one of these as gRPC metadata:</p>
+<table>
+<thead>
+<tr>
+<th>Metadata</th>
+<th>Caller</th>
+<th>May query</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>x-service-key: &lt;key&gt;</code></td>
+<td>A backend service with no user in context</td>
+<td>Any organization</td>
+</tr>
+<tr>
+<td><code>authorization: &lt;user JWT&gt;</code></td>
+<td>A user, forwarded by a service acting for them</td>
+<td>Only organizations the user belongs to</td>
+</tr>
+</tbody>
+</table>
+<p>Generate one key per service, at least 32 characters:</p>
+<div class="highlight"><pre><span></span><code>openssl<span class="w"> </span>rand<span class="w"> </span>-base64<span class="w"> </span><span class="m">48</span>
+</code></pre></div>
+<p>Only SHA-256 digests of keys are held, and they are compared in constant time.
+Service keys are accepted only by the <code>Entitlements</code> service; the <code>Auth</code> service
+still requires a user token. To rotate a key, add the new key under a second
+name, deploy the calling service with it, then remove the old entry.</p>
+<h2 id="rpcs">RPCs</h2>
+<table>
+<thead>
+<tr>
+<th>RPC</th>
+<th>Use it to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GetEntitlements</code></td>
+<td>Read the full snapshot for one organization. Cache it.</td>
+</tr>
+<tr>
+<td><code>BatchGetEntitlements</code></td>
+<td>Read up to 100 organizations at once, for background jobs. Service keys only.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="states">States</h3>
+<p>Branch on <code>state</code>. <code>provider_status</code> is Stripe's raw vocabulary, for display only.</p>
+<table>
+<thead>
+<tr>
+<th><code>state</code></th>
+<th><code>entitled</code></th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NOT_MANAGED</code></td>
+<td>true</td>
+<td>Billing is disabled in this deployment. Apply no limits.</td>
+</tr>
+<tr>
+<td><code>NONE</code></td>
+<td>false</td>
+<td>Never subscribed, or the first payment never completed.</td>
+</tr>
+<tr>
+<td><code>TRIALING</code></td>
+<td>true</td>
+<td>Trial running; <code>trial_ends_at</code> is set.</td>
+</tr>
+<tr>
+<td><code>ACTIVE</code></td>
+<td>true</td>
+<td>Paid and current.</td>
+</tr>
+<tr>
+<td><code>PAST_DUE</code></td>
+<td>true</td>
+<td>A renewal payment failed and is being retried. Keep working.</td>
+</tr>
+<tr>
+<td><code>CANCELED</code></td>
+<td>false</td>
+<td>Cancelled; <code>ended_at</code> is set.</td>
+</tr>
+<tr>
+<td><code>EXPIRED</code></td>
+<td>false</td>
+<td>Lapsed for another reason (unpaid, paused, not renewed); <code>ended_at</code> is set.</td>
+</tr>
+</tbody>
+</table>
+<p>A period that ends without a renewal being observed keeps granting for
+<code>periodEndGraceHours</code> (48 by default), so a delayed webhook never locks out a
+paying organization.</p>
+<h3 id="limits">Limits</h3>
+<p><code>limits</code> holds every limit key the plan grants. A key missing from the map is not
+offered on the plan at all, which is different from a limit of zero.</p>
+<table>
+<thead>
+<tr>
+<th><code>kind</code></th>
+<th>What you count</th>
+<th>Resets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CAP</code></td>
+<td>Records currently stored, such as SKUs</td>
+<td>Never; deleting a record frees capacity</td>
+</tr>
+<tr>
+<td><code>MONTHLY_QUOTA</code></td>
+<td>Records created within <code>[period_start, period_end)</code>, such as invoices</td>
+<td>Monthly, on the subscription's billing-cycle day</td>
+</tr>
+</tbody>
+</table>
+<p>Monthly quotas reset monthly on yearly plans too. Always take the window from
+the snapshot rather than computing calendar months. When several subscription
+lines grant the same key, their allowances add up, and <code>unlimited</code> on any line
+wins. When <code>unlimited</code> is true, <code>limit</code> is zero and carries no meaning.</p>
+<h2 id="applying-the-rules">Applying the rules</h2>
+<p>Every client must implement these rules exactly, so that all services make the
+same decision from the same snapshot.</p>
+<p><strong>Feature</strong> <code>feature</code> is allowed when, checked in order:</p>
+<ol>
+<li><code>managed</code> is false → <strong>allow</strong>.</li>
+<li><code>entitled</code> is false → <strong>deny</strong>, reason <code>not_entitled</code>.</li>
+<li><code>feature</code> is not in <code>features</code> → <strong>deny</strong>, reason <code>feature_not_in_plan</code>.</li>
+<li>Otherwise → <strong>allow</strong>.</li>
+</ol>
+<p><strong>Limit</strong> for creating <code>requested</code> more of <code>key</code>, given <code>used</code> counted by the
+caller, checked in order (treat a negative <code>used</code> or <code>requested</code> as 0):</p>
+<ol>
+<li><code>managed</code> is false → <strong>allow</strong>.</li>
+<li><code>entitled</code> is false → <strong>deny</strong>, reason <code>not_entitled</code>.</li>
+<li><code>key</code> is not in <code>limits</code> → <strong>deny</strong>, reason <code>limit_not_in_plan</code>.</li>
+<li><code>unlimited</code> is true → <strong>allow</strong>.</li>
+<li><code>used + requested &lt;= limit</code> → <strong>allow</strong>; otherwise <strong>deny</strong>, reason
+   <code>limit_exceeded</code>.</li>
+</ol>
+<p><strong>Enforcement mode.</strong> When <code>enforced</code> is false (observe mode), evaluate the rules
+as above. If the result is a denial, log the reason and <strong>allow</strong> anyway. This
+matches what the auth service's own REST checks do in observe mode, and lets you
+measure the impact of a limit before enforcing it.</p>
+<h3 id="shared-test-cases">Shared test cases</h3>
+<p>Clients in every language should pass this table.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th><code>managed</code></th>
+<th><code>enforced</code></th>
+<th><code>entitled</code></th>
+<th><code>limits[key]</code></th>
+<th><code>used</code></th>
+<th><code>requested</code></th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>false</td>
+<td>false</td>
+<td>true</td>
+<td>missing</td>
+<td>10⁹</td>
+<td>1</td>
+<td>allow</td>
+</tr>
+<tr>
+<td>2</td>
+<td>true</td>
+<td>true</td>
+<td>false</td>
+<td>100</td>
+<td>0</td>
+<td>1</td>
+<td>deny <code>not_entitled</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>true</td>
+<td>true</td>
+<td>true</td>
+<td>missing</td>
+<td>0</td>
+<td>1</td>
+<td>deny <code>limit_not_in_plan</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>true</td>
+<td>true</td>
+<td>true</td>
+<td>unlimited</td>
+<td>10⁹</td>
+<td>1</td>
+<td>allow</td>
+</tr>
+<tr>
+<td>5</td>
+<td>true</td>
+<td>true</td>
+<td>true</td>
+<td>100</td>
+<td>99</td>
+<td>1</td>
+<td>allow</td>
+</tr>
+<tr>
+<td>6</td>
+<td>true</td>
+<td>true</td>
+<td>true</td>
+<td>100</td>
+<td>100</td>
+<td>1</td>
+<td>deny <code>limit_exceeded</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>true</td>
+<td>true</td>
+<td>true</td>
+<td>100</td>
+<td>150</td>
+<td>0</td>
+<td>deny <code>limit_exceeded</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td>true</td>
+<td>true</td>
+<td>true</td>
+<td>100</td>
+<td>−5</td>
+<td>100</td>
+<td>allow (used treated as 0)</td>
+</tr>
+<tr>
+<td>9</td>
+<td>true</td>
+<td>false</td>
+<td>true</td>
+<td>100</td>
+<td>100</td>
+<td>1</td>
+<td>allow, log <code>limit_exceeded</code></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th><code>managed</code></th>
+<th><code>enforced</code></th>
+<th><code>entitled</code></th>
+<th><code>features</code></th>
+<th>Feature</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>false</td>
+<td>false</td>
+<td>true</td>
+<td><code>[]</code></td>
+<td><code>reports</code></td>
+<td>allow</td>
+</tr>
+<tr>
+<td>2</td>
+<td>true</td>
+<td>true</td>
+<td>false</td>
+<td><code>[reports]</code></td>
+<td><code>reports</code></td>
+<td>deny <code>not_entitled</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>true</td>
+<td>true</td>
+<td>true</td>
+<td><code>[cloud]</code></td>
+<td><code>reports</code></td>
+<td>deny <code>feature_not_in_plan</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>true</td>
+<td>true</td>
+<td>true</td>
+<td><code>[reports]</code></td>
+<td><code>reports</code></td>
+<td>allow</td>
+</tr>
+<tr>
+<td>5</td>
+<td>true</td>
+<td>false</td>
+<td>true</td>
+<td><code>[cloud]</code></td>
+<td><code>reports</code></td>
+<td>allow, log <code>feature_not_in_plan</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-go">Example (Go)</h3>
+<div class="highlight"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">Decision</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">Allowed</span><span class="w"> </span><span class="kt">bool</span>
+<span class="w">    </span><span class="nx">Reason</span><span class="w">  </span><span class="kt">string</span><span class="w"> </span><span class="c1">// empty when the rules allow</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">CheckLimit</span><span class="p">(</span><span class="nx">snapshot</span><span class="w"> </span><span class="o">*</span><span class="nx">authpb</span><span class="p">.</span><span class="nx">OrgEntitlements</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">used</span><span class="p">,</span><span class="w"> </span><span class="nx">requested</span><span class="w"> </span><span class="kt">int64</span><span class="p">)</span><span class="w"> </span><span class="nx">Decision</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">decision</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">evaluateLimit</span><span class="p">(</span><span class="nx">snapshot</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nb">max</span><span class="p">(</span><span class="nx">used</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="nb">max</span><span class="p">(</span><span class="nx">requested</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">!</span><span class="nx">decision</span><span class="p">.</span><span class="nx">Allowed</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">!</span><span class="nx">snapshot</span><span class="p">.</span><span class="nx">Enforced</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;entitlements: would deny %s for org %s: %s&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">snapshot</span><span class="p">.</span><span class="nx">OrgId</span><span class="p">,</span><span class="w"> </span><span class="nx">decision</span><span class="p">.</span><span class="nx">Reason</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">decision</span><span class="p">.</span><span class="nx">Allowed</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">decision</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">evaluateLimit</span><span class="p">(</span><span class="nx">snapshot</span><span class="w"> </span><span class="o">*</span><span class="nx">authpb</span><span class="p">.</span><span class="nx">OrgEntitlements</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">used</span><span class="p">,</span><span class="w"> </span><span class="nx">requested</span><span class="w"> </span><span class="kt">int64</span><span class="p">)</span><span class="w"> </span><span class="nx">Decision</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="nx">limit</span><span class="p">,</span><span class="w"> </span><span class="nx">offered</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">snapshot</span><span class="p">.</span><span class="nx">Limits</span><span class="p">[</span><span class="nx">key</span><span class="p">];</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="p">!</span><span class="nx">snapshot</span><span class="p">.</span><span class="nx">Managed</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">Decision</span><span class="p">{</span><span class="nx">Allowed</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="p">!</span><span class="nx">snapshot</span><span class="p">.</span><span class="nx">Entitled</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">Decision</span><span class="p">{</span><span class="nx">Reason</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;not_entitled&quot;</span><span class="p">}</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="p">!</span><span class="nx">offered</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">Decision</span><span class="p">{</span><span class="nx">Reason</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;limit_not_in_plan&quot;</span><span class="p">}</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="nx">limit</span><span class="p">.</span><span class="nx">Unlimited</span><span class="p">,</span><span class="w"> </span><span class="nx">used</span><span class="o">+</span><span class="nx">requested</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="nx">limit</span><span class="p">.</span><span class="nx">Limit</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">Decision</span><span class="p">{</span><span class="nx">Allowed</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
+<span class="w">    </span><span class="k">default</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">Decision</span><span class="p">{</span><span class="nx">Reason</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;limit_exceeded&quot;</span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>For a monthly quota, count within the snapshot's window before deciding:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">snapshot</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">cache</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">orgID</span><span class="p">)</span><span class="w"> </span><span class="c1">// GetEntitlements, cached briefly</span>
+<span class="k">if</span><span class="w"> </span><span class="nx">quota</span><span class="p">,</span><span class="w"> </span><span class="nx">offered</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">snapshot</span><span class="p">.</span><span class="nx">Limits</span><span class="p">[</span><span class="s">&quot;invoices&quot;</span><span class="p">];</span><span class="w"> </span><span class="nx">offered</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">!</span><span class="nx">quota</span><span class="p">.</span><span class="nx">Unlimited</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">used</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">countInvoices</span><span class="p">(</span><span class="nx">orgID</span><span class="p">,</span><span class="w"> </span><span class="nx">quota</span><span class="p">.</span><span class="nx">PeriodStart</span><span class="p">.</span><span class="nx">AsTime</span><span class="p">(),</span><span class="w"> </span><span class="nx">quota</span><span class="p">.</span><span class="nx">PeriodEnd</span><span class="p">.</span><span class="nx">AsTime</span><span class="p">())</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">decision</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">CheckLimit</span><span class="p">(</span><span class="nx">snapshot</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;invoices&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">used</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w"> </span><span class="p">!</span><span class="nx">decision</span><span class="p">.</span><span class="nx">Allowed</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">planLimitError</span><span class="p">(</span><span class="nx">decision</span><span class="p">.</span><span class="nx">Reason</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Skip counting when the key is unlimited or not offered; the rules decide both
+without a count. When the key is not offered, still call <code>CheckLimit</code> so the
+denial and its reason are consistent.</p>
+<p>These checks take no locks, so two concurrent creates can both pass with one unit
+left. Where an exact cap matters, re-count inside the transaction that creates
+the record, or accept a small overshoot.</p>
+<h2 id="caching-and-failures">Caching and failures</h2>
+<ul>
+<li>Cache a snapshot per organization for 30–60 seconds; <code>resolved_at</code> tells you
+  its age. A plan change reaches you within that window.</li>
+<li>Resolve at most once per request, not once per record.</li>
+<li>Use a short deadline, such as 500 ms.</li>
+<li>On <code>UNAVAILABLE</code> or <code>DEADLINE_EXCEEDED</code>, keep using the last snapshot for a few
+  minutes. Once it is too old, decide per operation whether to fail open or
+  closed; blocking reads during a billing outage is rarely right.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>gRPC code</th>
+<th>Cause</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>UNAUTHENTICATED</code></td>
+<td>Missing, unknown or invalid key or token.</td>
+</tr>
+<tr>
+<td><code>PERMISSION_DENIED</code></td>
+<td>User not a member of <code>org_id</code>, a service key on an <code>Auth</code> RPC, or a user calling <code>BatchGetEntitlements</code>.</td>
+</tr>
+<tr>
+<td><code>INVALID_ARGUMENT</code></td>
+<td>Missing <code>org_id</code>; empty, blank or more than 100 batch ids.</td>
+</tr>
+<tr>
+<td><code>INTERNAL</code></td>
+<td>The auth service could not read billing state. Retry, or use a cached snapshot.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="regenerating-code">Regenerating code</h2>
+<p>Inside this repository:</p>
+<div class="highlight"><pre><span></span><code>protoc<span class="w"> </span>--go_out<span class="o">=</span>.<span class="w"> </span>--go-grpc_out<span class="o">=</span>.<span class="w"> </span>grpc-auth/entitlements.proto
+</code></pre></div>
+<p>In another Go module, override the import path when generating:</p>
+<div class="highlight"><pre><span></span><code>protoc<span class="w"> </span>--go_out<span class="o">=</span>.<span class="w"> </span>--go_opt<span class="o">=</span>Mgrpc-auth/entitlements.proto<span class="o">=</span>example.com/yourservice/authpb<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--go-grpc_out<span class="o">=</span>.<span class="w"> </span>--go-grpc_opt<span class="o">=</span>Mgrpc-auth/entitlements.proto<span class="o">=</span>example.com/yourservice/authpb<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>grpc-auth/entitlements.proto
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "toc.integrate", "navigation.top"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
