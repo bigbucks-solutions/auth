@@ -20,6 +20,10 @@ type Organization struct {
 	// Country is an ISO-3166 alpha-2 code, stored upper-case. The billing
 	// layer maps it to a currency; see subscriptions.CurrencyConfig.
 	Country            string `validate:"omitempty,iso3166_1_alpha2"`
+	// Currency is the organization's default ISO-4217 code, stored upper-case.
+	// Documents are raised in it; prices held in another currency are converted
+	// at a rate the user supplies when the document is created.
+	Currency           string  `gorm:"size:3" validate:"omitempty,iso4217"`
 	Latitude           float64
 	Longitude          float64
 	LogoURL            string
@@ -41,6 +45,7 @@ type OrganizationDetails struct {
 	PostalCode         string    `json:"postal_code"`
 	State              string    `json:"state"`
 	Country            string    `json:"country"`
+	Currency           string    `json:"currency"`
 	Latitude           float64   `json:"latitude"`
 	Longitude          float64   `json:"longitude"`
 	LogoURL            string    `json:"logo_url"`
@@ -71,6 +76,26 @@ func IsOrganizationMember(orgID, username string) (bool, error) {
 	return count > 0, err
 }
 
+// IsOrganizationOwner reports whether the user holds the organization's
+// system "Owner" role — the bar for changing organization settings.
+func IsOrganizationOwner(orgID, username string) (bool, error) {
+	var count int64
+	err := Dbcon.Model(&UserOrgRole{}).
+		Joins("JOIN users ON users.id = user_org_roles.user_id").
+		Joins("JOIN roles ON roles.id = user_org_roles.role_id").
+		Where("user_org_roles.org_id = ? AND users.username = ? AND roles.name = ? AND roles.is_system_role = ?",
+			orgID, username, "Owner", true).
+		Count(&count).Error
+	return count > 0, err
+}
+
+// UpdateOrganizationFields persists an explicit set of columns. A map is used
+// so that clearing a value (empty string, 0) is written rather than skipped,
+// which gorm's struct-based Updates would silently do.
+func UpdateOrganizationFields(orgID string, fields map[string]any) error {
+	return Dbcon.Model(&Organization{}).Where("id = ?", orgID).Updates(fields).Error
+}
+
 // Details converts an Organization to its complete API representation.
 func (org Organization) Details() OrganizationDetails {
 	return OrganizationDetails{
@@ -81,6 +106,7 @@ func (org Organization) Details() OrganizationDetails {
 		PostalCode:         org.PostalCode,
 		State:              org.State,
 		Country:            org.Country,
+		Currency:           org.Currency,
 		Latitude:           org.Latitude,
 		Longitude:          org.Longitude,
 		LogoURL:            org.LogoURL,

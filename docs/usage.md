@@ -72,6 +72,8 @@ Create `config.docker.json`:
 
   Set `EMAIL_VERIFICATION_SECRET` to an independently generated secret of at least 32 characters. The service refuses to start without it. Generate one with `openssl rand -base64 32`; do not commit the generated value. Optional policy overrides are `EMAIL_VERIFICATION_TTL_SECONDS`, `EMAIL_VERIFICATION_MAX_ATTEMPTS`, `EMAIL_VERIFICATION_RESEND_SECONDS`, and `EMAIL_VERIFICATION_HOURLY_SEND_LIMIT`.
 
+  **Client addresses behind a proxy.** The send limit, sessions and sign-in audit records are keyed on the client's address. Behind a reverse proxy — and for every call the web app makes from its server actions — the TCP peer is one of your own processes, so without help every user would share a single rate-limit bucket. `TRUSTED_PROXIES` lists the peers (IPs or CIDRs, comma-separated) whose `X-Forwarded-For` / `X-Real-IP` are believed. The chain is read right to left, skipping trusted hops, and the first untrusted address is the client, so a caller cannot spoof one by sending its own header. Unset, it trusts loopback and the private ranges (`127.0.0.0/8, ::1, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, fc00::/7`), which covers nginx on the same host and a Docker gateway. `none` trusts nothing. Every hop between the browser and auth must either append to `X-Forwarded-For` (nginx: `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for`) or be listed here; a hop that reaches auth over a public address — the web app calling auth by its public hostname on the same host, say — must be listed by that address.
+
 ## GitHub Actions Configuration
 
 The repository uses GitHub Actions. Store the HMAC secret as an Actions secret and store non-sensitive policy values as Actions variables.
@@ -94,6 +96,7 @@ Create these repository variables only when overriding the application defaults:
 | `EMAIL_VERIFICATION_MAX_ATTEMPTS` | `5` | Failed attempts allowed per code |
 | `EMAIL_VERIFICATION_RESEND_SECONDS` | `60` | Minimum delay before resend |
 | `EMAIL_VERIFICATION_HOURLY_SEND_LIMIT` | `5` | Maximum sends per email and source IP per hour |
+| `TRUSTED_PROXIES` | loopback + private ranges | Proxies whose `X-Forwarded-For` is believed; see above |
 
 The secret must remain stable across deployments. Changing it invalidates every outstanding verification code.
 

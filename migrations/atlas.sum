@@ -1,4 +1,4 @@
-h1:w93ULEEVMMno8fpjqBe3x/vOdkVZotF4If4LwTY6KN8=
+h1:8PK94YQiIarkLYSSU9nWBhYtWdTQIQh9Y1BXrf8WAQY=
 20260104120111_initial.up.sql h1:oLwuc55MsZ78g8NzWEYfEojH7G2bBu7T4PXE/3VX0pA=
 20260213144039_webauthn.up.sql h1:UKxng5Ye0c2mJItxofdTT5KYkXQpPCHN2r+31MMleRs=
 20260213173113_webauthn-flag.up.sql h1:Bk2cUd9FVkdouex/Pdi/RVCTRt+qXy4YaN3s5kU2abw=
@@ -8,3 +8,4 @@ h1:w93ULEEVMMno8fpjqBe3x/vOdkVZotF4If4LwTY6KN8=
 20260825090000_email_verification.up.sql h1:X3VYJUkxu4Pczbm7FLAHf1l+37cEkvChpe39bVJAfIw=
 20260905095716_subscriptions.up.sql h1:sQN8M2rzbgdyExYJ+Bul2P4lNOJYTbDUDKzdeOlAfjU=
 20260913120000_subscription_lifecycle.up.sql h1:MBMF76nsQjlOJsN1XJwC+eX+WGi9i6rp4ZW3269e5Ak=
+20260919231359_organization_currency.up.sql h1:cK+UH9rYcOVA3kq3hRcerhdpTQXlnjaqH0bpqBYZQoM=

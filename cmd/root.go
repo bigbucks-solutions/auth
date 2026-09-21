@@ -278,6 +278,7 @@ func bindEnvironmentVariables() error {
 	bindings := map[string][]string{
 		"uiHost":                           {"UI_HOST", "UIHOST"},
 		"googleClientIDs":                  {"GOOGLE_CLIENT_IDS"},
+		"trustedProxies":                   {"TRUSTED_PROXIES"},
 		"emailVerificationSecret":          {"EMAIL_VERIFICATION_SECRET"},
 		"emailVerificationTTLSeconds":      {"EMAIL_VERIFICATION_TTL_SECONDS"},
 		"emailVerificationMaxAttempts":     {"EMAIL_VERIFICATION_MAX_ATTEMPTS"},

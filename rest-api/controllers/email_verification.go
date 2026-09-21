@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"bigbucks/solution/auth/actions"
+	"bigbucks/solution/auth/clientip"
 	"bigbucks/solution/auth/request_context"
 	"bigbucks/solution/auth/rest-api/controllers/types"
 	"bigbucks/solution/auth/validations"
@@ -80,7 +81,7 @@ func ResendEmailVerification(w http.ResponseWriter, r *http.Request, _ *request_
 		return http.StatusBadRequest, err
 	}
 
-	if err := emailVerificationService.Resend(requestBody.Email, directClientIP(r)); err != nil {
+	if err := emailVerificationService.Resend(requestBody.Email, clientIP(r)); err != nil {
 		switch {
 		case errors.Is(err, actions.ErrVerificationCooldown), errors.Is(err, actions.ErrVerificationLocked):
 			w.Header().Set("Retry-After", "60")
@@ -103,10 +104,24 @@ func decodeVerificationRequest(w http.ResponseWriter, r *http.Request, destinati
 	return decoder.Decode(destination)
 }
 
-func directClientIP(r *http.Request) string {
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err == nil {
+// clientIPs resolves the address a request really came from; set at startup
+// from the trustedProxies setting.
+var clientIPs *clientip.Resolver
+
+func SetClientIPResolver(resolver *clientip.Resolver) {
+	clientIPs = resolver
+}
+
+// clientIP is the caller's address as far as rate limits and audit records
+// are concerned. Behind the web app and nginx the TCP peer is always one of
+// our own processes, so using it would put every user in the same bucket.
+func clientIP(r *http.Request) string {
+	if clientIPs == nil {
+		host, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			return r.RemoteAddr
+		}
 		return host
 	}
-	return r.RemoteAddr
+	return clientIPs.FromRequest(r)
 }

@@ -2,6 +2,7 @@ package rest
 
 import (
 	"bigbucks/solution/auth/actions"
+	"bigbucks/solution/auth/clientip"
 	"bigbucks/solution/auth/emailservice"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
@@ -51,6 +52,12 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	}
 	ctr.SetEmailVerificationService(emailVerificationService)
 
+	clientIPs, err := clientip.New(settings.TrustedProxies)
+	if err != nil {
+		return nil, err
+	}
+	ctr.SetClientIPResolver(clientIPs)
+
 	// The subscription layer is optional. A disabled configuration yields a
 	// module with no provider and an allow-all policy, so nothing below changes
 	// behaviour until it is switched on.
@@ -87,6 +94,7 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	api.Handle("/signout", makeHandler(ctr.SignOut, WithAuth(true))).Methods("POST")
 	api.Handle("/organizations", makeHandler(ctr.CreateOrg, WithAuth(true))).Methods("POST")
 	api.Handle("/organizations/{org_id}", makeHandler(ctr.GetOrg, WithAuth(true))).Methods("GET")
+	api.Handle("/organizations/{org_id}", makeHandler(ctr.UpdateOrg, WithAuth(true))).Methods("PUT")
 
 	// sessions
 	api.Handle("/sessions/users/{user_id}", makeHandler(ctr.Sessions, WithAuth(true), WithPermission("session:all:read"))).Methods("GET")

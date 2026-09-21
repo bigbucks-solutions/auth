@@ -29,6 +29,7 @@ type Organization struct {
 	PostalCode         string  `json:"postal_code"`
 	State              string  `json:"state"`
 	Country            string  `json:"country" validate:"omitempty,iso3166_1_alpha2"`
+	Currency           string  `json:"currency" validate:"omitempty,iso4217"`
 	Latitude           float64 `json:"latitude"`
 	Longitude          float64 `json:"longitude"`
 	LogoURL            string  `json:"logo_url"`
@@ -36,6 +37,16 @@ type Organization struct {
 	WebsiteURL         string  `json:"website" validate:"omitempty,url"`
 	CompanyDescription string  `json:"description" validate:"omitempty,max=500"`
 }
+
+// errCountryImmutable is returned when an update tries to move an
+// organization to a different country. Subscription plans are priced per
+// country (see subscriptions.CurrencyConfig), so the country an organization
+// is billed under is fixed at creation; changing it is a billing operation,
+// not a settings edit.
+var errCountryImmutable = errors.New(
+	"organization country cannot be changed because plans are priced per country; " +
+		"contact support to move the organization",
+)
 
 // allowedLogoExts lists image extensions accepted for logo file uploads.
 var allowedLogoExts = map[string]bool{
@@ -58,6 +69,7 @@ func OrganizationFromRequest(r *http.Request) (*Organization, int, error) {
 		org.PostalCode = r.FormValue("postal_code")
 		org.State = r.FormValue("state")
 		org.Country = r.FormValue("country")
+		org.Currency = r.FormValue("currency")
 		org.WebsiteURL = r.FormValue("website")
 		org.CompanyDescription = r.FormValue("description")
 		org.LogoURL = r.FormValue("logo_url")
@@ -107,6 +119,8 @@ func OrganizationFromRequest(r *http.Request) (*Organization, int, error) {
 	// mapping looks the stored value up the same way, so normalise once here
 	// rather than letting "ae" fail validation or "  AE " miss the map.
 	org.Country = strings.ToUpper(strings.TrimSpace(org.Country))
+	// iso4217 matches upper-case codes exactly, same as the country validator.
+	org.Currency = strings.ToUpper(strings.TrimSpace(org.Currency))
 	return &org, 0, nil
 }
 
@@ -125,6 +139,7 @@ func CreateOrganisationFromAuthenticatedUser(org *Organization, userName string,
 	orgModel.ContactEmail = org.ContactEmail
 	orgModel.ContactNumber = org.ContactNumber
 	orgModel.Country = org.Country
+	orgModel.Currency = org.Currency
 	orgModel.Latitude = org.Latitude
 	orgModel.Longitude = org.Longitude
 	orgModel.LogoURL = org.LogoURL
@@ -194,4 +209,82 @@ func ownerPermissionResources(extraResources []string) []string {
 		addResource(resource)
 	}
 	return resources
+}
+
+// countryMoveRefused reports whether an update would move an organization to a
+// different country, which is not allowed: plans are priced per country, so the
+// country an organization is billed under is fixed once it has one.
+//
+// Both operands are already upper-cased and trimmed by OrganizationFromRequest.
+// Two cases are deliberately *not* a move:
+//
+//   - a blank request value — the settings form PUTs the whole record, and a
+//     client that omits the field is not asking for anything;
+//   - a blank stored value — an organization created before the field was
+//     collected can still have it filled in.
+func countryMoveRefused(existing, requested string) bool {
+	return existing != "" && requested != "" && requested != existing
+}
+
+// UpdateOrganization replaces the organization's editable details.
+//
+// Only the organization's Owner may change settings. The whole record is
+// supplied (the request shares CreateOrg's validation, so name and contact
+// email stay required); membership and role links are never touched here.
+//
+// Country is deliberately not editable — see errCountryImmutable.
+func UpdateOrganization(orgID string, org *Organization, userName string) (*models.OrganizationDetails, int, error) {
+	existing, err := models.GetOrganization(orgID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, http.StatusNotFound, errors.New("organization not found")
+		}
+		return nil, http.StatusInternalServerError, err
+	}
+	isOwner, err := models.IsOrganizationOwner(orgID, userName)
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+	if !isOwner {
+		return nil, http.StatusForbidden, errors.New("only the organization owner can change its settings")
+	}
+	if err := valids.Validate.Struct(org); err != nil {
+		return nil, http.StatusBadRequest, err
+	}
+	if countryMoveRefused(existing.Country, org.Country) {
+		return nil, http.StatusConflict, errCountryImmutable
+	}
+	fields := map[string]any{
+		"name":                org.Name,
+		"contact_email":       org.ContactEmail,
+		"contact_number":      org.ContactNumber,
+		"address":             org.Address,
+		"city":                org.City,
+		"postal_code":         org.PostalCode,
+		"state":               org.State,
+		"currency":            org.Currency,
+		"latitude":            org.Latitude,
+		"longitude":           org.Longitude,
+		"tax_id":              org.TaxID,
+		"website_url":         org.WebsiteURL,
+		"company_description": org.CompanyDescription,
+	}
+	// Written only when it was blank — countryMoveRefused rejects a change, so
+	// this can fill the field in but never move it.
+	if existing.Country == "" && org.Country != "" {
+		fields["country"] = org.Country
+	}
+	// A logo is only replaced when a new one was uploaded or a URL supplied.
+	if org.LogoURL != "" {
+		fields["logo_url"] = org.LogoURL
+	}
+	if err := models.UpdateOrganizationFields(orgID, fields); err != nil {
+		return nil, http.StatusConflict, err
+	}
+	updated, err := models.GetOrganization(orgID)
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+	details := updated.Details()
+	return &details, 0, nil
 }

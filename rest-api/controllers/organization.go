@@ -102,3 +102,33 @@ func CreateOrg(w http.ResponseWriter, r *http.Request, ctx *request_context.Cont
 	}
 	return 0, nil
 }
+
+// UpdateOrg godoc
+//
+//	@Summary		Update an organization's details and settings
+//	@Description	Replaces the organization's editable details, including its default currency. Owner only.
+//	@Tags			organization
+//	@Accept			json
+//	@Produce		json
+//	@Param			org_id	path		string	true	"Organization id"
+//	@Success		200		{object}	models.OrganizationDetails
+//	@Failure		400		{object}	error	"Validation failed"
+//	@Failure		403		{object}	error	"Not the organization owner"
+//	@Failure		404		{object}	error	"Organization not found"
+//	@Router			/organizations/{org_id} [put]
+func UpdateOrg(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
+	orgID := mux.Vars(r)["org_id"]
+	org, code, err := actions.OrganizationFromRequest(r)
+	if err != nil {
+		return code, err
+	}
+	updated, code, err := actions.UpdateOrganization(orgID, org, ctx.Auth.User.Username)
+	if err != nil {
+		return code, err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(updated); err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return 0, nil
+}

@@ -94,6 +94,11 @@ type Settings struct {
 	WebAuthnRPName                   string   `json:"webAuthnRPName" mapstructure:"webAuthnRPName"`
 	WebAuthnOrigins                  []string `json:"webAuthnOrigins" mapstructure:"webAuthnOrigins"`
 	SubscriptionsConfigFile          string   `json:"subscriptionsConfigFile" mapstructure:"subscriptionsConfigFile"`
+	// TrustedProxies are the peers whose X-Forwarded-For / X-Real-IP headers
+	// are believed when working out a client's address (see package clientip):
+	// IPs or CIDRs. Empty means loopback and the private ranges; "none" trusts
+	// nothing. Supply it through TRUSTED_PROXIES as a comma-separated list.
+	TrustedProxies []string `json:"trustedProxies" mapstructure:"trustedProxies"`
 	// GRPCAddress is where the gRPC server listens. The default,
 	// 127.0.0.1:8080, is reachable only from the same host.
 	GRPCAddress string `json:"grpcAddress" mapstructure:"grpcAddress"`

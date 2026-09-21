@@ -189,7 +189,7 @@ func Signup(w http.ResponseWriter, r *http.Request, ctx *request_context.Context
 		},
 	}
 
-	if err := emailVerificationService.Register(&user, directClientIP(r)); err != nil {
+	if err := emailVerificationService.Register(&user, clientIP(r)); err != nil {
 		loging.Logger.Warnln("Attempt to register with existing email:")
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			return http.StatusConflict, errors.New("user with this email already exists")

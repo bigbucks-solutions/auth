@@ -64,10 +64,7 @@ func Signin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context
 		return http.StatusForbidden, errors.New("account_inactive")
 	}
 	userAgent := r.UserAgent()
-	ip := r.Header.Get("X-Forwarded-For")
-	if ip == "" {
-		ip = r.RemoteAddr
-	}
+	ip := clientIP(r)
 	// JWT expiration time (e.g., 24 hours)
 
 	sessionId, err := ctx.SessionStore.CreateSession(user.ID, user.Username, userAgent, ip, constants.SESSION_EXPIRY)
@@ -99,7 +96,7 @@ func GoogleSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 			w.WriteHeader(http.StatusUnauthorized)
 			return http.StatusUnauthorized, nil
 		}
-		sessionId, err := ctx.SessionStore.CreateSession(user.ID, user.Username, r.UserAgent(), r.RemoteAddr, constants.SESSION_EXPIRY)
+		sessionId, err := ctx.SessionStore.CreateSession(user.ID, user.Username, r.UserAgent(), clientIP(r), constants.SESSION_EXPIRY)
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
@@ -120,7 +117,7 @@ func FbSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.Conte
 	if !success {
 		return http.StatusUnauthorized, nil
 	}
-	sessionId, err := ctx.SessionStore.CreateSession(user.ID, user.Username, r.UserAgent(), r.RemoteAddr, constants.SESSION_EXPIRY)
+	sessionId, err := ctx.SessionStore.CreateSession(user.ID, user.Username, r.UserAgent(), clientIP(r), constants.SESSION_EXPIRY)
 	if err != nil {
 		loging.Logger.Error("Error creating session", err)
 		return http.StatusInternalServerError, err

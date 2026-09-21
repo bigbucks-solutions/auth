@@ -187,10 +187,7 @@ func FinishWebAuthnLogin(w http.ResponseWriter, r *http.Request, ctx *request_co
 
 	// Create session and issue JWT — same flow as password signin
 	userAgent := r.UserAgent()
-	ip := r.Header.Get("X-Forwarded-For")
-	if ip == "" {
-		ip = r.RemoteAddr
-	}
+	ip := clientIP(r)
 
 	sessionID, err := ctx.SessionStore.CreateSession(user.ID, user.Username, userAgent, ip, constants.SESSION_EXPIRY)
 	if err != nil {
