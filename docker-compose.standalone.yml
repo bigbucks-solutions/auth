@@ -43,6 +43,8 @@ services:
       EMAIL_VERIFICATION_MAX_ATTEMPTS: ${EMAIL_VERIFICATION_MAX_ATTEMPTS:-5}
       EMAIL_VERIFICATION_RESEND_SECONDS: ${EMAIL_VERIFICATION_RESEND_SECONDS:-60}
       EMAIL_VERIFICATION_HOURLY_SEND_LIMIT: ${EMAIL_VERIFICATION_HOURLY_SEND_LIMIT:-5}
+      # Proxies whose X-Forwarded-For is believed; empty = loopback + private ranges.
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
     depends_on:
       postgres:
         condition: service_healthy
