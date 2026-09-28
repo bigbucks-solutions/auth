@@ -28,7 +28,7 @@ require (
 	github.com/rs/cors v1.11.1
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
-	github.com/stripe/stripe-go/v82 v82.5.1
+	github.com/stripe/stripe-go/v86 v86.4.2
 	github.com/stripe/stripe-go/v86 v86.4.2
 	github.com/swaggo/http-swagger/v2 v2.0.2
 	github.com/swaggo/swag v1.16.6
