@@ -286,7 +286,7 @@ var _ = Describe("Roles API Tests", Ordered, func() {
 	Context("Bind Permission to Role", func() {
 		It("Should bind permission to role successfully", func() {
 			bindData := []byte(fmt.Sprintf(`{
-				"resource": "test_resource",
+				"resource": "report",
 				"scope": "org",
 				"action": "read",
 				"role_id": "%s"
@@ -304,6 +304,32 @@ var _ = Describe("Roles API Tests", Ordered, func() {
 			_ = json.Unmarshal(bodyBytes, &result)
 
 			Ω(result["message"]).Should(Equal("Permission bound successfully"))
+		})
+
+		It("Should reject a wildcard scope with 400 rather than storing a dead grant", func() {
+			bindData := []byte(fmt.Sprintf(`{
+				"resource": "billing",
+				"scope": "*",
+				"action": "read",
+				"role_id": "%s"
+			}`, roleID))
+			request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/roles/bind-permission", s.URL), bytes.NewBuffer(bindData))
+			request.Header.Set("Content-Type", "application/json")
+			request.Header.Set("X-Auth", jwt)
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
+			response, _ := c.Do(request)
+
+			Ω(response.StatusCode).Should(Equal(400))
+
+			var result map[string]interface{}
+			bodyBytes, _ := io.ReadAll(response.Body)
+			_ = json.Unmarshal(bodyBytes, &result)
+			Ω(result).Should(HaveKey("errors"))
+			Ω(result["errors"].(map[string]interface{})).Should(HaveKey("scope"))
+
+			var count int64
+			models.Dbcon.Model(&models.Permission{}).Where("resource = ? AND scope = ?", "billing", "*").Count(&count)
+			Ω(count).Should(Equal(int64(0)))
 		})
 	})
 
@@ -335,7 +361,7 @@ var _ = Describe("Roles API Tests", Ordered, func() {
 	Context("UnBind Permission", func() {
 		It("Should unbind permission from role successfully", func() {
 			unbindData := []byte(fmt.Sprintf(`{
-				"resource": "test_resource",
+				"resource": "report",
 				"scope": "org",
 				"action": "read",
 				"role_id": "%s"
