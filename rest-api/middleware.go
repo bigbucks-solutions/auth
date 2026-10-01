@@ -19,6 +19,7 @@ import (
 
 	//Load all controllers methods by deafult
 
+	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
 
@@ -129,13 +130,15 @@ func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, pe
 				return
 			}
 			ctx.Auth = &authToken
-			orgID := r.Header.Get("X-Organization-Id")
-			if orgID == "" {
-				orgID = r.PathValue("org_id")
-			}
-			ctx.CurrentOrgID = orgID
+			ctx.CurrentOrgID = requestOrgID(r)
+			orgID := ctx.CurrentOrgID
 
-			if config.requireOrgMembership && orgID != "" {
+			if config.requireOrgMembership {
+				if orgID == "" {
+					loging.Logger.Warn("No org_id found in request")
+					http.Error(_responseLogger, "Forbidden", http.StatusForbidden)
+					return
+				}
 				member, err := models.IsOrganizationMember(orgID, ctx.Auth.User.Username)
 				if err != nil {
 					loging.Logger.Errorw("organization membership check failed",
@@ -192,6 +195,26 @@ func handle(fn handleFunc, config *handlerConfig, setting *settings.Settings, pe
 
 	})
 	return http.StripPrefix(config.prefix, handler)
+}
+
+// requestOrgID is the organization a request is about.
+//
+// A route that names an organization in its path is about *that* organization,
+// so the path wins over the X-Organization-Id header: the checks below have to
+// run against the organization being acted on and not the one the client says
+// it is currently working in. Reading them the other way round let a caller
+// send their own organization in the header while naming somebody else's in the
+// path, and the permission check would answer for the wrong tenant.
+//
+// The path value is read through mux.Vars because gorilla/mux does not populate
+// r.PathValue — the r.PathValue("org_id") fallback this replaces always came
+// back empty, which left `/organizations/{org_id}` with no organization to
+// check at all unless the client happened to send the header too.
+func requestOrgID(r *http.Request) string {
+	if orgID := strings.TrimSpace(mux.Vars(r)["org_id"]); orgID != "" {
+		return orgID
+	}
+	return strings.TrimSpace(r.Header.Get("X-Organization-Id"))
 }
 
 func accessLogQueryParams(values url.Values) map[string][]string {

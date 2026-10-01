@@ -16,6 +16,9 @@ import (
 // GetOrg returns complete organization details to an authenticated member of
 // that organization.
 //
+// Membership is enforced by the route's WithOrgMembership, against the org_id in
+// the path — so a member of one organization cannot read another's.
+//
 //	@Summary	Get organization details
 //	@Description	Gets complete organization details, including its users. The authenticated user must belong to the requested organization.
 //	@Tags		auth
@@ -37,14 +40,6 @@ func GetOrg(w http.ResponseWriter, r *http.Request, ctx *request_context.Context
 	}
 	if err != nil {
 		return http.StatusInternalServerError, err
-	}
-
-	isMember, err := models.IsOrganizationMember(orgID, ctx.Auth.User.Username)
-	if err != nil {
-		return http.StatusInternalServerError, err
-	}
-	if !isMember {
-		return http.StatusForbidden, errors.New("forbidden")
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -106,14 +101,14 @@ func CreateOrg(w http.ResponseWriter, r *http.Request, ctx *request_context.Cont
 // UpdateOrg godoc
 //
 //	@Summary		Update an organization's details and settings
-//	@Description	Replaces the organization's editable details, including its default currency. Owner only.
+//	@Description	Replaces the organization's editable details, including its default currency. Requires organization:*:update, which an Owner holds by default and may delegate.
 //	@Tags			organization
 //	@Accept			json
 //	@Produce		json
 //	@Param			org_id	path		string	true	"Organization id"
 //	@Success		200		{object}	models.OrganizationDetails
 //	@Failure		400		{object}	error	"Validation failed"
-//	@Failure		403		{object}	error	"Not the organization owner"
+//	@Failure		403		{object}	error	"Caller may not change this organization's settings"
 //	@Failure		404		{object}	error	"Organization not found"
 //	@Router			/organizations/{org_id} [put]
 func UpdateOrg(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
@@ -122,7 +117,7 @@ func UpdateOrg(w http.ResponseWriter, r *http.Request, ctx *request_context.Cont
 	if err != nil {
 		return code, err
 	}
-	updated, code, err := actions.UpdateOrganization(orgID, org, ctx.Auth.User.Username)
+	updated, code, err := actions.UpdateOrganization(orgID, org)
 	if err != nil {
 		return code, err
 	}
