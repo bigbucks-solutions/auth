@@ -113,36 +113,12 @@ func (pc *PermissionCache) CheckPermission(ctx *context.Context, resource, scope
 	scopes := pc.expandScope(scope)
 	actions := pc.getTransientActions(strings.ToUpper(action))
 
-	// Collect org-specific role names once, uppercased
-	orgRoles := make([]string, 0, len(userInfo.Roles))
-	orgRoleOriginal := make(map[string]string, len(userInfo.Roles)) // UPPER -> original
-	for _, role := range userInfo.Roles {
-		if role.OrgID == orgID {
-			upper := strings.ToUpper(role.Role)
-			orgRoles = append(orgRoles, upper)
-			orgRoleOriginal[upper] = role.Role
-		}
+	orgRoles, orgRoleOriginal, err := pc.orgRoleNames(*ctx, orgID, userInfo)
+	if err != nil {
+		return false, err
 	}
 	if len(orgRoles) == 0 {
-		var currentRoles []string
-		err := models.Dbcon.WithContext(*ctx).
-			Model(&models.Role{}).
-			Select("roles.name").
-			Joins("INNER JOIN user_org_roles uor ON uor.role_id = roles.id AND uor.org_id = roles.org_id").
-			Joins("INNER JOIN users u ON u.id = uor.user_id").
-			Where("roles.org_id = ? AND u.username = ?", orgID, userInfo.Username).
-			Pluck("roles.name", &currentRoles).Error
-		if err != nil {
-			return false, err
-		}
-		for _, roleName := range currentRoles {
-			upper := strings.ToUpper(roleName)
-			orgRoles = append(orgRoles, upper)
-			orgRoleOriginal[upper] = roleName
-		}
-		if len(orgRoles) == 0 {
-			return false, nil
-		}
+		return false, nil
 	}
 
 	// Phase 1: Pipelined Redis check — batch all SIsMember calls into one round-trip
@@ -394,4 +370,102 @@ func (pc *PermissionCache) updateRoleNameInCache(ctx context.Context, orgID, old
 		zap.Int("keysUpdated", len(keysToUpdate)))
 
 	return nil
+}
+
+// orgRoleNames resolves the roles a user holds in one organization, returning
+// them upper-cased for cache and query comparisons alongside a map back to the
+// names as stored.
+//
+// The session token carries the user's roles, so the common path costs nothing.
+// A token issued before the user was given a role in this organization carries
+// none for it, which is indistinguishable here from holding none at all — so a
+// token that knows of no role is checked against the database rather than
+// taken as a refusal.
+func (pc *PermissionCache) orgRoleNames(ctx context.Context, orgID string, userInfo *settings.UserInfo) ([]string, map[string]string, error) {
+	upperNames := make([]string, 0, len(userInfo.Roles))
+	original := make(map[string]string, len(userInfo.Roles)) // UPPER -> as stored
+	for _, role := range userInfo.Roles {
+		if role.OrgID == orgID {
+			upper := strings.ToUpper(role.Role)
+			upperNames = append(upperNames, upper)
+			original[upper] = role.Role
+		}
+	}
+	if len(upperNames) > 0 {
+		return upperNames, original, nil
+	}
+
+	var storedNames []string
+	if err := models.Dbcon.WithContext(ctx).
+		Model(&models.Role{}).
+		Select("roles.name").
+		Joins("INNER JOIN user_org_roles uor ON uor.role_id = roles.id AND uor.org_id = roles.org_id").
+		Joins("INNER JOIN users u ON u.id = uor.user_id").
+		Where("roles.org_id = ? AND u.username = ?", orgID, userInfo.Username).
+		Pluck("roles.name", &storedNames).Error; err != nil {
+		return nil, nil, err
+	}
+	for _, roleName := range storedNames {
+		upper := strings.ToUpper(roleName)
+		upperNames = append(upperNames, upper)
+		original[upper] = roleName
+	}
+	return upperNames, original, nil
+}
+
+// PermissionTriple is one grant, in the lower-case form permissions are
+// written in everywhere outside the cache keys.
+type PermissionTriple struct {
+	Resource string `json:"resource"`
+	Scope    string `json:"scope"`
+	Action   string `json:"action"`
+}
+
+// ListEffectivePermissions returns every grant a user holds in one
+// organization, together with the roles those grants come from.
+//
+// This answers "what may this user do?", where CheckPermission answers "may
+// this user do X?" — a client that has to decide what to put on a screen would
+// otherwise ask the second question dozens of times per render.
+//
+// The grants are the ones enforcement reads: locked and hidden bindings are
+// included, because `is_hidden` governs whether a binding is offered for
+// editing, not whether it takes effect, and a caller told otherwise would hide
+// a control the server would then allow. Scope and action implications are
+// deliberately NOT expanded here — the list stays the grants as held, and the
+// caller expands them the way CheckPermission does.
+//
+// Uncached on purpose: it is one indexed join, it is called once per page a
+// client renders rather than once per request the client makes, and leaving it
+// uncached means a role change takes effect on the next page load instead of
+// when a cache entry expires.
+func (pc *PermissionCache) ListEffectivePermissions(ctx context.Context, orgID string, userInfo *settings.UserInfo) ([]PermissionTriple, []string, error) {
+	upperRoles, original, err := pc.orgRoleNames(ctx, orgID, userInfo)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	roleNames := make([]string, 0, len(upperRoles))
+	for _, upper := range upperRoles {
+		roleNames = append(roleNames, original[upper])
+	}
+	if len(upperRoles) == 0 {
+		return []PermissionTriple{}, roleNames, nil
+	}
+
+	var rows []PermissionTriple
+	if err := models.Dbcon.WithContext(ctx).
+		Model(&models.Permission{}).
+		Distinct("LOWER(permissions.resource) as resource, LOWER(permissions.scope) as scope, LOWER(permissions.action) as action").
+		Joins("INNER JOIN role_permissions rp ON rp.permission_id = permissions.id").
+		Joins("INNER JOIN roles r ON r.id = rp.role_id").
+		Where("r.org_id = ? AND UPPER(r.name) IN ?", orgID, upperRoles).
+		Scan(&rows).Error; err != nil {
+		return nil, nil, err
+	}
+	if rows == nil {
+		rows = []PermissionTriple{}
+	}
+
+	return rows, roleNames, nil
 }

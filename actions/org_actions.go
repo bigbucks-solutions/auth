@@ -178,7 +178,7 @@ func CreateOrganisationFromAuthenticatedUser(org *Organization, userName string,
 	if err != nil {
 		return nil, http.StatusConflict, err
 	}
-	for _, resource := range ownerPermissionResources(settings.Current.ExtraPermResources) {
+	for _, resource := range OwnerPermissionResources(settings.Current.ExtraPermResources) {
 		if err := AssignSystemPermissionToRole(ownerRole.ID, orgModel.ID, resource, string(constants.ScopeAll), string(constants.ActionWrite), false, perm_cache, ctx); err != nil {
 			return nil, http.StatusConflict, err
 		}
@@ -188,7 +188,10 @@ func CreateOrganisationFromAuthenticatedUser(org *Organization, userName string,
 	return &details, 0, nil
 }
 
-func ownerPermissionResources(extraResources []string) []string {
+// OwnerPermissionResources is every resource an Owner role is given, which is
+// the standard list plus whatever this deployment adds through
+// `extraPermResources`.
+func OwnerPermissionResources(extraResources []string) []string {
 	resources := make([]string, 0, len(constants.Resources)+len(extraResources))
 	seen := make(map[string]struct{}, cap(resources))
 	addResource := func(resource string) {
@@ -228,25 +231,24 @@ func countryMoveRefused(existing, requested string) bool {
 
 // UpdateOrganization replaces the organization's editable details.
 //
-// Only the organization's Owner may change settings. The whole record is
-// supplied (the request shares CreateOrg's validation, so name and contact
-// email stay required); membership and role links are never touched here.
+// Who may call this is decided by the route, which declares
+// `organization:*:update` — not here. This used to ask IsOrganizationOwner
+// itself, which made the rule invisible in the route table and owner-only when
+// the roles around it had become granular; an Owner still passes, through the
+// organization:all:write their role is seeded with.
+//
+// The whole record is supplied (the request shares CreateOrg's validation, so
+// name and contact email stay required); membership and role links are never
+// touched here.
 //
 // Country is deliberately not editable — see errCountryImmutable.
-func UpdateOrganization(orgID string, org *Organization, userName string) (*models.OrganizationDetails, int, error) {
+func UpdateOrganization(orgID string, org *Organization) (*models.OrganizationDetails, int, error) {
 	existing, err := models.GetOrganization(orgID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, http.StatusNotFound, errors.New("organization not found")
 		}
 		return nil, http.StatusInternalServerError, err
-	}
-	isOwner, err := models.IsOrganizationOwner(orgID, userName)
-	if err != nil {
-		return nil, http.StatusInternalServerError, err
-	}
-	if !isOwner {
-		return nil, http.StatusForbidden, errors.New("only the organization owner can change its settings")
 	}
 	if err := valids.Validate.Struct(org); err != nil {
 		return nil, http.StatusBadRequest, err
