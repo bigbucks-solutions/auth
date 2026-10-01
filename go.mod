@@ -30,6 +30,7 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/stripe/stripe-go/v82 v82.5.1
 	github.com/stripe/stripe-go/v86 v86.4.2
+	github.com/stripe/stripe-go/v87 v87.0.0
 	github.com/swaggo/http-swagger/v2 v2.0.2
 	github.com/swaggo/swag v1.16.6
 	go.uber.org/zap v1.28.0
