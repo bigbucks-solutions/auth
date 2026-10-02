@@ -20,9 +20,15 @@ jobs:
         go-version: 1.26
 
     - name: Install Tools
+      # Both of these are major-versioned module paths, and the major is part
+      # of the path: `@latest` on `golangci-lint/cmd/...` resolves to the last
+      # v1 (v1.64.8, March 2025) and will never see a v2, which is why the
+      # linter stopped understanding the toolchain rather than the toolchain
+      # breaking. Pinned so a bump is a reviewable change; renovate keeps it
+      # current.
       run: |
-        go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-        go install github.com/onsi/ginkgo/ginkgo@latest
+        go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0
+        go install github.com/onsi/ginkgo/v2/ginkgo@latest
         go install golang.org/x/tools/cmd/goimports@latest
 
     - uses: actions/checkout@v7
