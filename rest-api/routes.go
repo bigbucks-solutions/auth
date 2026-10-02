@@ -93,8 +93,14 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	api.Handle("/renew", makeHandler(ctr.RenewToken, WithAuth(true))).Methods("POST")
 	api.Handle("/signout", makeHandler(ctr.SignOut, WithAuth(true))).Methods("POST")
 	api.Handle("/organizations", makeHandler(ctr.CreateOrg, WithAuth(true))).Methods("POST")
-	api.Handle("/organizations/{org_id}", makeHandler(ctr.GetOrg, WithAuth(true))).Methods("GET")
-	api.Handle("/organizations/{org_id}", makeHandler(ctr.UpdateOrg, WithAuth(true))).Methods("PUT")
+	// Reading the profile is membership, not a permission: every member needs the
+	// organization's currency and country to raise a document, so gating it on a
+	// grant would lock out every role that was not given one.
+	api.Handle("/organizations/{org_id}", makeHandler(ctr.GetOrg, WithAuth(true), WithOrgMembership())).Methods("GET")
+	// Changing it is delegatable. This was owner-only, and checked inside
+	// actions.UpdateOrganization rather than here; an Owner still holds it
+	// through the organization:all:write seeded with the role.
+	api.Handle("/organizations/{org_id}", makeHandler(ctr.UpdateOrg, WithAuth(true), WithPermission("organization:*:update"))).Methods("PUT")
 
 	// sessions
 	api.Handle("/sessions/users/{user_id}", makeHandler(ctr.Sessions, WithAuth(true), WithPermission("session:all:read"))).Methods("GET")
@@ -114,6 +120,9 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	).Methods("PUT")
 
 	api.Handle("/me", makeHandler(ctr.GetMeDetails, WithAuth(true))).Methods("GET")
+	// Reading one's own grants is not privileged: a client needs them to decide
+	// what to render, and refusing them would leave it guessing.
+	api.Handle("/me/permissions", makeHandler(ctr.GetMyPermissions, WithAuth(true), WithOrgMembership())).Methods("GET")
 	api.Handle("/user/reset", makeHandler(ctr.SendResetToken)).Methods("POST")
 	api.Handle("/user/updateprofile", makeHandler(ctr.UpdateProfile, WithAuth(true))).Methods("POST")
 	api.Handle("/user/changepassword/{token:[a-z0-9]+}", makeHandler(ctr.ChangePassword)).Methods("POST")
@@ -175,6 +184,12 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	).Methods("GET")
 	api.Handle("/billing/catalog",
 		makeHandler(ctr.GetBillingCatalog, WithAuth(true)),
+	).Methods("GET")
+	// Any member may ask whether the application is open to their organization:
+	// a client cannot render a thing without knowing, and refusing to say locks
+	// out every role that was not given billing:*:read.
+	api.Handle("/billing/entitlement",
+		makeHandler(ctr.GetOrgEntitlement, WithAuth(true), WithOrgMembership()),
 	).Methods("GET")
 	api.Handle("/billing/subscription",
 		makeHandler(ctr.GetBillingSubscription, WithAuth(true), WithPermission("billing:*:read")),

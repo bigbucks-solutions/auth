@@ -74,6 +74,49 @@ var _ = Describe("Permission Cache Advanced Tests", func() {
 		})
 	})
 
+	Context("Listing a user's own permissions", func() {
+		It("returns the grants of every role the user holds in the org", func() {
+			userInfo := &settings.UserInfo{
+				Roles: []settings.UserOrgRole{
+					{Role: "EDITOR", OrgID: TestORG},
+					{Role: "MANAGER", OrgID: TestORG},
+				},
+			}
+
+			perms, roles, err := permCache.ListEffectivePermissions(ctx, TestORG, userInfo)
+			Ω(err).Should(BeNil())
+			Ω(roles).Should(ConsistOf("EDITOR", "MANAGER"))
+			Ω(perms).Should(ConsistOf(
+				pc.PermissionTriple{Resource: "documents", Scope: "org", Action: "read"},
+				pc.PermissionTriple{Resource: "articles", Scope: "own", Action: "write"},
+			))
+		})
+
+		It("leaves out the grants of roles held in another org", func() {
+			otherOrg := ulid.Make().String()
+			userInfo := &settings.UserInfo{
+				Roles: []settings.UserOrgRole{{Role: "MANAGER", OrgID: TestORG}},
+			}
+
+			perms, roles, err := permCache.ListEffectivePermissions(ctx, otherOrg, userInfo)
+			Ω(err).Should(BeNil())
+			Ω(roles).Should(BeEmpty())
+			Ω(perms).Should(BeEmpty())
+		})
+
+		It("returns nothing, rather than failing, for a user with no role here", func() {
+			userInfo := &settings.UserInfo{
+				Username: "nobody@x.com",
+				Roles:    []settings.UserOrgRole{},
+			}
+
+			perms, roles, err := permCache.ListEffectivePermissions(ctx, TestORG, userInfo)
+			Ω(err).Should(BeNil())
+			Ω(roles).Should(BeEmpty())
+			Ω(perms).Should(BeEmpty())
+		})
+	})
+
 	Context("Multiple Role Tests", func() {
 		It("should handle permissions across multiple roles", func() {
 			userInfo := &settings.UserInfo{

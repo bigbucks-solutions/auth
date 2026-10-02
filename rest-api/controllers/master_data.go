@@ -39,7 +39,11 @@ func GetResources(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 func GetScopes(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
 	loging.Logger.Debugln("GetScopes")
 	currentScope, _ := ctx.GetCurrentScope()
-	scopes := constants.Scopes
+	// Cloned, not aliased: slices.DeleteFunc edits its argument's backing array
+	// in place, so narrowing `constants.Scopes` directly would drop "all" from
+	// the package-level list for the rest of the process — every later scope
+	// check, including the one BindPermission now makes, would reject it.
+	scopes := slices.Clone(constants.Scopes)
 	if *currentScope != constants.ScopeAll {
 		scopes = slices.DeleteFunc(scopes, func(s constants.Scope) bool {
 			return s == constants.ScopeAll

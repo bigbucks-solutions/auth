@@ -4,7 +4,10 @@ type CheckPermissionBody struct {
 	Scope    string
 	Resource string
 	Action   string
-	OrgID    int
+	// OrgID is optional and normally left out: the organization a request acts
+	// in is the one in its X-Organization-Id header, the same one enforcement
+	// reads. It is a string because organization IDs are ULIDs.
+	OrgID string
 }
 
 type CreatePermissionBody struct {

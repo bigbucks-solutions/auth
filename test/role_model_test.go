@@ -155,14 +155,14 @@ var _ = Describe("Role Model", func() {
 	Context("Bind Permission to Role", Ordered, func() {
 		It("Successfully binds permission to role", func() {
 			perm_cache := permission_cache.NewPermissionCache(settings.Current)
-			status, err := actions.BindPermission("users", "all", "read", roleID, testORG, perm_cache, context.Background())
+			status, err := actions.BindPermission("user", "all", "read", roleID, testORG, perm_cache, context.Background())
 			Ω(err).To(Succeed())
 			Ω(status).To(Equal(0))
-			Ω(perm_cache.RedisClient.SIsMember(context.Background(), fmt.Sprintf("perm:%s:USERS:ALL:READ", testORG), "ADMIN_ROLE").Val()).To(BeTrue())
+			Ω(perm_cache.RedisClient.SIsMember(context.Background(), fmt.Sprintf("perm:%s:USER:ALL:READ", testORG), "ADMIN_ROLE").Val()).To(BeTrue())
 		})
 
 		It("Fails with non-existent role", func() {
-			status, err := actions.BindPermission("users", "all", "read", "non_existent_role", testORG, permission_cache.NewPermissionCache(settings.Current), context.Background())
+			status, err := actions.BindPermission("user", "all", "read", "non_existent_role", testORG, permission_cache.NewPermissionCache(settings.Current), context.Background())
 			Ω(err).To(HaveOccurred())
 			Ω(status).To(Equal(409))
 		})

@@ -86,6 +86,68 @@ func billingPricingRequest(r *http.Request, ctx *request_context.Context) action
 	}
 }
 
+// OrgEntitlementResponse is what any member may know about their
+// organization's subscription: whether it may use the app, and what it unlocks.
+//
+// Deliberately smaller than subscriptions.Entitlements. Licence counts, the
+// purchased lines, trial and period dates and the rest are the owner's
+// business and stay behind billing:*:read on /billing/subscription.
+type OrgEntitlementResponse struct {
+	OrgID string `json:"org_id"`
+	// Entitled reports whether the organization may use the application.
+	Entitled bool `json:"entitled"`
+	// State is the provider-neutral lifecycle state, for a screen that has to
+	// say why the application is closed.
+	State string `json:"state"`
+	// Features is what the active lines unlock, which is what decides whether a
+	// client shows a feature at all.
+	Features []string `json:"features"`
+	// ManagedExternally is false when subscriptions are disabled, telling the
+	// frontend to hide billing UI entirely.
+	ManagedExternally bool `json:"managed_externally"`
+}
+
+// GetOrgEntitlement godoc
+//
+//	@Summary		Whether this organization may use the app
+//	@Description	The unprivileged half of the subscription: entitled, the lifecycle state, the features unlocked, and whether billing is managed at all. Any member of the organization may read it, because a client cannot render anything without knowing whether the application is open to them — where the licence counts, the purchased plans and the invoices on /billing/subscription need billing:*:read.
+//	@Tags			billing
+//	@Produce		json
+//	@Param			X-Auth				header	string	true	"Authorization"
+//	@Param			X-Organization-Id	header	string	true	"Organization ID"
+//	@Security		JWTAuth
+//	@Success		200	{object}	controllers.OrgEntitlementResponse
+//	@Failure		401	{object}	error
+//	@Failure		403	{object}	error	"X-Organization-Id is missing, or the caller is not a member of that organization"
+//	@Router			/billing/entitlement [get]
+func GetOrgEntitlement(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
+	if ctx.CurrentOrgID == "" {
+		return http.StatusForbidden, errors.New("organization is required")
+	}
+
+	entitlements, err := actions.OrganizationEntitlements(ctx.Context, ctx.CurrentOrgID)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	features := entitlements.Features
+	if features == nil {
+		features = []string{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(&OrgEntitlementResponse{
+		OrgID:             entitlements.OrgID,
+		Entitled:          entitlements.Entitled,
+		State:             string(entitlements.State),
+		Features:          features,
+		ManagedExternally: entitlements.ManagedExternally,
+	}); err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return 0, nil
+}
+
 // GetBillingSubscription godoc
 //
 //	@Summary		Get the current organization's subscription

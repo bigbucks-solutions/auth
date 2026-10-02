@@ -76,19 +76,6 @@ func IsOrganizationMember(orgID, username string) (bool, error) {
 	return count > 0, err
 }
 
-// IsOrganizationOwner reports whether the user holds the organization's
-// system "Owner" role — the bar for changing organization settings.
-func IsOrganizationOwner(orgID, username string) (bool, error) {
-	var count int64
-	err := Dbcon.Model(&UserOrgRole{}).
-		Joins("JOIN users ON users.id = user_org_roles.user_id").
-		Joins("JOIN roles ON roles.id = user_org_roles.role_id").
-		Where("user_org_roles.org_id = ? AND users.username = ? AND roles.name = ? AND roles.is_system_role = ?",
-			orgID, username, "Owner", true).
-		Count(&count).Error
-	return count > 0, err
-}
-
 // UpdateOrganizationFields persists an explicit set of columns. A map is used
 // so that clearing a value (empty string, 0) is written rather than skipped,
 // which gorm's struct-based Updates would silently do.

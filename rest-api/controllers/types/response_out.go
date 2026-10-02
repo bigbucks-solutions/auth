@@ -1,6 +1,9 @@
 package types
 
-import "bigbucks/solution/auth/actions/types"
+import (
+	"bigbucks/solution/auth/actions/types"
+	"bigbucks/solution/auth/permission_cache"
+)
 
 type SimpleResponse struct {
 	Message string `json:"message" example:"message"`
@@ -8,6 +11,15 @@ type SimpleResponse struct {
 
 type AuthorizeResponse struct {
 	Status bool `json:"status"`
+}
+
+// MyPermissionsResponse is what a client reads to decide what to put on a
+// screen: the grants the caller holds in one organization, as held — the
+// caller expands scope and action implications the way enforcement does.
+type MyPermissionsResponse struct {
+	OrgID       string                              `json:"orgId"`
+	Roles       []string                            `json:"roles"`
+	Permissions []permission_cache.PermissionTriple `json:"permissions"`
 }
 
 type UserInfo = types.UserInfo
