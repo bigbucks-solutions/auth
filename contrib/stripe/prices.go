@@ -65,7 +65,7 @@ func (provider *Provider) InspectPrices(ctx context.Context, priceIDs []string) 
 				expansions = configuredPriceExpansions(subscriptions.CurrencyConfig{})
 			}
 			price, err := provider.client.V1Prices.Retrieve(ctx, priceID, &stripesdk.PriceRetrieveParams{
-				Params: stripesdk.Params{Expand: expansions},
+				Expand: expansions,
 			})
 			if err != nil {
 				return nil, fmt.Errorf("retrieve price %s: %w", priceID, err)
