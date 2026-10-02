@@ -285,8 +285,14 @@ var _ = Describe("Roles API Tests", Ordered, func() {
 
 	Context("Bind Permission to Role", func() {
 		It("Should bind permission to role successfully", func() {
+			// A resource auth enforces on its own routes, so this stays about
+			// binding. The product's resources — sales, report and the rest —
+			// reach a deployment through `extraPermResources`, and a suite that
+			// does not set it does not have them; the spec named "accepts a
+			// resource this deployment adds through extraPermResources" is
+			// where that path is covered.
 			bindData := []byte(fmt.Sprintf(`{
-				"resource": "report",
+				"resource": "account",
 				"scope": "org",
 				"action": "read",
 				"role_id": "%s"
@@ -360,8 +366,9 @@ var _ = Describe("Roles API Tests", Ordered, func() {
 	})
 	Context("UnBind Permission", func() {
 		It("Should unbind permission from role successfully", func() {
+			// Matches the resource bound above.
 			unbindData := []byte(fmt.Sprintf(`{
-				"resource": "report",
+				"resource": "account",
 				"scope": "org",
 				"action": "read",
 				"role_id": "%s"
