@@ -8,7 +8,6 @@ import (
 	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/settings"
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -20,7 +19,7 @@ var syncOwnerOrgID string
 // list.
 //
 // An Owner role is seeded when its organization is created, from
-// `constants.Resources` as it stood that day. Adding a resource afterwards
+// the deployment's resource list as it stood that day. Adding one afterwards
 // leaves every organization made before it without that grant — their owners
 // cannot use the feature and cannot grant it to anyone either, since a
 // permission you do not hold is not yours to hand out.
@@ -32,7 +31,8 @@ var syncOwnerPermissionsCmd = &cobra.Command{
 	Short: "Give every Owner role the resources it is missing",
 	Long: `Write the current resource list into every organization's Owner role.
 
-Run this after adding to constants.Resources or to extraPermResources; the
+Run this after adding a resource to extraPermResources, or after a release that
+adds one auth enforces itself; the
 organizations created before that have none of the new grants. One organization
 at a time with --orgid.
 
@@ -53,10 +53,15 @@ at a time with --orgid.
 			return err
 		}
 		if len(owners) == 0 {
+			// Naming an organization that has no Owner role is a mistake worth
+			// reporting. Finding none at all is not: a deployment runs this
+			// after every migration, and an environment where nobody has
+			// signed up yet has nothing to sync and nothing wrong with it.
 			if syncOwnerOrgID != "" {
 				return fmt.Errorf("organization %s has no Owner role", syncOwnerOrgID)
 			}
-			return errors.New("no Owner role found in any organization")
+			fmt.Println("No organizations yet; nothing to sync.")
+			return nil
 		}
 
 		var failures int
