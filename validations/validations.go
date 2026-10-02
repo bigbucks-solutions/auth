@@ -3,6 +3,7 @@ package validations
 import (
 	"bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/loging"
+	"bigbucks/solution/auth/settings"
 	"encoding/json"
 	"fmt"
 	"slices"
@@ -84,8 +85,10 @@ func InitializeValidations() {
 	}
 
 	err = Validate.RegisterValidation("valid_resources", func(fl validator.FieldLevel) bool {
-		value := fl.Field().String()
-		return slices.Contains(constants.Resources, value)
+		// Read at validation time, not at registration: the deployment's own
+		// resources arrive with the config, which is loaded after this runs.
+		value := strings.ToLower(strings.TrimSpace(fl.Field().String()))
+		return slices.Contains(settings.GrantableResources(), value)
 	})
 	if err != nil {
 		loging.Logger.Error(err)

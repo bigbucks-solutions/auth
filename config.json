@@ -32,8 +32,14 @@
         "861393961889-8q3a55ad1arfnbp99og8f0fdv06ojku6.apps.googleusercontent.com"
     ],
     "extraPermResources": [
-        "inventory",
-        "billing"
+        "party",
+        "sales",
+        "purchase",
+        "payment",
+        "tax",
+        "report",
+        "journal",
+        "sales_dashboard"
     ],
     "subscriptionsConfigFile": "subscriptions.local.json"
 }

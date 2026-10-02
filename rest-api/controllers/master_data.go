@@ -5,6 +5,7 @@ import (
 	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/request_context"
+	"bigbucks/solution/auth/settings"
 	"encoding/json"
 	"net/http"
 	"slices"
@@ -22,7 +23,9 @@ func GetResources(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 	loging.Logger.Debugln("GetResources")
 
 	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(constants.Resources)
+	// The same list the bind path validates against: anything offered here has
+	// to be bindable, and nothing else should be offered.
+	err := json.NewEncoder(w).Encode(settings.GrantableResources())
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}

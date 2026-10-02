@@ -188,30 +188,12 @@ func CreateOrganisationFromAuthenticatedUser(org *Organization, userName string,
 	return &details, 0, nil
 }
 
-// OwnerPermissionResources is every resource an Owner role is given, which is
-// the standard list plus whatever this deployment adds through
-// `extraPermResources`.
+// OwnerPermissionResources is every resource an Owner role is seeded with:
+// what auth enforces on its own routes plus what this deployment adds through
+// `extraPermResources`. The list itself lives in settings, so the role screen,
+// the bind path and this agree by construction.
 func OwnerPermissionResources(extraResources []string) []string {
-	resources := make([]string, 0, len(constants.Resources)+len(extraResources))
-	seen := make(map[string]struct{}, cap(resources))
-	addResource := func(resource string) {
-		resource = strings.ToLower(strings.TrimSpace(resource))
-		if resource == "" {
-			return
-		}
-		if _, exists := seen[resource]; exists {
-			return
-		}
-		seen[resource] = struct{}{}
-		resources = append(resources, resource)
-	}
-	for _, resource := range constants.Resources {
-		addResource(resource)
-	}
-	for _, resource := range extraResources {
-		addResource(resource)
-	}
-	return resources
+	return settings.ResourcesWith(extraResources)
 }
 
 // countryMoveRefused reports whether an update would move an organization to a

@@ -19,7 +19,7 @@ var syncOwnerOrgID string
 // list.
 //
 // An Owner role is seeded when its organization is created, from
-// `constants.Resources` as it stood that day. Adding a resource afterwards
+// the deployment's resource list as it stood that day. Adding one afterwards
 // leaves every organization made before it without that grant — their owners
 // cannot use the feature and cannot grant it to anyone either, since a
 // permission you do not hold is not yours to hand out.
@@ -31,7 +31,8 @@ var syncOwnerPermissionsCmd = &cobra.Command{
 	Short: "Give every Owner role the resources it is missing",
 	Long: `Write the current resource list into every organization's Owner role.
 
-Run this after adding to constants.Resources or to extraPermResources; the
+Run this after adding a resource to extraPermResources, or after a release that
+adds one auth enforces itself; the
 organizations created before that have none of the new grants. One organization
 at a time with --orgid.
 
