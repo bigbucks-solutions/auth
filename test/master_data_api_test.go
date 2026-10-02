@@ -102,9 +102,33 @@ var _ = Describe("Master Data API Tests", Ordered, func() {
 			_ = json.Unmarshal(bodyBytes, &resources)
 
 			Ω(response.StatusCode).Should(Equal(200))
-			Ω(resources).Should(Equal(constants.Resources))
+			Ω(resources).Should(ContainElements(toAny(constants.Resources)...))
 		})
 
+		// The role screen offers what a role can be bound to. When this
+		// endpoint read the compiled-in list alone, a resource the deployment
+		// added was bindable through the API and invisible here — which is how
+		// a permission comes to be demanded by a route and offered to nobody.
+		It("Offers the resources this deployment adds as well", func() {
+			original := settings.Current.ExtraPermResources
+			settings.Current.ExtraPermResources = []string{"orders"}
+			defer func() { settings.Current.ExtraPermResources = original }()
+
+			request, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/master-data/resources", s.URL), nil)
+			request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+			request.Header.Set("X-Auth", jwt)
+			request.Header.Set("X-Organization-Id", models.SuperOrganization)
+			response, err := c.Do(request)
+			Ω(err).Should(BeNil())
+
+			bodyBytes, _ := io.ReadAll(response.Body)
+			var resources []string
+			_ = json.Unmarshal(bodyBytes, &resources)
+
+			Ω(response.StatusCode).Should(Equal(200))
+			Ω(resources).Should(ContainElement("orders"))
+			Ω(resources).Should(ContainElements(toAny(constants.Resources)...))
+		})
 	})
 
 	Context("Actions Endpoint", func() {
@@ -140,3 +164,12 @@ var _ = Describe("Master Data API Tests", Ordered, func() {
 		})
 	})
 })
+
+// toAny widens a string slice for ContainElements, which takes interfaces.
+func toAny(values []string) []any {
+	widened := make([]any, len(values))
+	for i, value := range values {
+		widened[i] = value
+	}
+	return widened
+}
