@@ -8,7 +8,6 @@ import (
 	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/settings"
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -53,10 +52,15 @@ at a time with --orgid.
 			return err
 		}
 		if len(owners) == 0 {
+			// Naming an organization that has no Owner role is a mistake worth
+			// reporting. Finding none at all is not: a deployment runs this
+			// after every migration, and an environment where nobody has
+			// signed up yet has nothing to sync and nothing wrong with it.
 			if syncOwnerOrgID != "" {
 				return fmt.Errorf("organization %s has no Owner role", syncOwnerOrgID)
 			}
-			return errors.New("no Owner role found in any organization")
+			fmt.Println("No organizations yet; nothing to sync.")
+			return nil
 		}
 
 		var failures int
