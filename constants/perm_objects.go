@@ -53,6 +53,9 @@ var Resources = []string{
 	// Enforced on PUT /organizations/{org_id}, so that changing an organization
 	// can be delegated rather than kept to the Owner role.
 	"organization",
+	// Enforced on /sso/{provider}: which domain's sign-ins join the
+	// organization, and with what role. Seeded to the Owner role.
+	"sso",
 	// Older than this split and left where it is, so a deployment that has never
 	// set extraPermResources keeps the resource its roles are already bound to.
 	"inventory",

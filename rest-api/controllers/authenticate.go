@@ -11,7 +11,7 @@ import (
 	"errors"
 	"net/http"
 
-	googleAuthIDTokenVerifier "github.com/futurenda/google-auth-id-token-verifier"
+	"bigbucks/solution/auth/actions"
 )
 
 // Struct for parsing json body login credentials
@@ -25,12 +25,6 @@ type JsonCred struct {
 type GoogleSigninCred struct {
 	IdToken     string `json:"idToken"`
 	AccessToken string `json:"accessToken"`
-}
-
-var googleIdTokenver googleAuthIDTokenVerifier.Verifier = googleAuthIDTokenVerifier.Verifier{}
-
-func init() {
-	// googleIdTokenver := googleAuthIDTokenVerifier.Verifier{}
 }
 
 // Signin godoc
@@ -89,21 +83,36 @@ func GoogleSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
-	err = googleIdTokenver.VerifyIDToken(googCred.IdToken, ctx.Settings.GoogleClientIDs)
-	if err == nil {
-		success, user, _ := oauth.GoogleAuthenticate(googCred.IdToken, googCred.AccessToken)
-		if !success {
-			w.WriteHeader(http.StatusUnauthorized)
-			return http.StatusUnauthorized, nil
-		}
-		sessionId, err := ctx.SessionStore.CreateSession(user.ID, user.Username, r.UserAgent(), clientIP(r), constants.SESSION_EXPIRY)
-		if err != nil {
-			return http.StatusInternalServerError, err
-		}
-		return printToken(w, r, &user, sessionId)
+	identity, err := oauth.VerifyGoogleIDToken(r.Context(), googCred.IdToken, ctx.Settings.GoogleClientIDs)
+	if err != nil {
+		return http.StatusBadRequest, err
 	}
-	return http.StatusBadRequest, err
-	// return printToken(w, r, &user, &ctx.Settings)
+	// The account is named after the address, so an address Google has not
+	// verified could be anyone's.
+	if identity.Email == "" || !identity.EmailVerified {
+		return http.StatusUnauthorized, errors.New("email_verification_required")
+	}
+	user, err := oauth.GoogleAuthenticate(identity)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	if user.Status == constants.UserStatusInactive {
+		return http.StatusForbidden, errors.New("account_inactive")
+	}
+	// A Workspace account joins the organization that set up sign-on for its
+	// domain. Failing to join is not failing to sign in.
+	if _, err := actions.JoinOrgBySSODomain(r.Context(), &user, models.SSOProviderGoogle, identity.HostedDomain); err != nil {
+		loging.Logger.Errorw("sso join failed", "user_id", user.ID, "error", err.Error())
+	}
+	// The token carries the user's organizations, the one just joined among them.
+	if err := models.Dbcon.Preload("Roles").First(&user, "id = ?", user.ID).Error; err != nil {
+		return http.StatusInternalServerError, err
+	}
+	sessionId, err := ctx.SessionStore.CreateSession(user.ID, user.Username, r.UserAgent(), clientIP(r), constants.SESSION_EXPIRY)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return printToken(w, r, &user, sessionId)
 }
 
 func FbSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {

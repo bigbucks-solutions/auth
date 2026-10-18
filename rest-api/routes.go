@@ -102,6 +102,11 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	// through the organization:all:write seeded with the role.
 	api.Handle("/organizations/{org_id}", makeHandler(ctr.UpdateOrg, WithAuth(true), WithPermission("organization:*:update"))).Methods("PUT")
 
+	// Single sign-on: the domain whose sign-ins join the organization.
+	api.Handle("/sso/{provider}", makeHandler(ctr.GetOrgSSO, WithAuth(true), WithPermission("sso:*:read"))).Methods("GET")
+	api.Handle("/sso/{provider}", makeHandler(ctr.SaveOrgSSO, WithAuth(true), WithPermission("sso:*:write"))).Methods("PUT")
+	api.Handle("/sso/{provider}", makeHandler(ctr.DeleteOrgSSO, WithAuth(true), WithPermission("sso:*:delete"))).Methods("DELETE")
+
 	// sessions
 	api.Handle("/sessions/users/{user_id}", makeHandler(ctr.Sessions, WithAuth(true), WithPermission("session:all:read"))).Methods("GET")
 	api.Handle("/sessions/{session_id}", makeHandler(ctr.RevokeSession, WithAuth(true), WithPermission("session:all:delete"))).Methods("DELETE")
