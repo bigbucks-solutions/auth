@@ -10,15 +10,29 @@ import (
 // @gmail.com account carries no `hd`, so it can never match.
 const SSOProviderGoogle = "google"
 
+// SSOProviderMicrosoft is Microsoft Entra ID (work and school accounts),
+// matched on the `tid` claim: the tenant — the organization's directory — the
+// account belongs to. For it, OrgSSODomain.Domain holds the tenant ID.
+const SSOProviderMicrosoft = "microsoft"
+
+// SSOProviders are the providers an organization can set up, in the order a
+// screen lists them.
+var SSOProviders = []string{SSOProviderGoogle, SSOProviderMicrosoft}
+
 // AccountEmail is the address an account is reached at.
 //
-// A Google sign-in names its account "<address>+google", keeping it apart
-// from a password account on the same address; the address is the one Google
-// verified. That suffixed name is not an address — Stripe refuses it as a
+// A Google or Microsoft sign-in names its account "<address>+<provider>",
+// keeping it apart from a password account on the same address; the address
+// is the one the provider vouches for. That suffixed name is not an address — Stripe refuses it as a
 // customer email, and it never equals the address an invitation was sent to.
 // Profile.Email is not used instead: the user can change it.
 func AccountEmail(username string) string {
-	return strings.TrimSuffix(username, "+"+SSOProviderGoogle)
+	for _, provider := range SSOProviders {
+		if trimmed, ok := strings.CutSuffix(username, "+"+provider); ok {
+			return trimmed
+		}
+	}
+	return username
 }
 
 // OrgSSODomain lets an organization take in the people of a domain.

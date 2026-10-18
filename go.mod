@@ -6,6 +6,7 @@ require (
 	ariga.io/atlas-provider-gorm v0.6.1
 	github.com/dchest/authcookie v0.0.0-20190824115100-f900d2294c8e
 	github.com/fxamacker/cbor/v2 v2.9.6
+	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/go-playground/locales v0.14.2
 	github.com/go-playground/universal-translator v0.18.2
 	github.com/go-playground/validator/v10 v10.30.5
@@ -78,7 +79,6 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v1.3.3 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.15 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect

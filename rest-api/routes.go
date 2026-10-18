@@ -89,6 +89,7 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	api.Handle("/email-verifications/verify", makeHandler(ctr.VerifyEmail)).Methods("POST")
 	api.Handle("/email-verifications/resend", makeHandler(ctr.ResendEmailVerification)).Methods("POST")
 	api.Handle("/signin/google", makeHandler(ctr.GoogleSignin)).Methods("POST")
+	api.Handle("/signin/microsoft", makeHandler(ctr.MicrosoftSignin)).Methods("POST")
 	api.Handle("/signin/facebook", makeHandler(ctr.FbSignin)).Methods("POST")
 	api.Handle("/renew", makeHandler(ctr.RenewToken, WithAuth(true))).Methods("POST")
 	api.Handle("/signout", makeHandler(ctr.SignOut, WithAuth(true))).Methods("POST")
@@ -103,6 +104,7 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	api.Handle("/organizations/{org_id}", makeHandler(ctr.UpdateOrg, WithAuth(true), WithPermission("organization:*:update"))).Methods("PUT")
 
 	// Single sign-on: the domain whose sign-ins join the organization.
+	api.Handle("/sso", makeHandler(ctr.ListOrgSSO, WithAuth(true), WithPermission("sso:*:read"))).Methods("GET")
 	api.Handle("/sso/{provider}", makeHandler(ctr.GetOrgSSO, WithAuth(true), WithPermission("sso:*:read"))).Methods("GET")
 	api.Handle("/sso/{provider}", makeHandler(ctr.SaveOrgSSO, WithAuth(true), WithPermission("sso:*:write"))).Methods("PUT")
 	api.Handle("/sso/{provider}", makeHandler(ctr.DeleteOrgSSO, WithAuth(true), WithPermission("sso:*:delete"))).Methods("DELETE")
