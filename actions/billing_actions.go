@@ -63,7 +63,7 @@ func OrganizationBillingContact(ctx context.Context, orgID string) (BillingConta
 		return contact, err
 	}
 	if ownerEmail != "" {
-		contact.Email = ownerEmail
+		contact.Email = models.AccountEmail(ownerEmail)
 	}
 	return contact, nil
 }
