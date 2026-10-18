@@ -9,42 +9,21 @@ import (
 //
 // Unlike Owner it is an ordinary role: seeded once, then the organization's to
 // edit or delete like any it made itself. Grants are `resource:scope:action`.
+//
+// Auth names no default roles of its own. Like `extraPermResources`, what a
+// deployment's roles are and which of its resources they reach belong to the
+// product it serves, so they come from configuration — `defaultRoles` in
+// config.json — and a deployment that sets none seeds only Owner.
 type DefaultRole struct {
 	Name        string   `json:"name" mapstructure:"name"`
 	Description string   `json:"description" mapstructure:"description"`
 	Grants      []string `json:"grants" mapstructure:"grants"`
 }
 
-// BuiltinDefaultRoles is what an organization gets when the deployment sets no
-// `defaultRoles`: a Staff role for the counter and the stockroom. It sells and
-// buys, takes and pays money, adds customers and vendors, and reads stock and
-// prices — but edits only the documents it raised itself, deletes nothing,
-// and sees no reports, books or administration.
-//
-// A grant naming a resource this deployment does not offer is skipped when
-// seeding, so the list may name the product's resources freely.
-var BuiltinDefaultRoles = []DefaultRole{
-	{
-		Name:        "Staff",
-		Description: "Sells and buys at the counter; edits only what they raised",
-		Grants: []string{
-			"inventory:org:read",
-			"sales:org:create", "sales:org:read", "sales:own:update",
-			"purchase:org:create", "purchase:org:read", "purchase:own:update",
-			"payment:org:create", "payment:org:read",
-			"party:org:create", "party:org:read",
-			"tax:org:read",
-			"sales_dashboard:org:read",
-			"masterdata:org:read",
-		},
-	},
-}
-
-// DefaultRoles is the deployment's `defaultRoles`, or the built-in set when it
-// has none. An explicit empty list turns default roles off.
+// DefaultRoles is the deployment's `defaultRoles`; none when it sets none.
 func DefaultRoles() []DefaultRole {
-	if Current == nil || Current.DefaultRoles == nil {
-		return BuiltinDefaultRoles
+	if Current == nil {
+		return nil
 	}
 	return Current.DefaultRoles
 }

@@ -90,8 +90,7 @@ type Settings struct {
 	EmailVerificationHourlySendLimit int64    `json:"emailVerificationHourlySendLimit" mapstructure:"emailVerificationHourlySendLimit"`
 	ExtraPermResources               []string `json:"extraPermResources" mapstructure:"extraPermResources"`
 	// DefaultRoles are the roles a new organization starts with besides Owner
-	// (see DefaultRoles()). Left out, the built-in Staff role is used; an
-	// empty list seeds none.
+	// (see DefaultRole). Left out, only Owner is seeded.
 	DefaultRoles            []DefaultRole `json:"defaultRoles" mapstructure:"defaultRoles"`
 	GoogleClientIDs         []string      `json:"googleClientIDs" mapstructure:"googleClientIDs"`
 	WebAuthnRPID            string        `json:"webAuthnRPID" mapstructure:"webAuthnRPID"`

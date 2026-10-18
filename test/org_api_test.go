@@ -85,6 +85,10 @@ var _ = Describe("Organization API Tests", Ordered, func() {
 			var ownerRole models.Role
 			Ω(models.Dbcon.Where("org_id = ? AND name = ?", org.ID, "Owner").First(&ownerRole).Error).Should(Succeed())
 			Ω(ownerRole.IsSystemRole).Should(BeTrue())
+			// With no defaultRoles configured, Owner is the only role.
+			var roleCount int64
+			Ω(models.Dbcon.Model(&models.Role{}).Where("org_id = ?", org.ID).Count(&roleCount).Error).Should(Succeed())
+			Ω(roleCount).Should(Equal(int64(1)))
 
 			var ownerBinding models.UserOrgRole
 			Ω(models.Dbcon.Where("org_id = ? AND role_id = ?", org.ID, ownerRole.ID).First(&ownerBinding).Error).Should(Succeed())
@@ -98,10 +102,26 @@ var _ = Describe("Organization API Tests", Ordered, func() {
 			Ω(resources).Should(ConsistOf(append(append([]string{}, constants.Resources...), "orders", "reports")))
 		})
 
-		It("Should seed a Staff role, as ordinary editable grants", func() {
+		It("Should seed the configured default roles, as ordinary editable grants", func() {
+			// Auth knows nothing of the product: the deployment names both its
+			// resources and the roles that reach them.
 			originalExtra := settings.Current.ExtraPermResources
-			settings.Current.ExtraPermResources = []string{"sales", "purchase", "payment", "party", "tax"}
-			defer func() { settings.Current.ExtraPermResources = originalExtra }()
+			originalRoles := settings.Current.DefaultRoles
+			settings.Current.ExtraPermResources = []string{"orders", "invoices"}
+			settings.Current.DefaultRoles = []settings.DefaultRole{{
+				Name:        "Staff",
+				Description: "Front desk",
+				Grants: []string{
+					"orders:org:create", "orders:org:read", "orders:own:update",
+					"invoices:org:read", "masterdata:org:read",
+					// Not offered by this deployment: skipped, not fatal.
+					"shipments:org:read",
+				},
+			}}
+			defer func() {
+				settings.Current.ExtraPermResources = originalExtra
+				settings.Current.DefaultRoles = originalRoles
+			}()
 
 			body, _ := json.Marshal(map[string]interface{}{
 				"name": "Staffed Shop", "email": "shop@staffed.test", "phone": "+15550001111",
@@ -136,14 +156,10 @@ var _ = Describe("Organization API Tests", Ordered, func() {
 				Ω(g.IsLocked).Should(BeFalse())
 				names = append(names, g.Resource+":"+g.Scope+":"+g.Action)
 			}
-			// What this deployment offers; sales_dashboard is not offered here,
-			// so its grant is skipped rather than failing the role.
-			Ω(names).Should(ContainElements(
-				"inventory:org:read", "sales:org:create", "sales:own:update",
-				"purchase:org:create", "purchase:own:update", "payment:org:create",
-				"party:org:create", "tax:org:read", "masterdata:org:read",
+			Ω(names).Should(ConsistOf(
+				"orders:org:create", "orders:org:read", "orders:own:update",
+				"invoices:org:read", "masterdata:org:read",
 			))
-			Ω(names).ShouldNot(ContainElement("sales_dashboard:org:read"))
 
 			// Running the backfill again creates nothing and keeps an owner's edit.
 			Ω(models.Dbcon.Model(&staff).Update("description", "Edited by the owner").Error).Should(Succeed())

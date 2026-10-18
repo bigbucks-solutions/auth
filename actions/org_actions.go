@@ -184,10 +184,10 @@ func CreateOrganisationFromAuthenticatedUser(org *Organization, userName string,
 			return nil, http.StatusConflict, err
 		}
 	}
-	// The roles a new organization starts with besides Owner, Staff by
-	// default. A failure here is logged, not returned: the organization and its
-	// Owner already exist, an owner can make the role by hand, and
-	// `auth role sync-default-roles` fills it in later.
+	// The roles the deployment says a new organization starts with besides
+	// Owner (`defaultRoles`; none unless configured). A failure here is logged,
+	// not returned: the organization and its Owner already exist, an owner can
+	// make the role by hand, and `auth role sync-default-roles` fills it in.
 	if _, err := SeedDefaultRoles(orgModel.ID, perm_cache, ctx); err != nil {
 		loging.Logger.Errorw("could not seed the default roles of a new organization",
 			"org_id", orgModel.ID, "error", err.Error())

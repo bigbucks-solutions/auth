@@ -56,15 +56,16 @@ Create `config.docker.json`:
 
   `uiHost` is the frontend origin used for invitation and password-reset links. It falls back to `baseHost` when omitted for backward compatibility. Do not include a trailing slash.
 
-  **Default roles.** Every new organization gets an Owner role and, by default, a **Staff** role: it sells and buys, takes and pays money, adds customers and vendors, and reads stock, prices and taxes, but edits only the documents it raised, deletes nothing, and sees no reports, books or administration. Staff is an ordinary role, so an owner can change or delete it. Set `defaultRoles` to replace it; `[]` seeds none. A grant naming a resource the deployment does not offer is skipped.
+  **Default roles.** Every new organization gets an Owner role. `defaultRoles` adds more: roles each new organization starts with, each a name, a description and grants written `resource:scope:action`. Auth names none of its own — like `extraPermResources`, they belong to the product the deployment serves — so with `defaultRoles` unset only Owner is seeded. A default role is ordinary, so an owner can change or delete it; a grant naming a resource the deployment does not offer is skipped.
 
 ```json
 {
+  "extraPermResources": ["orders", "invoices"],
   "defaultRoles": [
     {
-      "name": "Cashier",
-      "description": "Takes payments",
-      "grants": ["sales:org:read", "payment:org:create", "payment:org:read"]
+      "name": "Staff",
+      "description": "Front desk",
+      "grants": ["orders:org:create", "orders:org:read", "orders:own:update", "invoices:org:read"]
     }
   ]
 }

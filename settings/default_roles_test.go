@@ -22,20 +22,19 @@ func TestParseGrant(t *testing.T) {
 	}
 }
 
-func TestDefaultRolesFallsBackToStaff(t *testing.T) {
+// Auth names no roles of its own: a deployment that configures none gets none.
+func TestDefaultRolesAreOnlyWhatIsConfigured(t *testing.T) {
 	original := Current
 	defer func() { Current = original }()
 
 	Current = &Settings{}
-	roles := DefaultRoles()
-	if len(roles) != 1 || roles[0].Name != "Staff" {
-		t.Fatalf("DefaultRoles() = %+v, want the built-in Staff role", roles)
+	if roles := DefaultRoles(); len(roles) != 0 {
+		t.Fatalf("DefaultRoles() = %+v, want none when unconfigured", roles)
 	}
 
-	// An explicit empty list turns default roles off.
-	Current = &Settings{DefaultRoles: []DefaultRole{}}
-	if roles := DefaultRoles(); len(roles) != 0 {
-		t.Fatalf("DefaultRoles() = %+v, want none", roles)
+	Current = &Settings{DefaultRoles: []DefaultRole{{Name: "Clerk"}}}
+	if roles := DefaultRoles(); len(roles) != 1 || roles[0].Name != "Clerk" {
+		t.Fatalf("DefaultRoles() = %+v, want the configured Clerk", roles)
 	}
 }
 
@@ -57,13 +56,5 @@ func TestDefaultRolesDecodeFromConfig(t *testing.T) {
 	if len(s.DefaultRoles) != 1 || s.DefaultRoles[0].Name != "Cashier" ||
 		s.DefaultRoles[0].Grants[0] != "payment:org:create" {
 		t.Fatalf("decoded %+v", s.DefaultRoles)
-	}
-}
-
-func TestBuiltinStaffGrantsAreWellFormed(t *testing.T) {
-	for _, grant := range BuiltinDefaultRoles[0].Grants {
-		if _, scope, _, err := ParseGrant(grant); err != nil || scope == "all" {
-			t.Fatalf("built-in grant %q: err=%v scope=%q", grant, err, scope)
-		}
 	}
 }

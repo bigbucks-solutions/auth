@@ -17,9 +17,9 @@ var syncDefaultRolesOrgID string
 
 // syncDefaultRolesCmd gives existing organizations the default roles.
 //
-// Default roles (Staff, unless `defaultRoles` says otherwise) are seeded when
-// an organization is created. Organizations made before a role was added to
-// the list have none of it; this creates it for them.
+// Default roles — whatever the deployment's `defaultRoles` names; auth has none
+// of its own — are seeded when an organization is created. Organizations made
+// before a role was added to the list have none of it; this creates it.
 //
 // It only ever adds a role an organization lacks. One it already has — seeded
 // earlier, or made by its owner under that name — is left exactly as it is,
@@ -28,13 +28,18 @@ var syncDefaultRolesOrgID string
 var syncDefaultRolesCmd = &cobra.Command{
 	Use:   "sync-default-roles",
 	Short: "Give every organization the default roles it is missing",
-	Long: `Create the default roles (Staff, unless defaultRoles is set) in every
-organization that does not have them yet. Roles an organization already has are
-left untouched. One organization at a time with --orgid.
+	Long: `Create the roles named in defaultRoles in every organization that does
+not have them yet; with no defaultRoles configured there is nothing to do.
+Roles an organization already has are left untouched. One organization at a
+time with --orgid.
 
 	auth role sync-default-roles
 	auth role sync-default-roles --orgid <ORG_ID>`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(settings.DefaultRoles()) == 0 {
+			fmt.Println("No defaultRoles configured; nothing to sync.")
+			return nil
+		}
 		ctx := context.Background()
 		permCache := permission_cache.NewPermissionCache(settings.Current)
 
