@@ -21,7 +21,6 @@ type PermissionCache struct {
 	lockTTL         time.Duration
 	actionHierarchy map[string][]string
 	scopeHierarchy  map[string][]string
-	validScopes     map[string]struct{}
 }
 
 // Define a custom type for the context key
@@ -50,12 +49,6 @@ func NewPermissionCache(settings *settings.Settings) *PermissionCache {
 			strings.ToUpper(string(constants.ScopeAssociated)): {strings.ToUpper(string(constants.ScopeAll)), strings.ToUpper(string(constants.ScopeOrg))},
 			strings.ToUpper(string(constants.ScopeOwn)):        {strings.ToUpper(string(constants.ScopeAll)), strings.ToUpper(string(constants.ScopeOrg)), strings.ToUpper(string(constants.ScopeAssociated))},
 		},
-		validScopes: map[string]struct{}{
-			strings.ToUpper(string(constants.ScopeAll)):        {},
-			strings.ToUpper(string(constants.ScopeOrg)):        {},
-			strings.ToUpper(string(constants.ScopeAssociated)): {},
-			strings.ToUpper(string(constants.ScopeOwn)):        {},
-		},
 	}
 }
 
@@ -83,14 +76,23 @@ func (pc *PermissionCache) releaseLock(orgID, lockValue string) {
 	loging.Logger.Debug("Lock released", zap.String("lockKey", lockKey), zap.String("lockValue", lockValue))
 }
 
+// widestScopeFirst is every scope, widest first. The first grant a check
+// finds is the one Authorize reports as `permitted`, so checking in this order
+// makes that the widest the user holds — what a caller asking for any scope
+// (`*`) needs to know how far the user may reach. Ranging over a set of
+// scopes instead gave Go's map order: a user holding both `own` and `org` could be
+// reported either, differently from one request to the next.
+var widestScopeFirst = []string{
+	strings.ToUpper(string(constants.ScopeAll)),
+	strings.ToUpper(string(constants.ScopeOrg)),
+	strings.ToUpper(string(constants.ScopeAssociated)),
+	strings.ToUpper(string(constants.ScopeOwn)),
+}
+
 func (pc *PermissionCache) expandScope(scope string) []string {
 	normalized := strings.ToUpper(strings.TrimSpace(scope))
 	if normalized == "*" {
-		scopes := make([]string, 0, len(pc.validScopes))
-		for s := range pc.validScopes {
-			scopes = append(scopes, s)
-		}
-		return scopes
+		return append([]string(nil), widestScopeFirst...)
 	}
 	if expanded, exists := pc.scopeHierarchy[normalized]; exists {
 		return append(expanded, normalized)
@@ -245,6 +247,10 @@ func (pc *PermissionCache) checkPermissionInDBBatch(
 		Joins("INNER JOIN roles r ON r.id = rp.role_id").
 		Where("r.org_id = ? AND UPPER(r.name) IN ? AND UPPER(permissions.resource) = ? AND UPPER(permissions.scope) IN ? AND UPPER(permissions.action) IN ?",
 			orgID, roleNames, resource, scopes, actions).
+		// The widest scope, then the most general action, as the cache path
+		// finds them: this match is what Authorize reports as `permitted`.
+		Order("CASE UPPER(permissions.scope) WHEN 'ALL' THEN 0 WHEN 'ORG' THEN 1 WHEN 'ASSOCIATED' THEN 2 ELSE 3 END").
+		Order("CASE UPPER(permissions.action) WHEN 'WRITE' THEN 0 ELSE 1 END").
 		Limit(1).
 		Scan(&result).Error
 
