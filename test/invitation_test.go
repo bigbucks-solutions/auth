@@ -195,6 +195,31 @@ var _ = Describe("Invitation Actions", func() {
 			Ω(err).Should(BeNil())
 		})
 
+		It("Should accept for the Google account on the invited address", func() {
+			// A Google sign-in names its account "<address>+google".
+			google := &models.User{Username: testEmail + "+google", Password: "password123",
+				Profile: models.Profile{FirstName: "Google", LastName: "Invitee", Email: testEmail}}
+			Ω(models.Dbcon.Create(google).Error).Should(Succeed())
+			defer models.Dbcon.Unscoped().Where("id = ?", google.ID).Delete(&models.User{})
+
+			code, err := actions.AcceptInvitation(invitation.Token, google.ID)
+
+			Ω(err).Should(BeNil())
+			Ω(code).Should(Equal(200))
+		})
+
+		It("Should not take the address from the profile, which the user can edit", func() {
+			impostor := &models.User{Username: "impostor@test.com+google", Password: "password123",
+				Profile: models.Profile{FirstName: "Im", LastName: "Postor", Email: testEmail}}
+			Ω(models.Dbcon.Create(impostor).Error).Should(Succeed())
+			defer models.Dbcon.Unscoped().Where("id = ?", impostor.ID).Delete(&models.User{})
+
+			code, err := actions.AcceptInvitation(invitation.Token, impostor.ID)
+
+			Ω(err).Should(HaveOccurred())
+			Ω(code).Should(Equal(417))
+		})
+
 		It("Should fail with invalid token", func() {
 			code, err := actions.AcceptInvitation("invalid-token", inviteeID)
 

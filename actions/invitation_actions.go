@@ -226,7 +226,7 @@ func AcceptInvitation(token string, userID string) (int, error) {
 			return err
 		}
 
-		if user.Username != invitation.Email {
+		if models.AccountEmail(user.Username) != invitation.Email {
 			customerr.Errors["email"] = "Invitation email does not match user email"
 			customerr.Errors["_status"] = strconv.Itoa(http.StatusExpectationFailed)
 			return customerr
