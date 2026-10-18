@@ -2,6 +2,7 @@ package auth_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,8 +10,10 @@ import (
 	"net/http"
 	"strings"
 
+	"bigbucks/solution/auth/actions"
 	"bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/models"
+	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/settings"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -93,6 +96,63 @@ var _ = Describe("Organization API Tests", Ordered, func() {
 				Where("role_permissions.role_id = ? AND permissions.scope = ? AND permissions.action = ? AND role_permissions.is_locked = ?", ownerRole.ID, constants.ScopeAll, constants.ActionWrite, true).
 				Pluck("permissions.resource", &resources).Error).Should(Succeed())
 			Ω(resources).Should(ConsistOf(append(append([]string{}, constants.Resources...), "orders", "reports")))
+		})
+
+		It("Should seed a Staff role, as ordinary editable grants", func() {
+			originalExtra := settings.Current.ExtraPermResources
+			settings.Current.ExtraPermResources = []string{"sales", "purchase", "payment", "party", "tax"}
+			defer func() { settings.Current.ExtraPermResources = originalExtra }()
+
+			body, _ := json.Marshal(map[string]interface{}{
+				"name": "Staffed Shop", "email": "shop@staffed.test", "phone": "+15550001111",
+				"address": "1 Shop St", "city": "Kochi", "postal_code": "682001",
+				"state": "Kerala", "country": "IN",
+			})
+			request, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/organizations", s.URL), bytes.NewBuffer(body))
+			request.Header.Set("Content-Type", "application/json")
+			request.Header.Set("X-Auth", jwt)
+			response, _ := c.Do(request)
+			Ω(response.StatusCode).Should(Equal(200))
+			defer func() { _ = response.Body.Close() }()
+			var created models.OrganizationDetails
+			Ω(json.NewDecoder(response.Body).Decode(&created)).Should(Succeed())
+
+			var staff models.Role
+			Ω(models.Dbcon.Where("org_id = ? AND name = ?", created.ID, "Staff").First(&staff).Error).Should(Succeed())
+			Ω(staff.IsSystemRole).Should(BeFalse())
+
+			type grant struct {
+				Resource, Scope, Action string
+				IsLocked                bool
+			}
+			var grants []grant
+			Ω(models.Dbcon.Model(&models.Permission{}).
+				Select("permissions.resource, permissions.scope, permissions.action, role_permissions.is_locked").
+				Joins("JOIN role_permissions ON role_permissions.permission_id = permissions.id").
+				Where("role_permissions.role_id = ?", staff.ID).
+				Scan(&grants).Error).Should(Succeed())
+			names := make([]string, 0, len(grants))
+			for _, g := range grants {
+				Ω(g.IsLocked).Should(BeFalse())
+				names = append(names, g.Resource+":"+g.Scope+":"+g.Action)
+			}
+			// What this deployment offers; sales_dashboard is not offered here,
+			// so its grant is skipped rather than failing the role.
+			Ω(names).Should(ContainElements(
+				"inventory:org:read", "sales:org:create", "sales:own:update",
+				"purchase:org:create", "purchase:own:update", "payment:org:create",
+				"party:org:create", "tax:org:read", "masterdata:org:read",
+			))
+			Ω(names).ShouldNot(ContainElement("sales_dashboard:org:read"))
+
+			// Running the backfill again creates nothing and keeps an owner's edit.
+			Ω(models.Dbcon.Model(&staff).Update("description", "Edited by the owner").Error).Should(Succeed())
+			result, err := actions.SeedDefaultRoles(created.ID, permission_cache.NewPermissionCache(settings.Current), context.Background())
+			Ω(err).Should(BeNil())
+			Ω(result.Created).Should(BeEmpty())
+			Ω(result.Skipped).Should(ConsistOf("Staff"))
+			Ω(models.Dbcon.First(&staff, "id = ?", staff.ID).Error).Should(Succeed())
+			Ω(staff.Description).Should(Equal("Edited by the owner"))
 		})
 
 		It("Should create org without optional location fields", func() {
