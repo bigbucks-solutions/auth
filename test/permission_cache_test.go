@@ -5,6 +5,8 @@ import (
 	pc "bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/settings"
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/oklog/ulid/v2"
 	. "github.com/onsi/ginkgo/v2"
@@ -151,6 +153,52 @@ var _ = Describe("Permission Cache Advanced Tests", func() {
 			allowed, err := permCache.CheckPermission(&ctx, "documents", "org", "read", TestORG, userInfo)
 			Ω(err).Should(BeNil())
 			Ω(allowed).Should(BeFalse())
+		})
+	})
+
+	Context("Reported grant", func() {
+		// Authorize hands back the grant a check matched (UserPerm on the
+		// context). Asked for any scope, it must be the widest the user holds,
+		// every time, so a caller can tell `own` from `org`.
+		BeforeEach(func() {
+			clerk := &models.Role{Name: "CLERK", OrgID: TestORG}
+			lead := &models.Role{Name: "LEAD", OrgID: TestORG}
+			models.Dbcon.Create(clerk)
+			models.Dbcon.Create(lead)
+
+			own := &models.Permission{Resource: "invoices", Scope: "own", Action: "update"}
+			org := &models.Permission{Resource: "invoices", Scope: "org", Action: "update"}
+			own.Roles = []*models.Role{clerk}
+			org.Roles = []*models.Role{lead}
+			models.Dbcon.Create(own)
+			models.Dbcon.Create(org)
+		})
+
+		reported := func(userInfo *settings.UserInfo) string {
+			checkCtx := context.Background()
+			allowed, err := permCache.CheckPermission(&checkCtx, "invoices", "*", "update", TestORG, userInfo)
+			Ω(err).Should(BeNil())
+			Ω(allowed).Should(BeTrue())
+			perm, ok := checkCtx.Value(pc.UserPerm).(map[string]interface{})
+			Ω(ok).Should(BeTrue())
+			return fmt.Sprintf("%v", perm["scope"])
+		}
+
+		It("is the widest scope the user holds, every time", func() {
+			both := &settings.UserInfo{Roles: []settings.UserOrgRole{
+				{Role: "CLERK", OrgID: TestORG}, {Role: "LEAD", OrgID: TestORG},
+			}}
+			// The first checks go to the database, later ones to the cache
+			// it rebuilds; the answer must not depend on which.
+			for i := 0; i < 25; i++ {
+				Ω(reported(both)).Should(Equal("org"))
+				time.Sleep(5 * time.Millisecond)
+			}
+		})
+
+		It("is own for a user who holds only own", func() {
+			clerk := &settings.UserInfo{Roles: []settings.UserOrgRole{{Role: "CLERK", OrgID: TestORG}}}
+			Ω(reported(clerk)).Should(Equal("own"))
 		})
 	})
 
