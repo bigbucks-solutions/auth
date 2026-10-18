@@ -2,6 +2,7 @@ package actions
 
 import (
 	"bigbucks/solution/auth/constants"
+	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/permission_cache"
 	"bigbucks/solution/auth/settings"
@@ -182,6 +183,14 @@ func CreateOrganisationFromAuthenticatedUser(org *Organization, userName string,
 		if err := AssignSystemPermissionToRole(ownerRole.ID, orgModel.ID, resource, string(constants.ScopeAll), string(constants.ActionWrite), false, perm_cache, ctx); err != nil {
 			return nil, http.StatusConflict, err
 		}
+	}
+	// The roles the deployment says a new organization starts with besides
+	// Owner (`defaultRoles`; none unless configured). A failure here is logged,
+	// not returned: the organization and its Owner already exist, an owner can
+	// make the role by hand, and `auth role sync-default-roles` fills it in.
+	if _, err := SeedDefaultRoles(orgModel.ID, perm_cache, ctx); err != nil {
+		loging.Logger.Errorw("could not seed the default roles of a new organization",
+			"org_id", orgModel.ID, "error", err.Error())
 	}
 
 	details := orgModel.Details()

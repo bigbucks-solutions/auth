@@ -89,11 +89,14 @@ type Settings struct {
 	EmailVerificationResendSeconds   int      `json:"emailVerificationResendSeconds" mapstructure:"emailVerificationResendSeconds"`
 	EmailVerificationHourlySendLimit int64    `json:"emailVerificationHourlySendLimit" mapstructure:"emailVerificationHourlySendLimit"`
 	ExtraPermResources               []string `json:"extraPermResources" mapstructure:"extraPermResources"`
-	GoogleClientIDs                  []string `json:"googleClientIDs" mapstructure:"googleClientIDs"`
-	WebAuthnRPID                     string   `json:"webAuthnRPID" mapstructure:"webAuthnRPID"`
-	WebAuthnRPName                   string   `json:"webAuthnRPName" mapstructure:"webAuthnRPName"`
-	WebAuthnOrigins                  []string `json:"webAuthnOrigins" mapstructure:"webAuthnOrigins"`
-	SubscriptionsConfigFile          string   `json:"subscriptionsConfigFile" mapstructure:"subscriptionsConfigFile"`
+	// DefaultRoles are the roles a new organization starts with besides Owner
+	// (see DefaultRole). Left out, only Owner is seeded.
+	DefaultRoles            []DefaultRole `json:"defaultRoles" mapstructure:"defaultRoles"`
+	GoogleClientIDs         []string      `json:"googleClientIDs" mapstructure:"googleClientIDs"`
+	WebAuthnRPID            string        `json:"webAuthnRPID" mapstructure:"webAuthnRPID"`
+	WebAuthnRPName          string        `json:"webAuthnRPName" mapstructure:"webAuthnRPName"`
+	WebAuthnOrigins         []string      `json:"webAuthnOrigins" mapstructure:"webAuthnOrigins"`
+	SubscriptionsConfigFile string        `json:"subscriptionsConfigFile" mapstructure:"subscriptionsConfigFile"`
 	// TrustedProxies are the peers whose X-Forwarded-For / X-Real-IP headers
 	// are believed when working out a client's address (see package clientip):
 	// IPs or CIDRs. Empty means loopback and the private ranges; "none" trusts
