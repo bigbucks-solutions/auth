@@ -47,6 +47,7 @@ func main() {
 		&models.MobileVerification{},
 		&models.Invitation{},
 		&models.WebAuthnCredential{},
+		&models.OrgSSODomain{},
 
 		// Optional billing tables. They are always present in the schema even
 		// when the subscription layer is disabled, so enabling it later needs
