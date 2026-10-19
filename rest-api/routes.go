@@ -129,6 +129,9 @@ func NewHandler(settings *settings.Settings, perm_cache *permission_cache.Permis
 	api.Handle("/me", makeHandler(ctr.GetMeDetails, WithAuth(true))).Methods("GET")
 	// Reading one's own grants is not privileged: a client needs them to decide
 	// what to render, and refusing them would leave it guessing.
+	api.Handle("/me/sign-in-methods", makeHandler(ctr.GetSignInMethods, WithAuth(true))).Methods("GET")
+	api.Handle("/me/sign-in-methods/{provider}", makeHandler(ctr.UnlinkProvider, WithAuth(true))).Methods("DELETE")
+	api.Handle("/me/password", makeHandler(ctr.SetPassword, WithAuth(true))).Methods("POST")
 	api.Handle("/me/permissions", makeHandler(ctr.GetMyPermissions, WithAuth(true), WithOrgMembership())).Methods("GET")
 	api.Handle("/user/reset", makeHandler(ctr.SendResetToken)).Methods("POST")
 	api.Handle("/user/updateprofile", makeHandler(ctr.UpdateProfile, WithAuth(true))).Methods("POST")

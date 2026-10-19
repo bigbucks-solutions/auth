@@ -87,16 +87,11 @@ func GoogleSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
-	// The account is named after the address, so an address Google has not
-	// verified could be anyone's.
-	if identity.Email == "" || !identity.EmailVerified {
-		return http.StatusUnauthorized, errors.New("email_verification_required")
+	linked, err := oauth.GoogleAuthenticate(identity)
+	if status, err := providerSigninError(err, identity.Email); err != nil {
+		return status, err
 	}
-	user, err := oauth.GoogleAuthenticate(identity)
-	if err != nil {
-		return http.StatusInternalServerError, err
-	}
-	return finishProviderSignin(w, r, ctx, user, models.SSOProviderGoogle, identity.HostedDomain)
+	return finishProviderSignin(w, r, ctx, linked, models.SSOProviderGoogle, identity.HostedDomain)
 }
 
 // Struct for parsing Microsoft sign-in credentials: the ID token the web app's
@@ -130,23 +125,48 @@ func MicrosoftSignin(w http.ResponseWriter, r *http.Request, ctx *request_contex
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
-	user, err := oauth.MicrosoftAuthenticate(identity)
+	linked, err := oauth.MicrosoftAuthenticate(identity)
 	if errors.Is(err, oauth.ErrMicrosoftAccountMismatch) {
 		loging.Logger.Warnw("microsoft sign-in under a name another identity holds",
 			"username", identity.Username, "tenant", identity.TenantID)
 		return http.StatusUnauthorized, err
 	}
-	if err != nil {
-		return http.StatusInternalServerError, err
+	if status, err := providerSigninError(err, identity.Username); err != nil {
+		return status, err
 	}
-	return finishProviderSignin(w, r, ctx, user, models.SSOProviderMicrosoft, identity.TenantID)
+	return finishProviderSignin(w, r, ctx, linked, models.SSOProviderMicrosoft, identity.TenantID)
 }
 
-// finishProviderSignin is the end every provider sign-in shares: refuse an
-// inactive account, join the organization that set up sign-on for
-// [identifier] (a Workspace domain, a tenant), and issue the token.
+// providerSigninError is the response for a provider sign-in that could not
+// find or link its account.
+func providerSigninError(err error, address string) (int, error) {
+	switch {
+	case err == nil:
+		return 0, nil
+	case errors.Is(err, models.ErrProviderEmailUnverified):
+		return http.StatusUnauthorized, err
+	case errors.Is(err, models.ErrAccountMergeConflict):
+		// Signing in to the address's account would leave the old provider
+		// account, and the organizations it holds, behind.
+		loging.Logger.Warnw("provider sign-in at an address whose old account cannot be merged",
+			"address", address)
+		return http.StatusConflict, err
+	}
+	return http.StatusInternalServerError, err
+}
+
+// finishProviderSignin is the end every provider sign-in shares: end the
+// sessions linking said must end, refuse an inactive account, join the
+// organization that set up sign-on for [identifier] (a Workspace domain, a
+// tenant), and issue the token.
 func finishProviderSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context,
-	user models.User, provider, identifier string) (int, error) {
+	linked models.LinkedAccount, provider, identifier string) (int, error) {
+	for _, userID := range linked.EndSessions {
+		if err := ctx.SessionStore.RevokeAllUserSessions(userID, ""); err != nil {
+			return http.StatusInternalServerError, err
+		}
+	}
+	user := linked.User
 	if user.Status == constants.UserStatusInactive {
 		return http.StatusForbidden, errors.New("account_inactive")
 	}

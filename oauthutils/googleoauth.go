@@ -4,8 +4,6 @@ import (
 	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,7 +12,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/api/idtoken"
 	"gorm.io/datatypes"
-	"gorm.io/gorm"
 )
 
 const GOOGLE_SUFFIX = "google"
@@ -67,54 +64,21 @@ func identityFromClaims(claims map[string]interface{}) GoogleIdentity {
 	}
 }
 
-// GoogleAuthenticate signs in, or signs up, the user [id] names.
+// GoogleAuthenticate signs in, or signs up, the user [id] names: the one
+// account at the address, with Google linked to it. See
+// models.SignInWithProvider for what linking does to an existing account.
 //
 // What is kept of the sign-in is the account's Workspace domain, which is
 // what proves an organization's single sign-on domain; the Google tokens
 // themselves are not stored.
-func GoogleAuthenticate(id GoogleIdentity) (user models.User, err error) {
+func GoogleAuthenticate(id GoogleIdentity) (models.LinkedAccount, error) {
 	loging.Logger.Debugln("Google OAuth::", zap.String("Logged User", id.Email))
-	username := fmt.Sprintf("%s+%s", id.Email, GOOGLE_SUFFIX)
 	details, err := json.Marshal(map[string]string{"hd": id.HostedDomain})
 	if err != nil {
-		return user, err
+		return models.LinkedAccount{}, err
 	}
-
-	err = models.Dbcon.First(&user, "username = ?", username).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		password, err := unusablePassword()
-		if err != nil {
-			return user, err
-		}
-		user = models.User{Username: username, Password: password, EmailVerified: id.EmailVerified,
-			Profile:     models.Profile{FirstName: id.GivenName, LastName: id.FamilyName, Email: id.Email},
-			OAuthClient: models.OAuthClient{Source: GOOGLE_SUFFIX, Details: datatypes.JSON(details)},
-		}
-		return user, models.Dbcon.Create(&user).Error
-	}
-	if err != nil {
-		return user, err
-	}
-
-	var client models.OAuthClient
-	err = models.Dbcon.Where("user_id = ? AND source = ?", user.ID, GOOGLE_SUFFIX).
-		Order("updated_at DESC").First(&client).Error
-	switch {
-	case errors.Is(err, gorm.ErrRecordNotFound):
-		err = models.Dbcon.Create(&models.OAuthClient{UserID: user.ID, Source: GOOGLE_SUFFIX,
-			Details: datatypes.JSON(details)}).Error
-	case err == nil:
-		err = models.Dbcon.Model(&client).Update("details", datatypes.JSON(details)).Error
-	}
-	return user, err
-}
-
-// unusablePassword is a password nobody knows, for an account that only
-// signs in through Google. It is hashed like any other on create.
-func unusablePassword() (string, error) {
-	buf := make([]byte, 32)
-	if _, err := rand.Read(buf); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(buf), nil
+	return models.SignInWithProvider(models.ProviderSignIn{
+		Address: id.Email, EmailVerified: id.EmailVerified, Provider: GOOGLE_SUFFIX,
+		Details: datatypes.JSON(details), FirstName: id.GivenName, LastName: id.FamilyName,
+	})
 }
