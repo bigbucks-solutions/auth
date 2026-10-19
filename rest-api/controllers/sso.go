@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"bigbucks/solution/auth/actions"
-	"bigbucks/solution/auth/models"
 	"bigbucks/solution/auth/request_context"
 	"encoding/json"
 	"errors"
@@ -11,11 +10,37 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// ssoProvider is the provider a /sso/{provider} route names. Google is the
-// only one so far.
+// ssoProvider is the provider a /sso/{provider} route names.
 func ssoProvider(r *http.Request) (string, bool) {
 	provider := mux.Vars(r)["provider"]
-	return provider, provider == models.SSOProviderGoogle
+	return provider, actions.IsSSOProvider(provider)
+}
+
+// ListOrgSSO godoc
+//
+//	@Summary		List the organization's single sign-on
+//	@Description	Every provider, set up or not, with whether this deployment can sign in with it.
+//	@Tags			sso
+//	@Produce		json
+//	@Param			X-Auth				header	string	true	"Authorization"
+//	@Param			X-Organization-Id	header	string	true	"Organization ID"
+//	@Security		JWTAuth
+//	@Success		200	{array}	actions.OrgSSO
+//	@Router			/sso [get]
+func ListOrgSSO(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
+	user, err := ctx.GetCurrentUserModel()
+	if err != nil {
+		return http.StatusUnauthorized, err
+	}
+	views, err := actions.ListOrgSSO(ctx.CurrentOrgID, user.ID)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(views); err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return 0, nil
 }
 
 func writeOrgSSO(w http.ResponseWriter, view *actions.OrgSSO) (int, error) {
@@ -34,7 +59,7 @@ func writeOrgSSO(w http.ResponseWriter, view *actions.OrgSSO) (int, error) {
 //	@Produce		json
 //	@Param			X-Auth				header	string	true	"Authorization"
 //	@Param			X-Organization-Id	header	string	true	"Organization ID"
-//	@Param			provider			path	string	true	"Provider (google)"
+//	@Param			provider			path	string	true	"Provider (google, microsoft)"
 //	@Security		JWTAuth
 //	@Success		200	{object}	actions.OrgSSO
 //	@Failure		403	{object}	error
@@ -65,7 +90,7 @@ func GetOrgSSO(w http.ResponseWriter, r *http.Request, ctx *request_context.Cont
 //	@Produce		json
 //	@Param			X-Auth				header	string						true	"Authorization"
 //	@Param			X-Organization-Id	header	string						true	"Organization ID"
-//	@Param			provider			path	string						true	"Provider (google)"
+//	@Param			provider			path	string						true	"Provider (google, microsoft)"
 //	@Param			request				body	actions.SaveOrgSSORequest	true	"request body"
 //	@Security		JWTAuth
 //	@Success		200	{object}	actions.OrgSSO
@@ -100,7 +125,7 @@ func SaveOrgSSO(w http.ResponseWriter, r *http.Request, ctx *request_context.Con
 //	@Tags			sso
 //	@Param			X-Auth				header	string	true	"Authorization"
 //	@Param			X-Organization-Id	header	string	true	"Organization ID"
-//	@Param			provider			path	string	true	"Provider (google)"
+//	@Param			provider			path	string	true	"Provider (google, microsoft)"
 //	@Security		JWTAuth
 //	@Success		204
 //	@Router			/sso/{provider} [delete]

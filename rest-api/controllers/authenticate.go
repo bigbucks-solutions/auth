@@ -96,13 +96,63 @@ func GoogleSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.C
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
+	return finishProviderSignin(w, r, ctx, user, models.SSOProviderGoogle, identity.HostedDomain)
+}
+
+// Struct for parsing Microsoft sign-in credentials: the ID token the web app's
+// server got for the user's authorization code.
+type MicrosoftSigninCred struct {
+	IdToken string `json:"idToken"`
+}
+
+// MicrosoftSignin godoc
+//
+//	@Summary		Sign in with Microsoft
+//	@Description	Signs in, or signs up, a Microsoft Entra ID (work or school) account from its ID token, and joins it to the organization that set up single sign-on for its tenant. Personal Microsoft accounts are refused.
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		MicrosoftSigninCred	true	"request body"
+//	@Success		202		{string}	string				"JWT token"
+//	@Failure		400		{object}	error				"Token not valid"
+//	@Failure		401		{object}	error				"Sign-in name held by another Microsoft account"
+//	@Failure		404		{object}	error				"Microsoft sign-in is not configured"
+//	@Router			/signin/microsoft [post]
+func MicrosoftSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context) (int, error) {
+	if len(ctx.Settings.MicrosoftClientIDs) == 0 {
+		return http.StatusNotFound, errors.New("microsoft sign-in is not configured")
+	}
+	var cred MicrosoftSigninCred
+	if err := json.NewDecoder(r.Body).Decode(&cred); err != nil {
+		return http.StatusBadRequest, err
+	}
+	identity, err := oauth.VerifyMicrosoftIDToken(r.Context(), cred.IdToken, ctx.Settings.MicrosoftClientIDs)
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
+	user, err := oauth.MicrosoftAuthenticate(identity)
+	if errors.Is(err, oauth.ErrMicrosoftAccountMismatch) {
+		loging.Logger.Warnw("microsoft sign-in under a name another identity holds",
+			"username", identity.Username, "tenant", identity.TenantID)
+		return http.StatusUnauthorized, err
+	}
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return finishProviderSignin(w, r, ctx, user, models.SSOProviderMicrosoft, identity.TenantID)
+}
+
+// finishProviderSignin is the end every provider sign-in shares: refuse an
+// inactive account, join the organization that set up sign-on for
+// [identifier] (a Workspace domain, a tenant), and issue the token.
+func finishProviderSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context,
+	user models.User, provider, identifier string) (int, error) {
 	if user.Status == constants.UserStatusInactive {
 		return http.StatusForbidden, errors.New("account_inactive")
 	}
-	// A Workspace account joins the organization that set up sign-on for its
-	// domain. Failing to join is not failing to sign in.
-	if _, err := actions.JoinOrgBySSODomain(r.Context(), &user, models.SSOProviderGoogle, identity.HostedDomain); err != nil {
-		loging.Logger.Errorw("sso join failed", "user_id", user.ID, "error", err.Error())
+	// Failing to join is not failing to sign in.
+	if _, err := actions.JoinOrgBySSODomain(r.Context(), &user, provider, identifier); err != nil {
+		loging.Logger.Errorw("sso join failed", "user_id", user.ID, "provider", provider, "error", err.Error())
 	}
 	// The token carries the user's organizations, the one just joined among them.
 	if err := models.Dbcon.Preload("Roles").First(&user, "id = ?", user.ID).Error; err != nil {
