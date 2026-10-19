@@ -102,22 +102,8 @@ func mergeProviderAccounts(out io.Writer, db *gorm.DB, address string, dryRun bo
 			_, _ = fmt.Fprintf(out, "FAILED   %s: %v\n", address, err)
 			continue
 		}
-		if outcome.Renamed != "" {
-			_, _ = fmt.Fprintf(out, "rename   %s -> %s (%s)\n", outcome.Renamed, address, outcome.KeptID)
-		}
-		for _, username := range outcome.Merged {
-			_, _ = fmt.Fprintf(out, "%-8s %s -> %s (%s)\n", label, username, address, outcome.KeptID)
-		}
-		for _, note := range outcome.Notes {
-			_, _ = fmt.Fprintf(out, "  note   %s\n", note)
-		}
-		for _, conflict := range outcome.Conflicts {
-			_, _ = fmt.Fprintf(out, "CONFLICT %s\n", conflict)
-		}
-		merged += len(outcome.Merged)
-		if outcome.Renamed != "" {
-			merged++
-		}
+		printOutcome(out, label, outcome)
+		merged += outcome.AccountsRetired()
 		conflicts += len(outcome.Conflicts)
 		endSessions = append(endSessions, outcome.EndSessions...)
 	}
@@ -138,6 +124,23 @@ func mergeProviderAccounts(out io.Writer, db *gorm.DB, address string, dryRun bo
 		return fmt.Errorf("%d addresses failed", failures)
 	}
 	return nil
+}
+
+// printOutcome writes one line per account [outcome] renamed, merged or left
+// alone, and its notes.
+func printOutcome(out io.Writer, label string, outcome models.MergeOutcome) {
+	if outcome.Renamed != "" {
+		_, _ = fmt.Fprintf(out, "rename   %s -> %s (%s)\n", outcome.Renamed, outcome.Address, outcome.KeptID)
+	}
+	for _, username := range outcome.Merged {
+		_, _ = fmt.Fprintf(out, "%-8s %s -> %s (%s)\n", label, username, outcome.Address, outcome.KeptID)
+	}
+	for _, note := range outcome.Notes {
+		_, _ = fmt.Fprintf(out, "  note   %s\n", note)
+	}
+	for _, conflict := range outcome.Conflicts {
+		_, _ = fmt.Fprintf(out, "CONFLICT %s\n", conflict)
+	}
 }
 
 func init() {

@@ -92,48 +92,62 @@ func (usr User) ChangePassword(token, password string) (int, error) {
 		return http.StatusForbidden, customerr
 	}
 
+	if len(password) > MaxPasswordBytes {
+		customerr.Errors["password"] = PasswordTooLongMessage
+		return http.StatusBadRequest, customerr
+	}
+
 	err := Dbcon.Transaction(func(tx *gorm.DB) error {
-		tx.Model(&usr).Update("Password", password)
-		usr.Password = password
-		tx.Model(&usr.ForgotPassword).Update("Expiry", time.Now())
-		return nil
+		if err := tx.Model(&usr).Update("Password", password).Error; err != nil {
+			return err
+		}
+		return tx.Model(&usr.ForgotPassword).Update("Expiry", time.Now()).Error
 	})
 	if err != nil {
-		return http.StatusForbidden, err
+		return http.StatusInternalServerError, err
 	}
 	return 0, nil
 }
 
-// BeforeCreate GORM hook hash the password
+// MaxPasswordBytes is the longest password bcrypt hashes; it refuses longer
+// ones rather than truncate them.
+const MaxPasswordBytes = 72
+
+// PasswordTooLongMessage is the validation message for a password over
+// MaxPasswordBytes.
+const PasswordTooLongMessage = "Use at most 72 bytes"
+
+// hashPassword hashes a password for storage. The empty string stays empty:
+// it means the account has no password, and hashed it would be one.
+func hashPassword(password string) (string, error) {
+	if password == "" {
+		return "", nil
+	}
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), 0)
+	return string(hashed), err
+}
+
+// BeforeCreate generates the ID and hashes the password. A password that
+// cannot be hashed fails the create rather than be stored as typed.
 func (usr *User) BeforeCreate(tx *gorm.DB) (err error) {
-	// Call the parent BeforeCreate to generate ULID
 	if err = usr.BaseModel.BeforeCreate(tx); err != nil {
 		return err
 	}
-
-	// Hash password. An account made by a provider sign-in has none, and
-	// the empty string is kept as is: hashed, it would be a password.
-	if usr.Password == "" {
-		return
-	}
-	if pw, err := bcrypt.GenerateFromPassword([]byte(usr.Password), 0); err == nil {
-		usr.Password = string(pw)
-	}
-	return
+	usr.Password, err = hashPassword(usr.Password)
+	return err
 }
 
-// BeforeUpdate GORM hook hash the password
-func (usr *User) BeforeUpdate(tx *gorm.DB) (err error) {
-	if tx.Statement.Changed("Password") {
-		x := tx.Statement.Dest.(map[string]interface{})["Password"]
-		if x.(string) == "" {
-			return
-		}
-		if pw, err := bcrypt.GenerateFromPassword([]byte(x.(string)), 0); err == nil {
-			tx.Statement.SetColumn("Password", string(pw))
-		}
+// BeforeUpdate hashes a changed password, failing the update when it cannot.
+func (usr *User) BeforeUpdate(tx *gorm.DB) error {
+	if !tx.Statement.Changed("Password") {
+		return nil
 	}
-	return
+	hashed, err := hashPassword(tx.Statement.Dest.(map[string]interface{})["Password"].(string))
+	if err != nil {
+		return err
+	}
+	tx.Statement.SetColumn("Password", hashed)
+	return nil
 }
 
 // Authenticate => check for valid user credentials

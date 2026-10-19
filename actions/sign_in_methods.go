@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // LinkedProvider is one provider the user can sign in with.
@@ -32,44 +33,95 @@ type SignInMethods struct {
 	Linkable []string `json:"linkable"`
 }
 
+// ErrProviderNotLinked is returned when unlinking a provider the account
+// does not have.
+var ErrProviderNotLinked = errors.New("provider is not linked")
+
+// ErrLastSignInMethod is returned when unlinking would leave the account with
+// no way to sign in.
+var ErrLastSignInMethod = errors.New("last_sign_in_method")
+
 // GetSignInMethods lists how [userID] can sign in.
 func GetSignInMethods(userID string) (SignInMethods, error) {
+	return signInMethods(models.Dbcon, userID)
+}
+
+func signInMethods(db *gorm.DB, userID string) (SignInMethods, error) {
 	var user models.User
-	if err := models.Dbcon.First(&user, "id = ?", userID).Error; err != nil {
+	if err := db.First(&user, "id = ?", userID).Error; err != nil {
 		return SignInMethods{}, err
 	}
-	var clients []models.OAuthClient
-	if err := models.Dbcon.Where("user_id = ?", userID).Order("created_at").Find(&clients).Error; err != nil {
+	// An account can hold more than one row for a provider; it is one link,
+	// made when the first was and last used when the latest was.
+	var links []struct {
+		Source     string
+		LinkedAt   time.Time
+		LastUsedAt time.Time
+	}
+	if err := db.Model(&models.OAuthClient{}).
+		Select("source, MIN(created_at) AS linked_at, MAX(updated_at) AS last_used_at").
+		Where("user_id = ?", userID).Group("source").Order("linked_at").
+		Scan(&links).Error; err != nil {
 		return SignInMethods{}, err
 	}
-	methods := SignInMethods{Email: models.AccountEmail(user.Username), HasPassword: user.HasPassword(),
-		Providers: []LinkedProvider{}, Linkable: []string{}}
-	linked := map[string]int{}
-	for _, client := range clients {
-		if i, ok := linked[client.Source]; ok {
-			if client.UpdatedAt.After(methods.Providers[i].LastUsedAt) {
-				methods.Providers[i].LastUsedAt = client.UpdatedAt
-			}
-			continue
-		}
-		linked[client.Source] = len(methods.Providers)
-		methods.Providers = append(methods.Providers, LinkedProvider{Provider: client.Source,
-			Available: ssoProviderAvailable(client.Source), LinkedAt: client.CreatedAt, LastUsedAt: client.UpdatedAt})
+
+	methods := SignInMethods{
+		Email:       models.AccountEmail(user.Username),
+		HasPassword: user.HasPassword(),
+		Providers:   []LinkedProvider{},
+		Linkable:    []string{},
+	}
+	for _, link := range links {
+		methods.Providers = append(methods.Providers, LinkedProvider{
+			Provider:   link.Source,
+			Available:  ssoProviderAvailable(link.Source),
+			LinkedAt:   link.LinkedAt,
+			LastUsedAt: link.LastUsedAt,
+		})
 	}
 	for _, provider := range models.SSOProviders {
-		if _, ok := linked[provider]; !ok && ssoProviderAvailable(provider) {
+		if !methods.isLinked(provider) && ssoProviderAvailable(provider) {
 			methods.Linkable = append(methods.Linkable, provider)
 		}
 	}
 	return methods, nil
 }
 
+func (methods SignInMethods) isLinked(provider string) bool {
+	for _, linked := range methods.Providers {
+		if linked.Provider == provider {
+			return true
+		}
+	}
+	return false
+}
+
+// waysInWithout counts the ways into the account left once [provider] is
+// unlinked: its password, and each other provider this deployment signs in
+// with.
+func (methods SignInMethods) waysInWithout(provider string) int {
+	ways := 0
+	if methods.HasPassword {
+		ways++
+	}
+	for _, linked := range methods.Providers {
+		if linked.Provider != provider && linked.Available {
+			ways++
+		}
+	}
+	return ways
+}
+
 // SetPassword gives [userID], who signs in only through a provider, a
 // password. An account that has one changes it through a reset instead.
 func SetPassword(userID, password string) (int, error) {
 	customerr := valids.NewErrorDict()
-	if len(password) < 8 {
+	switch {
+	case len(password) < 8:
 		customerr.Errors["password"] = "Use at least 8 characters"
+		return http.StatusBadRequest, customerr
+	case len(password) > models.MaxPasswordBytes:
+		customerr.Errors["password"] = models.PasswordTooLongMessage
 		return http.StatusBadRequest, customerr
 	}
 	var user models.User
@@ -86,40 +138,36 @@ func SetPassword(userID, password string) (int, error) {
 	return 0, nil
 }
 
-// ErrLastSignInMethod is unlinking the only way left into an account.
-var ErrLastSignInMethod = errors.New("last_sign_in_method")
-
 // UnlinkProvider removes [provider] from [userID]'s ways to sign in, as long
 // as another remains: a password, or another provider.
 func UnlinkProvider(userID, provider string) (int, error) {
-	methods, err := GetSignInMethods(userID)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return http.StatusNotFound, err
-	}
-	if err != nil {
-		return http.StatusInternalServerError, err
-	}
-	var found bool
-	others := 0
-	if methods.HasPassword {
-		others++
-	}
-	for _, linked := range methods.Providers {
-		if linked.Provider == provider {
-			found = true
-		} else if linked.Available {
-			others++
+	err := models.Dbcon.Transaction(func(tx *gorm.DB) error {
+		// Two unlinks at once would each count the other's provider as still
+		// there. Locking the user makes the second wait and count again.
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			First(&models.User{}, "id = ?", userID).Error; err != nil {
+			return err
 		}
+		methods, err := signInMethods(tx, userID)
+		if err != nil {
+			return err
+		}
+		if !methods.isLinked(provider) {
+			return ErrProviderNotLinked
+		}
+		if methods.waysInWithout(provider) == 0 {
+			return ErrLastSignInMethod
+		}
+		return tx.Where("user_id = ? AND source = ?", userID, provider).
+			Delete(&models.OAuthClient{}).Error
+	})
+	switch {
+	case err == nil:
+		return 0, nil
+	case errors.Is(err, gorm.ErrRecordNotFound), errors.Is(err, ErrProviderNotLinked):
+		return http.StatusNotFound, err
+	case errors.Is(err, ErrLastSignInMethod):
+		return http.StatusConflict, err
 	}
-	if !found {
-		return http.StatusNotFound, errors.New("provider is not linked")
-	}
-	if others == 0 {
-		return http.StatusConflict, ErrLastSignInMethod
-	}
-	if err := models.Dbcon.Where("user_id = ? AND source = ?", userID, provider).
-		Delete(&models.OAuthClient{}).Error; err != nil {
-		return http.StatusInternalServerError, err
-	}
-	return 0, nil
+	return http.StatusInternalServerError, err
 }

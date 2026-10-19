@@ -19,8 +19,6 @@ import (
 	"gorm.io/datatypes"
 )
 
-const MICROSOFT_SUFFIX = models.SSOProviderMicrosoft
-
 // microsoftKeysURL serves the keys Microsoft signs every tenant's ID tokens
 // with.
 const microsoftKeysURL = "https://login.microsoftonline.com/common/discovery/v2.0/keys"
@@ -30,10 +28,6 @@ const microsoftKeysURL = "https://login.microsoftonline.com/common/discovery/v2.
 const MicrosoftConsumerTenant = "9188040d-6c67-4c5b-b112-36a304b66dad"
 
 var tenantPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
-
-// ErrMicrosoftAccountMismatch is a sign-in naming an account that another
-// Microsoft identity already holds.
-var ErrMicrosoftAccountMismatch = errors.New("microsoft account belongs to another identity")
 
 // MicrosoftIdentity is who a verified Microsoft Entra ID token says the user is.
 type MicrosoftIdentity struct {
@@ -159,11 +153,6 @@ func VerifyMicrosoftIDToken(ctx context.Context, idToken string, clientIDs []str
 	return identity, nil
 }
 
-type microsoftDetails struct {
-	TenantID string `json:"tid"`
-	ObjectID string `json:"oid"`
-}
-
 // MicrosoftAuthenticate signs in, or signs up, the user [id] names: the one
 // account at the sign-in name, with Microsoft linked to it.
 //
@@ -173,21 +162,17 @@ type microsoftDetails struct {
 // under the same name from another Entra account is refused rather than let in.
 func MicrosoftAuthenticate(id MicrosoftIdentity) (models.LinkedAccount, error) {
 	loging.Logger.Debugw("Microsoft OAuth", "user", id.Username, "tenant", id.TenantID)
-	details, err := json.Marshal(microsoftDetails{TenantID: id.TenantID, ObjectID: id.ObjectID})
+	signingIn := models.MicrosoftDetails{TenantID: id.TenantID, ObjectID: id.ObjectID}
+	details, err := json.Marshal(signingIn)
 	if err != nil {
 		return models.LinkedAccount{}, err
 	}
-	linked, err := models.SignInWithProvider(models.ProviderSignIn{
-		Address: id.Username, EmailVerified: true, Provider: MICROSOFT_SUFFIX,
+	return models.SignInWithProvider(models.ProviderSignIn{
+		Address: id.Username, EmailVerified: true, Provider: models.SSOProviderMicrosoft,
 		Details: datatypes.JSON(details), FirstName: id.GivenName, LastName: id.FamilyName,
 		Holds: func(client models.OAuthClient) bool {
-			var held microsoftDetails
-			_ = json.Unmarshal(client.Details, &held)
-			return held.ObjectID == "" || (held.ObjectID == id.ObjectID && held.TenantID == id.TenantID)
+			held := models.MicrosoftIdentity(client.Details)
+			return held == "" || held == signingIn.Identity()
 		},
 	})
-	if errors.Is(err, models.ErrProviderIdentityMismatch) {
-		return linked, ErrMicrosoftAccountMismatch
-	}
-	return linked, err
 }

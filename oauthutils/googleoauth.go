@@ -14,8 +14,6 @@ import (
 	"gorm.io/datatypes"
 )
 
-const GOOGLE_SUFFIX = "google"
-
 var googleIssuers = []string{"accounts.google.com", "https://accounts.google.com"}
 
 // GoogleIdentity is who a verified Google ID token says the user is.
@@ -78,7 +76,7 @@ func GoogleAuthenticate(id GoogleIdentity) (models.LinkedAccount, error) {
 		return models.LinkedAccount{}, err
 	}
 	return models.SignInWithProvider(models.ProviderSignIn{
-		Address: id.Email, EmailVerified: id.EmailVerified, Provider: GOOGLE_SUFFIX,
+		Address: id.Email, EmailVerified: id.EmailVerified, Provider: models.SSOProviderGoogle,
 		Details: datatypes.JSON(details), FirstName: id.GivenName, LastName: id.FamilyName,
 	})
 }

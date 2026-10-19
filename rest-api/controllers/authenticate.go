@@ -126,11 +126,6 @@ func MicrosoftSignin(w http.ResponseWriter, r *http.Request, ctx *request_contex
 		return http.StatusBadRequest, err
 	}
 	linked, err := oauth.MicrosoftAuthenticate(identity)
-	if errors.Is(err, oauth.ErrMicrosoftAccountMismatch) {
-		loging.Logger.Warnw("microsoft sign-in under a name another identity holds",
-			"username", identity.Username, "tenant", identity.TenantID)
-		return http.StatusUnauthorized, err
-	}
 	if status, err := providerSigninError(err, identity.Username); err != nil {
 		return status, err
 	}
@@ -145,6 +140,9 @@ func providerSigninError(err error, address string) (int, error) {
 		return 0, nil
 	case errors.Is(err, models.ErrProviderEmailUnverified):
 		return http.StatusUnauthorized, err
+	case errors.Is(err, models.ErrProviderIdentityMismatch):
+		loging.Logger.Warnw("provider sign-in under a name another identity holds", "address", address)
+		return http.StatusUnauthorized, err
 	case errors.Is(err, models.ErrAccountMergeConflict):
 		// Signing in to the address's account would leave the old provider
 		// account, and the organizations it holds, behind.
@@ -155,8 +153,8 @@ func providerSigninError(err error, address string) (int, error) {
 	return http.StatusInternalServerError, err
 }
 
-// finishProviderSignin is the end every provider sign-in shares: end the
-// sessions linking said must end, refuse an inactive account, join the
+// finishProviderSignin is the end every provider sign-in shares: revoke the
+// sessions in [linked].EndSessions, refuse an inactive account, join the
 // organization that set up sign-on for [identifier] (a Workspace domain, a
 // tenant), and issue the token.
 func finishProviderSignin(w http.ResponseWriter, r *http.Request, ctx *request_context.Context,

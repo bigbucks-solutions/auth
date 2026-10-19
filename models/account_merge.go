@@ -2,7 +2,6 @@ package models
 
 import (
 	"bigbucks/solution/auth/constants"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -32,26 +31,29 @@ type MergeOutcome struct {
 	EndSessions []string
 }
 
+// AccountsRetired counts the old provider accounts the address no longer has
+// apart: the ones merged in, and the one renamed to it.
+func (outcome MergeOutcome) AccountsRetired() int {
+	if outcome.Renamed != "" {
+		return len(outcome.Merged) + 1
+	}
+	return len(outcome.Merged)
+}
+
 // LegacyProviderAddresses lists the addresses that still have an account of
 // the old "<address>+<provider>" kind.
 func LegacyProviderAddresses(tx *gorm.DB) ([]string, error) {
 	var usernames []string
-	query := tx.Model(&User{})
-	for i, provider := range legacyProviders {
-		if i == 0 {
-			query = query.Where("username LIKE ?", "%+"+provider)
-		} else {
-			query = query.Or("username LIKE ?", "%+"+provider)
-		}
-	}
-	if err := query.Order("username").Pluck("username", &usernames).Error; err != nil {
+	if err := tx.Model(&User{}).
+		Where("username LIKE ? OR username LIKE ?", "%+"+SSOProviderGoogle, "%+"+SSOProviderMicrosoft).
+		Order("username").Pluck("username", &usernames).Error; err != nil {
 		return nil, err
 	}
 	seen := map[string]bool{}
 	var addresses []string
 	for _, username := range usernames {
 		address := NormalizeAddress(AccountEmail(username))
-		if address != username && !seen[address] {
+		if !seen[address] {
 			seen[address] = true
 			addresses = append(addresses, address)
 		}
@@ -154,21 +156,23 @@ func mergeConflict(tx *gorm.DB, kept, old User) (string, error) {
 	if kept.Status == constants.UserStatusInactive || old.Status == constants.UserStatusInactive {
 		return "one of the two accounts is deactivated", nil
 	}
-	keptOID, err := microsoftObjectID(tx, kept.ID)
+	keptIdentity, err := linkedMicrosoftIdentity(tx, kept.ID)
 	if err != nil {
 		return "", err
 	}
-	oldOID, err := microsoftObjectID(tx, old.ID)
+	oldIdentity, err := linkedMicrosoftIdentity(tx, old.ID)
 	if err != nil {
 		return "", err
 	}
-	if keptOID != "" && oldOID != "" && keptOID != oldOID {
+	if keptIdentity != "" && oldIdentity != "" && keptIdentity != oldIdentity {
 		return "linked to another Microsoft identity than " + kept.Username, nil
 	}
 	return "", nil
 }
 
-func microsoftObjectID(tx *gorm.DB, userID string) (string, error) {
+// linkedMicrosoftIdentity is the Entra account [userID]'s Microsoft link was
+// made by, or "" when it has none.
+func linkedMicrosoftIdentity(tx *gorm.DB, userID string) (string, error) {
 	var client OAuthClient
 	err := tx.Where("user_id = ? AND source = ?", userID, SSOProviderMicrosoft).
 		Order("updated_at DESC").First(&client).Error
@@ -178,15 +182,7 @@ func microsoftObjectID(tx *gorm.DB, userID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	var details struct {
-		TenantID string `json:"tid"`
-		ObjectID string `json:"oid"`
-	}
-	_ = json.Unmarshal(client.Details, &details)
-	if details.ObjectID == "" {
-		return "", nil
-	}
-	return details.TenantID + "/" + details.ObjectID, nil
+	return MicrosoftIdentity(client.Details), nil
 }
 
 func mergeAccount(tx *gorm.DB, kept, old User) (notes []string, err error) {
@@ -250,19 +246,23 @@ func mergeOrgRoles(tx *gorm.DB, kept, old User) (notes []string, err error) {
 		if err != nil {
 			return nil, err
 		}
-		if !wider {
-			continue
+		if wider {
+			if err := replaceRoles(tx, kept.ID, binding.OrgID, binding.RoleID); err != nil {
+				return nil, err
+			}
+			notes = append(notes, fmt.Sprintf("organization %s: role %s from %s replaces %s's",
+				binding.OrgID, roleName(tx, binding.RoleID), old.Username, kept.Username))
 		}
-		if err := tx.Where("user_id = ? AND org_id = ?", kept.ID, binding.OrgID).Delete(&UserOrgRole{}).Error; err != nil {
-			return nil, err
-		}
-		if err := tx.Create(&UserOrgRole{OrgID: binding.OrgID, UserID: kept.ID, RoleID: binding.RoleID}).Error; err != nil {
-			return nil, err
-		}
-		notes = append(notes, fmt.Sprintf("organization %s: role %s from %s replaces %s's",
-			binding.OrgID, roleName(tx, binding.RoleID), old.Username, kept.Username))
 	}
 	return notes, nil
+}
+
+// replaceRoles makes [roleID] the only role [userID] holds in [orgID].
+func replaceRoles(tx *gorm.DB, userID, orgID, roleID string) error {
+	if err := tx.Where("user_id = ? AND org_id = ?", userID, orgID).Delete(&UserOrgRole{}).Error; err != nil {
+		return err
+	}
+	return tx.Create(&UserOrgRole{OrgID: orgID, UserID: userID, RoleID: roleID}).Error
 }
 
 // roleRanks orders the roles every organization has; any other role ranks by
@@ -360,21 +360,23 @@ func mergeProfile(tx *gorm.DB, kept, old User) error {
 		return err
 	}
 	fill := map[string]interface{}{}
-	for column, pair := range map[string][2]string{
-		"first_name":     {keptProfile.FirstName, oldProfile.FirstName},
-		"last_name":      {keptProfile.LastName, oldProfile.LastName},
-		"contact_number": {keptProfile.ContactNumber, oldProfile.ContactNumber},
-		"picture":        {keptProfile.Picture, oldProfile.Picture},
-		"bio":            {keptProfile.Bio, oldProfile.Bio},
-		"designation":    {keptProfile.Designation, oldProfile.Designation},
-		"country":        {keptProfile.Country, oldProfile.Country},
-	} {
-		if strings.TrimSpace(pair[0]) == "" && strings.TrimSpace(pair[1]) != "" {
-			fill[column] = pair[1]
-		}
-	}
+	fillIfEmpty(fill, "first_name", keptProfile.FirstName, oldProfile.FirstName)
+	fillIfEmpty(fill, "last_name", keptProfile.LastName, oldProfile.LastName)
+	fillIfEmpty(fill, "contact_number", keptProfile.ContactNumber, oldProfile.ContactNumber)
+	fillIfEmpty(fill, "picture", keptProfile.Picture, oldProfile.Picture)
+	fillIfEmpty(fill, "bio", keptProfile.Bio, oldProfile.Bio)
+	fillIfEmpty(fill, "designation", keptProfile.Designation, oldProfile.Designation)
+	fillIfEmpty(fill, "country", keptProfile.Country, oldProfile.Country)
 	if len(fill) == 0 {
 		return nil
 	}
 	return tx.Model(&keptProfile).UpdateColumns(fill).Error
+}
+
+// fillIfEmpty sets [column] to [old] in [fill] when [kept] is blank and [old]
+// is not.
+func fillIfEmpty(fill map[string]interface{}, column, kept, old string) {
+	if strings.TrimSpace(kept) == "" && strings.TrimSpace(old) != "" {
+		fill[column] = old
+	}
 }

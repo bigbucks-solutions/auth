@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
 	"strings"
 
@@ -8,17 +9,17 @@ import (
 	"gorm.io/gorm"
 )
 
-// ErrProviderEmailUnverified is a provider sign-in whose address the provider
-// has not verified. The account is found by its address, so an unverified one
-// could be anyone's.
+// ErrProviderEmailUnverified is returned for a provider sign-in whose address
+// the provider has not verified. The account is found by its address, so an
+// unverified one could be anyone's.
 var ErrProviderEmailUnverified = errors.New("email_verification_required")
 
-// ErrProviderIdentityMismatch is a sign-in naming an account that another
-// identity with the same provider already holds.
+// ErrProviderIdentityMismatch is returned for a sign-in naming an account
+// that another identity with the same provider already holds.
 var ErrProviderIdentityMismatch = errors.New("account is linked to another identity with this provider")
 
-// ErrAccountMergeConflict is a sign-in at an address whose old provider
-// account could not be merged into it; see MergeLegacyAccounts.
+// ErrAccountMergeConflict is returned for a sign-in at an address whose old
+// provider account could not be merged into it; see MergeLegacyAccounts.
 var ErrAccountMergeConflict = errors.New("account_merge_conflict")
 
 // ProviderSignIn is who a provider says is signing in.
@@ -44,6 +45,32 @@ type LinkedAccount struct {
 	// EndSessions are users whose sessions must end: an unverified password
 	// account that lost its password, and old provider accounts merged in.
 	EndSessions []string
+}
+
+// MicrosoftDetails is what a Microsoft link keeps of its sign-in: the Entra
+// account (tenant and object ID) that made it.
+type MicrosoftDetails struct {
+	TenantID string `json:"tid"`
+	ObjectID string `json:"oid"`
+}
+
+// Identity is the Entra account as one comparable string, or "" when the
+// details name none.
+func (details MicrosoftDetails) Identity() string {
+	if details.ObjectID == "" {
+		return ""
+	}
+	return details.TenantID + "/" + details.ObjectID
+}
+
+// MicrosoftIdentity is the Entra account a Microsoft link's [details] name,
+// or "" when they name none.
+func MicrosoftIdentity(details datatypes.JSON) string {
+	var held MicrosoftDetails
+	if json.Unmarshal(details, &held) != nil {
+		return ""
+	}
+	return held.Identity()
 }
 
 // NormalizeAddress lower-cases and trims an address the way usernames are
@@ -77,68 +104,84 @@ func SignInWithProvider(in ProviderSignIn) (linked LinkedAccount, err error) {
 
 func signInWithProvider(in ProviderSignIn) (linked LinkedAccount, err error) {
 	err = Dbcon.Transaction(func(tx *gorm.DB) error {
-		// Until `auth user merge-provider-accounts` has run, the address may
-		// still have an account of the old "<address>+<provider>" kind holding
-		// the user's organizations.
-		outcome, err := MergeLegacyAccounts(tx, in.Address)
+		ended, err := mergeLegacyOrRefuse(tx, in.Address)
 		if err != nil {
 			return err
 		}
-		if len(outcome.Conflicts) > 0 {
-			return ErrAccountMergeConflict
+		user, created, err := findOrCreateUser(tx, in)
+		if err != nil {
+			return err
 		}
-		linked.EndSessions = append(linked.EndSessions, outcome.EndSessions...)
-
-		var user User
-		err = tx.First(&user, "username = ?", in.Address).Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			user = User{Username: in.Address, EmailVerified: true,
-				Profile:     Profile{FirstName: in.FirstName, LastName: in.LastName, Email: in.Address},
-				OAuthClient: OAuthClient{Source: in.Provider, Details: in.Details},
-			}
-			if err := tx.Create(&user).Error; err != nil {
+		if !created {
+			if err := linkProvider(tx, user.ID, in); err != nil {
 				return err
 			}
-			linked.User = user
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-
-		var client OAuthClient
-		err = tx.Where("user_id = ? AND source = ?", user.ID, in.Provider).
-			Order("updated_at DESC").First(&client).Error
-		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			err = tx.Create(&OAuthClient{UserID: user.ID, Source: in.Provider, Details: in.Details}).Error
-		case err == nil:
-			if in.Holds != nil && !in.Holds(client) {
-				return ErrProviderIdentityMismatch
+			if !user.EmailVerified {
+				if err := takeOverUnverified(tx, &user); err != nil {
+					return err
+				}
+				ended = append(ended, user.ID)
 			}
-			err = tx.Model(&client).Update("details", in.Details).Error
 		}
-		if err != nil {
-			return err
-		}
-
-		if !user.EmailVerified {
-			if err := takeOverUnverified(tx, &user); err != nil {
-				return err
-			}
-			linked.EndSessions = append(linked.EndSessions, user.ID)
-		}
-		linked.User = user
+		linked = LinkedAccount{User: user, EndSessions: ended}
 		return nil
 	})
 	return linked, err
+}
+
+// mergeLegacyOrRefuse merges the address's old "<address>+<provider>"
+// accounts, which until `auth user merge-provider-accounts` has run may still
+// hold the user's organizations, and returns the users whose sessions must
+// end. It refuses the sign-in when one cannot be merged.
+func mergeLegacyOrRefuse(tx *gorm.DB, address string) ([]string, error) {
+	outcome, err := MergeLegacyAccounts(tx, address)
+	if err != nil {
+		return nil, err
+	}
+	if len(outcome.Conflicts) > 0 {
+		return nil, ErrAccountMergeConflict
+	}
+	return outcome.EndSessions, nil
+}
+
+// findOrCreateUser finds the account at [in].Address, or creates it with no
+// password and the provider linked; [created] says which.
+func findOrCreateUser(tx *gorm.DB, in ProviderSignIn) (user User, created bool, err error) {
+	err = tx.First(&user, "username = ?", in.Address).Error
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return user, false, err
+	}
+	user = User{
+		Username:      in.Address,
+		EmailVerified: true,
+		Profile:       Profile{FirstName: in.FirstName, LastName: in.LastName, Email: in.Address},
+		OAuthClient:   OAuthClient{Source: in.Provider, Details: in.Details},
+	}
+	return user, true, tx.Create(&user).Error
+}
+
+// linkProvider links [in].Provider to [userID], or refreshes the link's
+// details. It refuses a link that another identity holds.
+func linkProvider(tx *gorm.DB, userID string, in ProviderSignIn) error {
+	var client OAuthClient
+	err := tx.Where("user_id = ? AND source = ?", userID, in.Provider).
+		Order("updated_at DESC").First(&client).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return tx.Create(&OAuthClient{UserID: userID, Source: in.Provider, Details: in.Details}).Error
+	}
+	if err != nil {
+		return err
+	}
+	if in.Holds != nil && !in.Holds(client) {
+		return ErrProviderIdentityMismatch
+	}
+	return tx.Model(&client).Update("details", in.Details).Error
 }
 
 // takeOverUnverified gives an account whose address was never verified to the
 // provider that just verified it: whoever set its password never proved the
 // address was theirs, so the password goes.
 func takeOverUnverified(tx *gorm.DB, user *User) error {
-	// UpdateColumns skips the hook that would hash the empty password.
 	if err := tx.Model(user).UpdateColumns(map[string]interface{}{
 		"hashed_password": "", "email_verified": true,
 	}).Error; err != nil {

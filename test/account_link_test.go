@@ -1,6 +1,10 @@
 package auth_test
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
+
 	"bigbucks/solution/auth/actions"
 	"bigbucks/solution/auth/constants"
 	"bigbucks/solution/auth/models"
@@ -148,7 +152,7 @@ var _ = Describe("One account per address", func() {
 
 			_, err = microsoft(address, tenant, "aaaaaaaa-0000-0000-0000-000000000002")
 
-			Ω(errors.Is(err, oauth.ErrMicrosoftAccountMismatch)).Should(BeTrue())
+			Ω(errors.Is(err, models.ErrProviderIdentityMismatch)).Should(BeTrue())
 		})
 
 		It("lets a password-signup owner prove a Workspace domain after one Google sign-in", func() {
@@ -271,6 +275,28 @@ var _ = Describe("One account per address", func() {
 			Ω(ok).Should(BeTrue())
 
 			Ω(merge(false).Merged).Should(BeEmpty(), "a second run has nothing to do")
+		})
+
+		It("keeps one link per provider, with the details of the newer sign-in", func() {
+			kept := passwordUser(address, true)
+			older := models.OAuthClient{UserID: kept.ID, Source: "google", Details: datatypes.JSON(`{"hd":"old.example"}`)}
+			Ω(models.Dbcon.Create(&older).Error).Should(Succeed())
+			Ω(models.Dbcon.Model(&older).UpdateColumn("updated_at", time.Now().Add(-48*time.Hour)).Error).Should(Succeed())
+			legacyUser("google", `{"hd":"new.example"}`)
+			msAccount := legacyUser("microsoft", `{"tid":"t","oid":"one"}`)
+			newer := models.OAuthClient{UserID: kept.ID, Source: "microsoft", Details: datatypes.JSON(`{"tid":"t","oid":"one","newer":true}`)}
+			Ω(models.Dbcon.Create(&newer).Error).Should(Succeed())
+			Ω(models.Dbcon.Model(&models.OAuthClient{}).Where("user_id = ?", msAccount.ID).
+				UpdateColumn("updated_at", time.Now().Add(-48*time.Hour)).Error).Should(Succeed())
+
+			merge(false)
+
+			Ω(links(kept.ID)).Should(Equal(map[string]int{"google": 1, "microsoft": 1}))
+			Ω(actions.SignedInIdentifier(kept.ID, models.SSOProviderGoogle)).Should(Equal("new.example"),
+				"the old account signed in with Google more recently")
+			var microsoftLink models.OAuthClient
+			Ω(models.Dbcon.First(&microsoftLink, "user_id = ? AND source = ?", kept.ID, "microsoft").Error).Should(Succeed())
+			Ω(string(microsoftLink.Details)).Should(ContainSubstring("newer"), "the kept account signed in with Microsoft more recently")
 		})
 
 		It("keeps the narrower account's role when it is the wider one already", func() {
@@ -439,6 +465,194 @@ var _ = Describe("One account per address", func() {
 			user := passwordUser(address, true)
 			status, _ := actions.UnlinkProvider(user.ID, "microsoft")
 			Ω(status).Should(Equal(http.StatusNotFound))
+		})
+
+		It("says an account that does not exist is not found", func() {
+			status, err := actions.UnlinkProvider(ulid.Make().String(), "google")
+			Ω(status).Should(Equal(http.StatusNotFound))
+			Ω(errors.Is(err, gorm.ErrRecordNotFound)).Should(BeTrue())
+		})
+
+		It("lists a provider linked twice once, from its first link to its latest sign-in", func() {
+			user := passwordUser(address, true)
+			first := time.Now().Add(-48 * time.Hour).UTC().Truncate(time.Second)
+			latest := time.Now().Add(-time.Hour).UTC().Truncate(time.Second)
+			for _, at := range []time.Time{first, latest} {
+				client := models.OAuthClient{UserID: user.ID, Source: "google", Details: datatypes.JSON(`{"hd":""}`)}
+				Ω(models.Dbcon.Create(&client).Error).Should(Succeed())
+				Ω(models.Dbcon.Model(&client).UpdateColumns(map[string]interface{}{
+					"created_at": at, "updated_at": at}).Error).Should(Succeed())
+			}
+
+			methods, err := actions.GetSignInMethods(user.ID)
+
+			Ω(err).Should(Succeed())
+			Ω(methods.Providers).Should(HaveLen(1))
+			Ω(methods.Providers[0].LinkedAt.Equal(first)).Should(BeTrue(), "linked at %v", methods.Providers[0].LinkedAt)
+			Ω(methods.Providers[0].LastUsedAt.Equal(latest)).Should(BeTrue(), "last used at %v", methods.Providers[0].LastUsedAt)
+		})
+
+		It("offers to link only the providers this deployment signs in with", func() {
+			savedGoogle, savedMicrosoft := settings.Current.GoogleClientIDs, settings.Current.MicrosoftClientIDs
+			settings.Current.GoogleClientIDs, settings.Current.MicrosoftClientIDs = []string{"test-client"}, nil
+			defer func() {
+				settings.Current.GoogleClientIDs, settings.Current.MicrosoftClientIDs = savedGoogle, savedMicrosoft
+			}()
+			user := passwordUser(address, true)
+
+			methods, err := actions.GetSignInMethods(user.ID)
+			Ω(err).Should(Succeed())
+			Ω(methods.Linkable).Should(Equal([]string{"google"}))
+
+			_, err = google(address, "")
+			Ω(err).Should(Succeed())
+			methods, err = actions.GetSignInMethods(user.ID)
+			Ω(err).Should(Succeed())
+			Ω(methods.Linkable).Should(BeEmpty())
+		})
+
+		It("does not count a provider this deployment cannot sign in with as a way in", func() {
+			savedGoogle, savedMicrosoft := settings.Current.GoogleClientIDs, settings.Current.MicrosoftClientIDs
+			settings.Current.GoogleClientIDs, settings.Current.MicrosoftClientIDs = []string{"test-client"}, nil
+			defer func() {
+				settings.Current.GoogleClientIDs, settings.Current.MicrosoftClientIDs = savedGoogle, savedMicrosoft
+			}()
+			linked, err := google(address, "")
+			Ω(err).Should(Succeed())
+			_, err = microsoft(address, "72f988bf-86f1-41af-91ab-2d7cd011db47", "aaaaaaaa-0000-0000-0000-000000000004")
+			Ω(err).Should(Succeed())
+
+			status, err := actions.UnlinkProvider(linked.User.ID, "google")
+			Ω(errors.Is(err, actions.ErrLastSignInMethod)).Should(BeTrue())
+			Ω(status).Should(Equal(http.StatusConflict))
+
+			// Unlinking the one that cannot sign in here leaves Google.
+			status, err = actions.UnlinkProvider(linked.User.ID, "microsoft")
+			Ω(err).Should(Succeed())
+			Ω(status).Should(Equal(0))
+			Ω(links(linked.User.ID)).Should(Equal(map[string]int{"google": 1}))
+		})
+
+		It("refuses a password bcrypt cannot hash, storing nothing", func() {
+			linked, err := google(address, "")
+			Ω(err).Should(Succeed())
+
+			status, err := actions.SetPassword(linked.User.ID, strings.Repeat("a", models.MaxPasswordBytes+1))
+
+			Ω(status).Should(Equal(http.StatusBadRequest))
+			Ω(err).Should(HaveOccurred())
+			Ω(reload(linked.User.ID).HasPassword()).Should(BeFalse())
+		})
+	})
+
+	Context("storing passwords", func() {
+		It("fails to create an account whose password cannot be hashed, rather than store it as typed", func() {
+			user := models.User{Username: address, Password: strings.Repeat("a", models.MaxPasswordBytes+1)}
+
+			Ω(models.Dbcon.Create(&user).Error).Should(HaveOccurred())
+			Ω(accountsAt(address)).Should(Equal(int64(0)))
+		})
+
+		It("fails an update whose password cannot be hashed, keeping the old one", func() {
+			user := passwordUser(address, true)
+
+			err := models.Dbcon.Model(&user).Updates(map[string]interface{}{
+				"Password": strings.Repeat("a", models.MaxPasswordBytes+1)}).Error
+
+			Ω(err).Should(HaveOccurred())
+			ok, _ := models.Authenticate(address, "password123")
+			Ω(ok).Should(BeTrue())
+		})
+
+		It("refuses a reset to a password too long to hash, and accepts one that fits", func() {
+			user := passwordUser(address, true)
+			_, err := user.GenerateResetToken()
+			Ω(err).Should(Succeed())
+			Ω(models.Dbcon.Preload("ForgotPassword").First(&user, "id = ?", user.ID).Error).Should(Succeed())
+			token := user.ForgotPassword.ResetToken
+
+			status, err := user.ChangePassword(token, strings.Repeat("a", models.MaxPasswordBytes+1))
+			Ω(status).Should(Equal(http.StatusBadRequest))
+			Ω(err).Should(HaveOccurred())
+
+			status, err = user.ChangePassword(token, "a-reset-password")
+			Ω(err).Should(Succeed())
+			Ω(status).Should(Equal(0))
+			ok, _ := models.Authenticate(address, "a-reset-password")
+			Ω(ok).Should(BeTrue())
+		})
+	})
+
+	Context("sign-in methods over HTTP", func() {
+		var jwt string
+
+		call := func(method, path string, body any) (*http.Response, map[string]any) {
+			var reader io.Reader
+			if body != nil {
+				raw, _ := json.Marshal(body)
+				reader = bytes.NewBuffer(raw)
+			}
+			request, _ := http.NewRequest(method, s.URL+"/api/v1"+path, reader)
+			request.Header.Set("Content-Type", "application/json")
+			request.Header.Set("X-Auth", jwt)
+			response, err := c.Do(request)
+			Ω(err).Should(Succeed())
+			raw, _ := io.ReadAll(response.Body)
+			var decoded map[string]any
+			_ = json.Unmarshal(raw, &decoded)
+			return response, decoded
+		}
+
+		var user models.User
+		BeforeEach(func() {
+			user = passwordUser(address, true)
+			response, _ := c.Post(s.URL+"/api/v1/signin", "application/json",
+				bytes.NewBufferString(`{"username":"`+address+`","password":"password123"}`))
+			raw, _ := io.ReadAll(response.Body)
+			Ω(response.StatusCode).Should(Equal(http.StatusAccepted))
+			jwt = string(raw)
+		})
+
+		It("lists, unlinks and refuses to unlink twice", func() {
+			_, err := google(address, "")
+			Ω(err).Should(Succeed())
+
+			response, methods := call("GET", "/me/sign-in-methods", nil)
+			Ω(response.StatusCode).Should(Equal(http.StatusOK))
+			Ω(methods["hasPassword"]).Should(BeTrue())
+			Ω(methods["email"]).Should(Equal(address))
+			Ω(methods["providers"]).Should(HaveLen(1))
+
+			response, _ = call("DELETE", "/me/sign-in-methods/google", nil)
+			Ω(response.StatusCode).Should(Equal(http.StatusNoContent))
+			response, _ = call("DELETE", "/me/sign-in-methods/google", nil)
+			Ω(response.StatusCode).Should(Equal(http.StatusNotFound))
+		})
+
+		It("sets a password on an account with none, once", func() {
+			response, _ := call("POST", "/me/password", map[string]string{"password": "a-valid-password"})
+			Ω(response.StatusCode).Should(Equal(http.StatusConflict), "it has a password already")
+
+			Ω(models.Dbcon.Model(&user).UpdateColumn("hashed_password", "").Error).Should(Succeed())
+			response, _ = call("POST", "/me/password", map[string]string{"password": "short"})
+			Ω(response.StatusCode).Should(Equal(http.StatusBadRequest))
+			response, _ = call("POST", "/me/password", map[string]string{"password": "a-brand-new-password"})
+			Ω(response.StatusCode).Should(Equal(http.StatusNoContent))
+
+			response, me := call("GET", "/me", nil)
+			Ω(response.StatusCode).Should(Equal(http.StatusOK))
+			Ω(me["hasPassword"]).Should(BeTrue())
+			ok, _ := models.Authenticate(address, "a-brand-new-password")
+			Ω(ok).Should(BeTrue())
+		})
+
+		It("needs a signed-in user", func() {
+			jwt = ""
+			for _, route := range [][2]string{{"GET", "/me/sign-in-methods"}, {"POST", "/me/password"},
+				{"DELETE", "/me/sign-in-methods/google"}} {
+				response, _ := call(route[0], route[1], map[string]string{})
+				Ω(response.StatusCode).Should(Equal(http.StatusUnauthorized), route[0]+" "+route[1])
+			}
 		})
 	})
 })
