@@ -21,11 +21,14 @@ var SSOProviders = []string{SSOProviderGoogle, SSOProviderMicrosoft}
 
 // AccountEmail is the address an account is reached at.
 //
-// A Google or Microsoft sign-in names its account "<address>+<provider>",
-// keeping it apart from a password account on the same address; the address
-// is the one the provider vouches for. That suffixed name is not an address — Stripe refuses it as a
-// customer email, and it never equals the address an invitation was sent to.
-// Profile.Email is not used instead: the user can change it.
+// Google and Microsoft sign-ins used to name their own accounts
+// "<address>+<provider>", apart from a password account on the same address.
+// They now sign in to the one account at the address, and
+// `auth user merge-provider-accounts` folds the old ones into it; until it has
+// run, this still reads an old account's address. The suffixed name is not an
+// address — Stripe refuses it as a customer email, and it never equals the
+// address an invitation was sent to. Profile.Email is not used instead: the
+// user can change it.
 func AccountEmail(username string) string {
 	for _, provider := range SSOProviders {
 		if trimmed, ok := strings.CutSuffix(username, "+"+provider); ok {

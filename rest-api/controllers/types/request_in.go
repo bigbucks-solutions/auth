@@ -18,7 +18,7 @@ type CreatePermissionBody struct {
 
 type SignupRequestBody struct {
 	Email     string `json:"email" validate:"required,email"`
-	Password  string `json:"password" validate:"required,min=8"`
+	Password  string `json:"password" validate:"required,min=8,max=72"`
 	FirstName string `json:"firstName" validate:"required"`
 	LastName  string `json:"lastName" validate:"required"`
 }

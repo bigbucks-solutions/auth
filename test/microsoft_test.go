@@ -126,14 +126,14 @@ var _ = Describe("Microsoft sign-in", func() {
 	})
 
 	Context("signing in", func() {
-		It("issues a token for the account named after the sign-in name", func() {
+		It("issues a token for the account at the sign-in name", func() {
 			response, body := signIn(token(signingKey, nil))
 
 			Ω(response.StatusCode).Should(Equal(http.StatusAccepted), body)
 			Ω(strings.Count(body, ".")).Should(Equal(2))
 			var user models.User
-			Ω(models.Dbcon.First(&user, "username = ?", "ana."+tenant[:8]+"@contoso.example+microsoft").Error).Should(Succeed())
-			Ω(models.AccountEmail(user.Username)).Should(Equal("ana." + tenant[:8] + "@contoso.example"))
+			Ω(models.Dbcon.First(&user, "username = ?", "ana."+tenant[:8]+"@contoso.example").Error).Should(Succeed())
+			Ω(user.HasPassword()).Should(BeFalse())
 		})
 
 		It("refuses a sign-in name another Microsoft account already holds", func() {
@@ -168,8 +168,9 @@ var _ = Describe("Microsoft sign-in", func() {
 				token(signingKey, func(c jwt.MapClaims) { c["preferred_username"] = "owner." + tenant[:8] + "@contoso.example" }),
 				[]string{clientID})
 			Ω(err).Should(Succeed())
-			owner, err = oauth.MicrosoftAuthenticate(id)
+			linked, err := oauth.MicrosoftAuthenticate(id)
 			Ω(err).Should(Succeed())
+			owner = linked.User
 		})
 
 		It("needs the owner's own Microsoft account in that tenant", func() {
@@ -199,7 +200,7 @@ var _ = Describe("Microsoft sign-in", func() {
 			Ω(response.StatusCode).Should(Equal(http.StatusAccepted))
 
 			var staff models.User
-			Ω(models.Dbcon.First(&staff, "username = ?", "staff."+tenant[:8]+"@contoso.example+microsoft").Error).Should(Succeed())
+			Ω(models.Dbcon.First(&staff, "username = ?", "staff."+tenant[:8]+"@contoso.example").Error).Should(Succeed())
 			var binding models.UserOrgRole
 			Ω(models.Dbcon.Where("user_id = ? AND org_id = ?", staff.ID, orgID).First(&binding).Error).Should(Succeed())
 			Ω(binding.RoleID).Should(Equal(staffRoleID))

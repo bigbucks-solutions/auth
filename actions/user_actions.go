@@ -288,8 +288,9 @@ func GetUserInfo(userID string) (*types.UserInfo, int, error) {
 	}
 
 	userInfo := &types.UserInfo{
-		Username: user.Username,
-		IsSocial: user.OAuthClient.ID != 0,
+		Username:    user.Username,
+		IsSocial:    user.OAuthClient.ID != 0,
+		HasPassword: user.HasPassword(),
 		Profile: types.UserInfoProfile{
 			Firstname:   user.Profile.FirstName,
 			Lastname:    user.Profile.LastName,

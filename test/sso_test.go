@@ -38,11 +38,11 @@ var _ = Describe("Organization single sign-on", func() {
 	}
 	// googleUser signs [email] in with Google as an account on [hd].
 	googleUser := func(email, hd string) models.User {
-		user, err := oauth.GoogleAuthenticate(oauth.GoogleIdentity{
+		linked, err := oauth.GoogleAuthenticate(oauth.GoogleIdentity{
 			Email: email, EmailVerified: true, GivenName: "G", FamilyName: "User", HostedDomain: hd,
 		})
 		Ω(err).Should(Succeed())
-		return user
+		return linked.User
 	}
 	memberRole := func(userID, org string) string {
 		var binding models.UserOrgRole

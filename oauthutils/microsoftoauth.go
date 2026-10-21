@@ -4,8 +4,6 @@ import (
 	"bigbucks/solution/auth/loging"
 	"bigbucks/solution/auth/models"
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,10 +17,7 @@ import (
 	"github.com/go-jose/go-jose/v4"
 	"github.com/golang-jwt/jwt/v5"
 	"gorm.io/datatypes"
-	"gorm.io/gorm"
 )
-
-const MICROSOFT_SUFFIX = models.SSOProviderMicrosoft
 
 // microsoftKeysURL serves the keys Microsoft signs every tenant's ID tokens
 // with.
@@ -33,10 +28,6 @@ const microsoftKeysURL = "https://login.microsoftonline.com/common/discovery/v2.
 const MicrosoftConsumerTenant = "9188040d-6c67-4c5b-b112-36a304b66dad"
 
 var tenantPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
-
-// ErrMicrosoftAccountMismatch is a sign-in naming an account that another
-// Microsoft identity already holds.
-var ErrMicrosoftAccountMismatch = errors.New("microsoft account belongs to another identity")
 
 // MicrosoftIdentity is who a verified Microsoft Entra ID token says the user is.
 type MicrosoftIdentity struct {
@@ -162,54 +153,26 @@ func VerifyMicrosoftIDToken(ctx context.Context, idToken string, clientIDs []str
 	return identity, nil
 }
 
-type microsoftDetails struct {
-	TenantID string `json:"tid"`
-	ObjectID string `json:"oid"`
-}
-
-// MicrosoftAuthenticate signs in, or signs up, the user [id] names.
+// MicrosoftAuthenticate signs in, or signs up, the user [id] names: the one
+// account at the sign-in name, with Microsoft linked to it.
 //
-// The account is named after the sign-in name, and held by the Entra account
-// (tenant and object ID) that first signed in with it: a later sign-in under
-// the same name from another Entra account is refused rather than let in.
-func MicrosoftAuthenticate(id MicrosoftIdentity) (user models.User, err error) {
+// The sign-in name is used rather than the `email` claim because Entra only
+// lets a tenant use a domain it has verified there. The link is held by the
+// Entra account (tenant and object ID) that first made it: a later sign-in
+// under the same name from another Entra account is refused rather than let in.
+func MicrosoftAuthenticate(id MicrosoftIdentity) (models.LinkedAccount, error) {
 	loging.Logger.Debugw("Microsoft OAuth", "user", id.Username, "tenant", id.TenantID)
-	username := fmt.Sprintf("%s+%s", id.Username, MICROSOFT_SUFFIX)
-	details, err := json.Marshal(microsoftDetails{TenantID: id.TenantID, ObjectID: id.ObjectID})
+	signingIn := models.MicrosoftDetails{TenantID: id.TenantID, ObjectID: id.ObjectID}
+	details, err := json.Marshal(signingIn)
 	if err != nil {
-		return user, err
+		return models.LinkedAccount{}, err
 	}
-
-	err = models.Dbcon.First(&user, "username = ?", username).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		buf := make([]byte, 32)
-		if _, err := rand.Read(buf); err != nil {
-			return user, err
-		}
-		user = models.User{Username: username, Password: hex.EncodeToString(buf), EmailVerified: true,
-			Profile:     models.Profile{FirstName: id.GivenName, LastName: id.FamilyName, Email: id.Username},
-			OAuthClient: models.OAuthClient{Source: MICROSOFT_SUFFIX, Details: datatypes.JSON(details)},
-		}
-		return user, models.Dbcon.Create(&user).Error
-	}
-	if err != nil {
-		return user, err
-	}
-
-	var client models.OAuthClient
-	err = models.Dbcon.Where("user_id = ? AND source = ?", user.ID, MICROSOFT_SUFFIX).
-		Order("updated_at DESC").First(&client).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return user, models.Dbcon.Create(&models.OAuthClient{UserID: user.ID, Source: MICROSOFT_SUFFIX,
-			Details: datatypes.JSON(details)}).Error
-	}
-	if err != nil {
-		return user, err
-	}
-	var held microsoftDetails
-	_ = json.Unmarshal(client.Details, &held)
-	if held.ObjectID != "" && (held.ObjectID != id.ObjectID || held.TenantID != id.TenantID) {
-		return user, ErrMicrosoftAccountMismatch
-	}
-	return user, models.Dbcon.Model(&client).Update("details", datatypes.JSON(details)).Error
+	return models.SignInWithProvider(models.ProviderSignIn{
+		Address: id.Username, EmailVerified: true, Provider: models.SSOProviderMicrosoft,
+		Details: datatypes.JSON(details), FirstName: id.GivenName, LastName: id.FamilyName,
+		Holds: func(client models.OAuthClient) bool {
+			held := models.MicrosoftIdentity(client.Details)
+			return held == "" || held == signingIn.Identity()
+		},
+	})
 }

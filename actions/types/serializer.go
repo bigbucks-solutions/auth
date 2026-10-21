@@ -62,6 +62,7 @@ type UserInfo struct {
 	Roles         []*UserInfoRole        `json:"roles,omitempty"`
 	Profile       UserInfoProfile        `json:"profile,omitempty"`
 	IsSocial      bool                   `json:"isSocialAccount"`
+	HasPassword   bool                   `json:"hasPassword"`
 	Organizations []UserInfoOrganization `json:"organizations,omitempty"`
 }
 
