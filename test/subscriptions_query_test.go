@@ -1,6 +1,7 @@
-package subscriptions
+package auth_test
 
 import (
+	"bigbucks/solution/auth/subscriptions"
 	"strings"
 	"testing"
 
@@ -32,13 +33,13 @@ func TestActiveItemsParenthesisesTheOrCondition(t *testing.T) {
 	db := dryRunDB(t)
 
 	statement := db.Session(&gorm.Session{DryRun: true}).
-		Model(&SubscriptionItem{}).
+		Model(&subscriptions.SubscriptionItem{}).
 		Joins("JOIN billing_accounts ON billing_accounts.id = subscription_items.account_id"+
 			" AND billing_accounts.deleted_at IS NULL").
 		Where("billing_accounts.org_id = ?", "org-1").
 		Where("subscription_items.active = ?", true).
 		Where("subscription_items.current_period_end IS NULL OR subscription_items.current_period_end > ?", "2026-01-01").
-		Find(&[]SubscriptionItem{}).Statement
+		Find(&[]subscriptions.SubscriptionItem{}).Statement
 
 	sql := statement.SQL.String()
 	if !strings.Contains(sql, "(subscription_items.current_period_end IS NULL OR subscription_items.current_period_end > ") {
@@ -91,7 +92,7 @@ func TestRequireLicensesEmitsRowLock(t *testing.T) {
 	statement := db.Session(&gorm.Session{DryRun: true}).
 		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("org_id = ?", "org-1").
-		Find(&[]BillingAccount{}).Statement
+		Find(&[]subscriptions.BillingAccount{}).Statement
 
 	if sql := statement.SQL.String(); !strings.Contains(sql, "FOR UPDATE") {
 		t.Fatalf("expected FOR UPDATE in the rendered query.\nSQL: %s", sql)
@@ -104,9 +105,9 @@ func TestResolveTakesNoLocks(t *testing.T) {
 	db := dryRunDB(t)
 
 	statement := db.Session(&gorm.Session{DryRun: true}).
-		Model(&SubscriptionItem{}).
+		Model(&subscriptions.SubscriptionItem{}).
 		Where("active = ?", true).
-		Find(&[]SubscriptionItem{}).Statement
+		Find(&[]subscriptions.SubscriptionItem{}).Statement
 
 	if sql := statement.SQL.String(); strings.Contains(sql, "FOR UPDATE") {
 		t.Fatalf("read path must not lock.\nSQL: %s", sql)

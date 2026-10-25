@@ -1,6 +1,7 @@
-package clientip
+package auth_test
 
 import (
+	"bigbucks/solution/auth/clientip"
 	"net/http"
 	"testing"
 )
@@ -19,7 +20,7 @@ func request(remote string, headers map[string][]string) *http.Request {
 func TestFromRequest(t *testing.T) {
 	// The QA topology: nginx on loopback in front of auth, and the web app
 	// reaching auth through the host's public address.
-	resolver, err := New([]string{"127.0.0.1", "::1", "34.197.58.226"})
+	resolver, err := clientip.New([]string{"127.0.0.1", "::1", "34.197.58.226"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +118,7 @@ func TestFromRequest(t *testing.T) {
 }
 
 func TestDefaultsTrustLoopbackAndPrivateOnly(t *testing.T) {
-	resolver, err := New(nil)
+	resolver, err := clientip.New(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,7 +135,7 @@ func TestDefaultsTrustLoopbackAndPrivateOnly(t *testing.T) {
 }
 
 func TestNoneTrustsNothing(t *testing.T) {
-	resolver, err := New([]string{"none"})
+	resolver, err := clientip.New([]string{"none"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -148,7 +149,7 @@ func TestNoneTrustsNothing(t *testing.T) {
 
 func TestNewAcceptsCommaSeparatedEnvValue(t *testing.T) {
 	// TRUSTED_PROXIES arrives as one string when set through the environment.
-	resolver, err := New([]string{"127.0.0.1, 10.10.0.0/16"})
+	resolver, err := clientip.New([]string{"127.0.0.1, 10.10.0.0/16"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -161,7 +162,7 @@ func TestNewAcceptsCommaSeparatedEnvValue(t *testing.T) {
 }
 
 func TestNewRejectsNonsense(t *testing.T) {
-	if _, err := New([]string{"nginx.internal"}); err == nil {
+	if _, err := clientip.New([]string{"nginx.internal"}); err == nil {
 		t.Fatal("expected an error for a hostname")
 	}
 }
