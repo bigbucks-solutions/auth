@@ -77,9 +77,13 @@ func (s *SessionStore) CreateSession(userID, username, userAgent, ip string, exp
 	// Use a Redis transaction to manage the session count
 	pipe := s.client.TxPipeline()
 
-	// Add session to the sorted set with creation time as score
+	// Add session to the sorted set, scored by creation time in microseconds.
+	// Whole seconds tied every sign-in made within the same second, and Redis
+	// breaks a tie by member (a random id), so "the oldest" evicted below was
+	// an arbitrary session: often one still in use. Microseconds stay exact in
+	// a float64, and older entries scored in seconds still sort first.
 	pipe.ZAdd(s.ctx, userSessionsKey, redis.Z{
-		Score:  float64(time.Now().Unix()),
+		Score:  float64(time.Now().UnixMicro()),
 		Member: sessionID,
 	})
 
