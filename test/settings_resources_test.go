@@ -1,4 +1,4 @@
-package settings_test
+package auth_test
 
 import (
 	"bigbucks/solution/auth/settings"

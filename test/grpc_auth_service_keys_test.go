@@ -1,16 +1,17 @@
-package grpc_auth
+package auth_test
 
 import (
+	grpc_auth "bigbucks/solution/auth/grpc-auth"
 	"strings"
 	"testing"
 )
 
 func TestParseServiceKeysMatchesConfiguredServices(t *testing.T) {
-	inventoryKey := strings.Repeat("a", MinServiceKeyLength)
+	inventoryKey := strings.Repeat("a", grpc_auth.MinServiceKeyLength)
 	// Keys may carry "=" padding; only the first "=" separates the name.
-	billingKey := strings.Repeat("b", MinServiceKeyLength) + "=="
+	billingKey := strings.Repeat("b", grpc_auth.MinServiceKeyLength) + "=="
 
-	keys, err := ParseServiceKeys(" inventory=" + inventoryKey + " , billing=" + billingKey + ",")
+	keys, err := grpc_auth.ParseServiceKeys(" inventory=" + inventoryKey + " , billing=" + billingKey + ",")
 	if err != nil {
 		t.Fatalf("ParseServiceKeys() error = %v", err)
 	}
@@ -31,7 +32,7 @@ func TestParseServiceKeysMatchesConfiguredServices(t *testing.T) {
 }
 
 func TestParseServiceKeysEmptyConfiguresNothing(t *testing.T) {
-	keys, err := ParseServiceKeys("  ")
+	keys, err := grpc_auth.ParseServiceKeys("  ")
 	if err != nil {
 		t.Fatalf("ParseServiceKeys() error = %v", err)
 	}
@@ -44,17 +45,17 @@ func TestParseServiceKeysEmptyConfiguresNothing(t *testing.T) {
 }
 
 func TestParseServiceKeysRejectsBadEntries(t *testing.T) {
-	key := strings.Repeat("k", MinServiceKeyLength)
+	key := strings.Repeat("k", grpc_auth.MinServiceKeyLength)
 	tests := map[string]string{
 		"a bare key":                   key,
 		"a missing name":               "=" + key,
 		"a short key":                  "inventory=short",
-		"a repeated name":              "inventory=" + key + ",inventory=" + strings.Repeat("z", MinServiceKeyLength),
+		"a repeated name":              "inventory=" + key + ",inventory=" + strings.Repeat("z", grpc_auth.MinServiceKeyLength),
 		"a key shared by two services": "inventory=" + key + ",billing=" + key,
 	}
 	for name, raw := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, err := ParseServiceKeys(raw)
+			_, err := grpc_auth.ParseServiceKeys(raw)
 			if err == nil {
 				t.Fatal("ParseServiceKeys() error = nil, want an error")
 			}

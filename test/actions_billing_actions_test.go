@@ -1,8 +1,9 @@
-package actions
+package auth_test
 
 import (
 	"testing"
 
+	"bigbucks/solution/auth/actions"
 	"bigbucks/solution/auth/settings"
 )
 
@@ -64,7 +65,7 @@ func TestResolveBillingRedirectRejectsForeignOrigins(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			if got := ResolveBillingRedirect(test.candidate, "/billing"); got != test.want {
+			if got := actions.ResolveBillingRedirect(test.candidate, "/billing"); got != test.want {
 				t.Fatalf("ResolveBillingRedirect(%q) = %q, want %q", test.candidate, got, test.want)
 			}
 		})
@@ -76,7 +77,7 @@ func TestResolveBillingRedirectWithoutSettings(t *testing.T) {
 	t.Cleanup(func() { settings.Current = previous })
 	settings.Current = nil
 
-	if got := ResolveBillingRedirect("https://evil.example.com", "/billing"); got != "/billing" {
+	if got := actions.ResolveBillingRedirect("https://evil.example.com", "/billing"); got != "/billing" {
 		t.Fatalf("ResolveBillingRedirect() = %q, want %q", got, "/billing")
 	}
 }
