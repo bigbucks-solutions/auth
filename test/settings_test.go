@@ -1,6 +1,7 @@
-package settings
+package auth_test
 
 import (
+	"bigbucks/solution/auth/settings"
 	"testing"
 	"time"
 )
@@ -8,17 +9,17 @@ import (
 func TestEmailLinkHost(t *testing.T) {
 	tests := []struct {
 		name     string
-		settings Settings
+		settings settings.Settings
 		want     string
 	}{
 		{
 			name:     "uses UI host",
-			settings: Settings{UIHost: "https://app.example.com/", BaseHost: "https://api.example.com"},
+			settings: settings.Settings{UIHost: "https://app.example.com/", BaseHost: "https://api.example.com"},
 			want:     "https://app.example.com",
 		},
 		{
 			name:     "falls back to base host",
-			settings: Settings{BaseHost: "https://api.example.com/"},
+			settings: settings.Settings{BaseHost: "https://api.example.com/"},
 			want:     "https://api.example.com",
 		},
 	}
@@ -33,7 +34,7 @@ func TestEmailLinkHost(t *testing.T) {
 }
 
 func TestEmailVerificationPolicyDefaults(t *testing.T) {
-	settings := Settings{EmailVerificationSecret: "test-email-verification-secret-32-bytes"}
+	settings := settings.Settings{EmailVerificationSecret: "test-email-verification-secret-32-bytes"}
 	ttl, attempts, cooldown, hourlyLimit, err := settings.EmailVerificationPolicy()
 	if err != nil {
 		t.Fatalf("EmailVerificationPolicy() error = %v", err)
@@ -44,7 +45,7 @@ func TestEmailVerificationPolicyDefaults(t *testing.T) {
 }
 
 func TestEmailVerificationPolicyRejectsWeakSecret(t *testing.T) {
-	settings := Settings{EmailVerificationSecret: "too-short"}
+	settings := settings.Settings{EmailVerificationSecret: "too-short"}
 	if _, _, _, _, err := settings.EmailVerificationPolicy(); err == nil {
 		t.Fatal("EmailVerificationPolicy() expected weak-secret error")
 	}

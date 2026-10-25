@@ -1,6 +1,7 @@
-package subscriptions
+package auth_test
 
 import (
+	"bigbucks/solution/auth/subscriptions"
 	"context"
 	"errors"
 	"fmt"
@@ -14,15 +15,15 @@ import (
 func TestEffectiveModeFallsBackToEnabledFlag(t *testing.T) {
 	tests := []struct {
 		name   string
-		config Config
-		want   Mode
+		config subscriptions.Config
+		want   subscriptions.Mode
 	}{
-		{"zero value is disabled", Config{}, ModeDisabled},
-		{"enabled without mode enforces", Config{Enabled: true}, ModeEnforce},
-		{"explicit mode wins over flag", Config{Enabled: true, Mode: ModeObserve}, ModeObserve},
-		{"mode without flag still applies", Config{Mode: ModeEnforce}, ModeEnforce},
-		{"mode is case insensitive", Config{Mode: "ENFORCE"}, ModeEnforce},
-		{"whitespace is trimmed", Config{Mode: "  observe  "}, ModeObserve},
+		{"zero value is disabled", subscriptions.Config{}, subscriptions.ModeDisabled},
+		{"enabled without mode enforces", subscriptions.Config{Enabled: true}, subscriptions.ModeEnforce},
+		{"explicit mode wins over flag", subscriptions.Config{Enabled: true, Mode: subscriptions.ModeObserve}, subscriptions.ModeObserve},
+		{"mode without flag still applies", subscriptions.Config{Mode: subscriptions.ModeEnforce}, subscriptions.ModeEnforce},
+		{"mode is case insensitive", subscriptions.Config{Mode: "ENFORCE"}, subscriptions.ModeEnforce},
+		{"whitespace is trimmed", subscriptions.Config{Mode: "  observe  "}, subscriptions.ModeObserve},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -34,11 +35,11 @@ func TestEffectiveModeFallsBackToEnabledFlag(t *testing.T) {
 }
 
 func TestReservesPendingInvitationsDefaultsToTrue(t *testing.T) {
-	if !(Config{}).ReservesPendingInvitations() {
+	if !(subscriptions.Config{}).ReservesPendingInvitations() {
 		t.Fatal("unset ReservePendingInvitations should default to true")
 	}
 	disabled := false
-	if (Config{ReservePendingInvitations: &disabled}).ReservesPendingInvitations() {
+	if (subscriptions.Config{ReservePendingInvitations: &disabled}).ReservesPendingInvitations() {
 		t.Fatal("explicit false should be honoured")
 	}
 }
@@ -46,15 +47,15 @@ func TestReservesPendingInvitationsDefaultsToTrue(t *testing.T) {
 func TestProductLicenses(t *testing.T) {
 	tests := []struct {
 		name     string
-		product  Product
+		product  subscriptions.Product
 		quantity int64
 		want     int64
 	}{
-		{"per seat scales with quantity", Product{LicensesPerUnit: 1}, 25, 25},
-		{"flat plan ignores quantity", Product{IncludedLicenses: 50}, 1, 50},
-		{"bundle plus seats", Product{IncludedLicenses: 5, LicensesPerUnit: 1}, 10, 15},
-		{"negative quantity is clamped", Product{LicensesPerUnit: 3}, -4, 0},
-		{"unmapped product grants nothing", Product{}, 99, 0},
+		{"per seat scales with quantity", subscriptions.Product{LicensesPerUnit: 1}, 25, 25},
+		{"flat plan ignores quantity", subscriptions.Product{IncludedLicenses: 50}, 1, 50},
+		{"bundle plus seats", subscriptions.Product{IncludedLicenses: 5, LicensesPerUnit: 1}, 10, 15},
+		{"negative quantity is clamped", subscriptions.Product{LicensesPerUnit: 3}, -4, 0},
+		{"unmapped product grants nothing", subscriptions.Product{}, 99, 0},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -69,7 +70,7 @@ func TestProductLicenses(t *testing.T) {
 // database through the policy, or disabling the feature would still cost a
 // query on every request.
 func TestDisabledModuleIsInert(t *testing.T) {
-	module, err := NewModule(Config{}, nil)
+	module, err := subscriptions.NewModule(subscriptions.Config{}, nil)
 	if err != nil {
 		t.Fatalf("NewModule() error = %v", err)
 	}
@@ -110,15 +111,15 @@ func TestDisabledModuleIsInert(t *testing.T) {
 func TestNewModuleRejectsBadConfiguration(t *testing.T) {
 	tests := []struct {
 		name   string
-		config Config
+		config subscriptions.Config
 	}{
-		{"unknown mode", Config{Mode: "sometimes"}},
-		{"enabled without provider", Config{Enabled: true}},
-		{"unregistered provider", Config{Enabled: true, Provider: "not-registered"}},
+		{"unknown mode", subscriptions.Config{Mode: "sometimes"}},
+		{"enabled without provider", subscriptions.Config{Enabled: true}},
+		{"unregistered provider", subscriptions.Config{Enabled: true, Provider: "not-registered"}},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			if _, err := NewModule(test.config, nil); err == nil {
+			if _, err := subscriptions.NewModule(test.config, nil); err == nil {
 				t.Fatal("NewModule() error = nil, want an error")
 			}
 		})
@@ -126,25 +127,25 @@ func TestNewModuleRejectsBadConfiguration(t *testing.T) {
 }
 
 func TestNewModuleRequiresDatabaseWhenEnabled(t *testing.T) {
-	Register("test-provider-requires-db", func(Config, *gorm.DB) (Provider, error) {
+	subscriptions.Register("test-provider-requires-db", func(subscriptions.Config, *gorm.DB) (subscriptions.Provider, error) {
 		t.Fatal("factory should not run without a database")
 		return nil, nil
 	})
-	_, err := NewModule(Config{Enabled: true, Provider: "test-provider-requires-db"}, nil)
+	_, err := subscriptions.NewModule(subscriptions.Config{Enabled: true, Provider: "test-provider-requires-db"}, nil)
 	if err == nil {
 		t.Fatal("NewModule() error = nil, want an error")
 	}
 }
 
 func TestCurrentModuleDefaultsToAllowAll(t *testing.T) {
-	SetModule(nil)
-	t.Cleanup(func() { SetModule(nil) })
+	subscriptions.SetModule(nil)
+	t.Cleanup(func() { subscriptions.SetModule(nil) })
 
-	if CurrentModule() == nil {
+	if subscriptions.CurrentModule() == nil {
 		t.Fatal("CurrentModule() should never return nil")
 	}
-	if _, ok := CurrentPolicy().(AllowAllPolicy); !ok {
-		t.Fatalf("CurrentPolicy() = %T, want AllowAllPolicy", CurrentPolicy())
+	if _, ok := subscriptions.CurrentPolicy().(subscriptions.AllowAllPolicy); !ok {
+		t.Fatalf("CurrentPolicy() = %T, want AllowAllPolicy", subscriptions.CurrentPolicy())
 	}
 }
 
@@ -155,18 +156,18 @@ func TestIsDenialAndHTTPStatus(t *testing.T) {
 		isDenial bool
 		status   int
 	}{
-		{"not entitled", ErrNotEntitled, true, http.StatusPaymentRequired},
-		{"feature missing", ErrFeatureUnavailable, true, http.StatusPaymentRequired},
-		{"no licences", ErrNoLicenses, true, http.StatusConflict},
+		{"not entitled", subscriptions.ErrNotEntitled, true, http.StatusPaymentRequired},
+		{"feature missing", subscriptions.ErrFeatureUnavailable, true, http.StatusPaymentRequired},
+		{"no licences", subscriptions.ErrNoLicenses, true, http.StatusConflict},
 		{"wrapped denial", errors.New("x"), false, http.StatusInternalServerError},
-		{"unsupported provider", ErrProviderUnsupported, false, http.StatusNotImplemented},
+		{"unsupported provider", subscriptions.ErrProviderUnsupported, false, http.StatusNotImplemented},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			if got := IsDenial(test.err); got != test.isDenial {
+			if got := subscriptions.IsDenial(test.err); got != test.isDenial {
 				t.Fatalf("IsDenial() = %v, want %v", got, test.isDenial)
 			}
-			if got := HTTPStatus(test.err); got != test.status {
+			if got := subscriptions.HTTPStatus(test.err); got != test.status {
 				t.Fatalf("HTTPStatus() = %d, want %d", got, test.status)
 			}
 		})
@@ -176,11 +177,11 @@ func TestIsDenialAndHTTPStatus(t *testing.T) {
 // Denials must be wrappable so call sites can add context without breaking
 // errors.Is at the HTTP boundary.
 func TestWrappedDenialsStayRecognisable(t *testing.T) {
-	wrapped := errors.Join(ErrNoLicenses, errors.New("plan allows 5, 5 in use"))
-	if !IsDenial(wrapped) {
+	wrapped := errors.Join(subscriptions.ErrNoLicenses, errors.New("plan allows 5, 5 in use"))
+	if !subscriptions.IsDenial(wrapped) {
 		t.Fatal("wrapped ErrNoLicenses should still be a denial")
 	}
-	if got := HTTPStatus(wrapped); got != http.StatusConflict {
+	if got := subscriptions.HTTPStatus(wrapped); got != http.StatusConflict {
 		t.Fatalf("HTTPStatus() = %d, want %d", got, http.StatusConflict)
 	}
 }
@@ -195,14 +196,14 @@ func (policy stubPolicy) RequireFeature(context.Context, *gorm.DB, string, strin
 func (policy stubPolicy) RequireLicenses(context.Context, *gorm.DB, string, int64) error {
 	return policy.err
 }
-func (policy stubPolicy) Entitlements(context.Context, *gorm.DB, string) (Entitlements, error) {
-	return Entitlements{}, policy.err
+func (policy stubPolicy) Entitlements(context.Context, *gorm.DB, string) (subscriptions.Entitlements, error) {
+	return subscriptions.Entitlements{}, policy.err
 }
 
 // Observe mode exists to measure impact before enforcing, so it must allow
 // denials through — but it must not disguise a broken database as "allowed".
 func TestObservePolicyAllowsDenialsButNotFaults(t *testing.T) {
-	allowed := ObservePolicy{Inner: stubPolicy{err: ErrNoLicenses}}
+	allowed := subscriptions.ObservePolicy{Inner: stubPolicy{err: subscriptions.ErrNoLicenses}}
 	if err := allowed.RequireLicenses(context.Background(), nil, "org-1", 1); err != nil {
 		t.Fatalf("observe mode should allow a denial, got %v", err)
 	}
@@ -211,14 +212,14 @@ func TestObservePolicyAllowsDenialsButNotFaults(t *testing.T) {
 	}
 
 	fault := errors.New("connection refused")
-	observed := ObservePolicy{Inner: stubPolicy{err: fault}}
+	observed := subscriptions.ObservePolicy{Inner: stubPolicy{err: fault}}
 	if err := observed.RequireEntitled(context.Background(), nil, "org-1"); !errors.Is(err, fault) {
 		t.Fatalf("observe mode should surface real faults, got %v", err)
 	}
 }
 
 func TestEntitlementsHasFeature(t *testing.T) {
-	entitlements := Entitlements{Features: []string{"cloud_access", "advanced_reporting"}}
+	entitlements := subscriptions.Entitlements{Features: []string{"cloud_access", "advanced_reporting"}}
 	if !entitlements.HasFeature("advanced_reporting") {
 		t.Fatal("HasFeature() should find a granted feature")
 	}
@@ -232,22 +233,22 @@ func TestEntitlementsHasFeature(t *testing.T) {
 func TestConfigValidate(t *testing.T) {
 	tests := []struct {
 		name    string
-		config  Config
+		config  subscriptions.Config
 		wantErr string
 	}{
 		{
 			name: "a plan granting no licences is unusable",
-			config: Config{
+			config: subscriptions.Config{
 				Enabled: true,
-				Catalog: map[string]Product{"price_a": {Name: "Broken"}},
+				Catalog: map[string]subscriptions.Product{"price_a": {Name: "Broken"}},
 			},
 			wantErr: "grants no licences",
 		},
 		{
 			name: "a feature with no display definition",
-			config: Config{
+			config: subscriptions.Config{
 				Enabled: true,
-				Catalog: map[string]Product{
+				Catalog: map[string]subscriptions.Product{
 					"price_a": {LicensesPerUnit: 1, Features: []string{"ghost_feature"}},
 				},
 			},
@@ -255,9 +256,9 @@ func TestConfigValidate(t *testing.T) {
 		},
 		{
 			name: "a quota with no display definition",
-			config: Config{
+			config: subscriptions.Config{
 				Enabled: true,
-				Catalog: map[string]Product{
+				Catalog: map[string]subscriptions.Product{
 					"price_a": {LicensesPerUnit: 1, MonthlyQuotas: map[string]int64{"ghost_quota": 10}},
 				},
 			},
@@ -265,9 +266,9 @@ func TestConfigValidate(t *testing.T) {
 		},
 		{
 			name: "a cap with no display definition",
-			config: Config{
+			config: subscriptions.Config{
 				Enabled: true,
-				Catalog: map[string]Product{
+				Catalog: map[string]subscriptions.Product{
 					"price_a": {LicensesPerUnit: 1, Caps: map[string]int64{"ghost_cap": 10}},
 				},
 			},
@@ -288,11 +289,11 @@ func TestConfigValidate(t *testing.T) {
 }
 
 func TestConfigValidateAcceptsAGoodCatalog(t *testing.T) {
-	config := Config{
+	config := subscriptions.Config{
 		Enabled:  true,
-		Features: map[string]FeatureDefinition{"cloud_access": {Label: "Cloud"}},
-		Limits:   map[string]LimitDefinition{"invoices": {Label: "Invoices"}},
-		Catalog: map[string]Product{
+		Features: map[string]subscriptions.FeatureDefinition{"cloud_access": {Label: "Cloud"}},
+		Limits:   map[string]subscriptions.LimitDefinition{"invoices": {Label: "Invoices"}},
+		Catalog: map[string]subscriptions.Product{
 			"price_a": {
 				Name: "Starter", Tier: "starter", LicensesPerUnit: 1,
 				Features:      []string{"cloud_access"},
@@ -307,7 +308,7 @@ func TestConfigValidateAcceptsAGoodCatalog(t *testing.T) {
 
 // A disabled deployment must not be blocked by catalog mistakes it never uses.
 func TestConfigValidateSkipsWhenDisabled(t *testing.T) {
-	config := Config{Catalog: map[string]Product{"price_a": {Name: "Broken"}}}
+	config := subscriptions.Config{Catalog: map[string]subscriptions.Product{"price_a": {Name: "Broken"}}}
 	if err := config.Validate(); err != nil {
 		t.Fatalf("Validate() error = %v, want nil while disabled", err)
 	}
@@ -316,25 +317,23 @@ func TestConfigValidateSkipsWhenDisabled(t *testing.T) {
 // A provider that cannot be reached must not stop the service starting, while a
 // catalog that is genuinely wrong must.
 func TestNewModuleDistinguishesUnavailableFromInvalid(t *testing.T) {
-	goodConfig := func(providerName string) Config {
-		return Config{
+	goodConfig := func(providerName string) subscriptions.Config {
+		return subscriptions.Config{
 			Enabled: true, Provider: providerName,
-			Features: map[string]FeatureDefinition{"f": {Label: "F"}},
-			Catalog:  map[string]Product{"price_a": {LicensesPerUnit: 1, Features: []string{"f"}}},
+			Features: map[string]subscriptions.FeatureDefinition{"f": {Label: "F"}},
+			Catalog:  map[string]subscriptions.Product{"price_a": {LicensesPerUnit: 1, Features: []string{"f"}}},
 		}
 	}
-
-	Register("test-validator-unavailable", func(Config, *gorm.DB) (Provider, error) {
-		return &validatingProvider{err: fmt.Errorf("%w: network down", ErrValidationUnavailable)}, nil
+	subscriptions.Register("test-validator-unavailable", func(subscriptions.Config, *gorm.DB) (subscriptions.Provider, error) {
+		return &validatingProvider{err: fmt.Errorf("%w: network down", subscriptions.ErrValidationUnavailable)}, nil
 	})
-	if _, err := NewModule(goodConfig("test-validator-unavailable"), &gorm.DB{}); err != nil {
+	if _, err := subscriptions.NewModule(goodConfig("test-validator-unavailable"), &gorm.DB{}); err != nil {
 		t.Fatalf("NewModule() error = %v; an unreachable provider must not block startup", err)
 	}
-
-	Register("test-validator-invalid", func(Config, *gorm.DB) (Provider, error) {
+	subscriptions.Register("test-validator-invalid", func(subscriptions.Config, *gorm.DB) (subscriptions.Provider, error) {
 		return &validatingProvider{err: errors.New("price_a does not exist in Stripe")}, nil
 	})
-	_, err := NewModule(goodConfig("test-validator-invalid"), &gorm.DB{})
+	_, err := subscriptions.NewModule(goodConfig("test-validator-invalid"), &gorm.DB{})
 	if err == nil {
 		t.Fatal("NewModule() error = nil; a mismatched catalog must stop startup")
 	}
@@ -345,9 +344,9 @@ func TestNewModuleDistinguishesUnavailableFromInvalid(t *testing.T) {
 
 type validatingProvider struct{ err error }
 
-func (provider *validatingProvider) Name() string      { return "test-validator" }
-func (provider *validatingProvider) Webhooks() []Route { return nil }
-func (provider *validatingProvider) ValidateCatalog(context.Context, map[string]Product) error {
+func (provider *validatingProvider) Name() string                    { return "test-validator" }
+func (provider *validatingProvider) Webhooks() []subscriptions.Route { return nil }
+func (provider *validatingProvider) ValidateCatalog(context.Context, map[string]subscriptions.Product) error {
 	return provider.err
 }
 
@@ -370,7 +369,7 @@ func TestLooksLikeCountryCode(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.country, func(t *testing.T) {
-			if got := LooksLikeCountryCode(test.country); got != test.want {
+			if got := subscriptions.LooksLikeCountryCode(test.country); got != test.want {
 				t.Fatalf("LooksLikeCountryCode(%q) = %v, want %v", test.country, got, test.want)
 			}
 		})
@@ -378,7 +377,7 @@ func TestLooksLikeCountryCode(t *testing.T) {
 }
 
 func TestCurrencyConfigFor(t *testing.T) {
-	config := CurrencyConfig{
+	config := subscriptions.CurrencyConfig{
 		Default:   "aed",
 		ByCountry: map[string]string{"AE": "aed", "us": "USD", "GB": "gbp"},
 	}
@@ -407,13 +406,13 @@ func TestCurrencyConfigFor(t *testing.T) {
 // A deployment with no country mapping must not trigger a lookup it will
 // discard.
 func TestCurrencyConfigMapsCountries(t *testing.T) {
-	if (CurrencyConfig{}).MapsCountries() {
+	if (subscriptions.CurrencyConfig{}).MapsCountries() {
 		t.Fatal("an empty config should not report a country mapping")
 	}
-	if (CurrencyConfig{Default: "aed"}).MapsCountries() {
+	if (subscriptions.CurrencyConfig{Default: "aed"}).MapsCountries() {
 		t.Fatal("a default alone is not a country mapping")
 	}
-	if !(CurrencyConfig{ByCountry: map[string]string{"AE": "aed"}}).MapsCountries() {
+	if !(subscriptions.CurrencyConfig{ByCountry: map[string]string{"AE": "aed"}}).MapsCountries() {
 		t.Fatal("a populated byCountry map should report true")
 	}
 }

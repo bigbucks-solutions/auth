@@ -1,10 +1,11 @@
-package actions
+package auth_test
 
 import (
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"bigbucks/solution/auth/actions"
 	valids "bigbucks/solution/auth/validations"
 )
 
@@ -34,7 +35,7 @@ func TestOrganizationCountryValidation(t *testing.T) {
 			request := httptest.NewRequest("POST", "/organizations", strings.NewReader(body))
 			request.Header.Set("Content-Type", "application/json")
 
-			org, _, err := OrganizationFromRequest(request)
+			org, _, err := actions.OrganizationFromRequest(request)
 			if err != nil {
 				t.Fatalf("OrganizationFromRequest() error = %v", err)
 			}

@@ -1,6 +1,7 @@
-package settings
+package auth_test
 
 import (
+	"bigbucks/solution/auth/settings"
 	"bytes"
 	"testing"
 
@@ -8,7 +9,7 @@ import (
 )
 
 func TestParseGrant(t *testing.T) {
-	resource, scope, action, err := ParseGrant(" Sales : ORG : create ")
+	resource, scope, action, err := settings.ParseGrant(" Sales : ORG : create ")
 	if err != nil {
 		t.Fatalf("ParseGrant() error = %v", err)
 	}
@@ -16,7 +17,7 @@ func TestParseGrant(t *testing.T) {
 		t.Fatalf("ParseGrant() = %q %q %q", resource, scope, action)
 	}
 	for _, bad := range []string{"sales:org", "sales::read", "a:b:c:d", ""} {
-		if _, _, _, err := ParseGrant(bad); err == nil {
+		if _, _, _, err := settings.ParseGrant(bad); err == nil {
 			t.Fatalf("ParseGrant(%q) accepted a malformed grant", bad)
 		}
 	}
@@ -24,16 +25,14 @@ func TestParseGrant(t *testing.T) {
 
 // Auth names no roles of its own: a deployment that configures none gets none.
 func TestDefaultRolesAreOnlyWhatIsConfigured(t *testing.T) {
-	original := Current
-	defer func() { Current = original }()
-
-	Current = &Settings{}
-	if roles := DefaultRoles(); len(roles) != 0 {
+	original := settings.Current
+	defer func() { settings.Current = original }()
+	settings.Current = &settings.Settings{}
+	if roles := settings.DefaultRoles(); len(roles) != 0 {
 		t.Fatalf("DefaultRoles() = %+v, want none when unconfigured", roles)
 	}
-
-	Current = &Settings{DefaultRoles: []DefaultRole{{Name: "Clerk"}}}
-	if roles := DefaultRoles(); len(roles) != 1 || roles[0].Name != "Clerk" {
+	settings.Current = &settings.Settings{DefaultRoles: []settings.DefaultRole{{Name: "Clerk"}}}
+	if roles := settings.DefaultRoles(); len(roles) != 1 || roles[0].Name != "Clerk" {
 		t.Fatalf("DefaultRoles() = %+v, want the configured Clerk", roles)
 	}
 }
@@ -49,7 +48,7 @@ func TestDefaultRolesDecodeFromConfig(t *testing.T) {
 	if err := v.ReadConfig(bytes.NewReader(config)); err != nil {
 		t.Fatalf("ReadConfig() error = %v", err)
 	}
-	var s Settings
+	var s settings.Settings
 	if err := v.Unmarshal(&s); err != nil {
 		t.Fatalf("Unmarshal() error = %v", err)
 	}
