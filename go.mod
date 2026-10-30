@@ -6,7 +6,7 @@ require (
 	ariga.io/atlas-provider-gorm v0.6.1
 	github.com/dchest/authcookie v0.0.0-20190824115100-f900d2294c8e
 	github.com/fxamacker/cbor/v2 v2.10.0
-	github.com/go-jose/go-jose/v4 v4.1.6
+	github.com/go-jose/go-jose/v4 v4.1.7
 	github.com/go-playground/locales v0.14.2
 	github.com/go-playground/universal-translator v0.18.2
 	github.com/go-playground/validator/v10 v10.30.5
