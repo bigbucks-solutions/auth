@@ -124,7 +124,8 @@ jq -n \
         },
         features: {
             cloud_access: {label: "Cloud access & sync"},
-            advanced_reporting: {label: "Advanced reporting", order: 1}
+            advanced_reporting: {label: "Advanced reporting", order: 1},
+            inventory_tracking: {label: "Batch & serial tracking", order: 2}
         },
         limits: {
             invoices: {label: "Invoices"},
@@ -133,19 +134,19 @@ jq -n \
         catalog: {
             ($starter_monthly): {
                 name: "Starter", tier: "starter", licensesPerUnit: 1,
-                features: ["cloud_access"], monthlyQuotas: {invoices: 5000}, caps: {skus: 5000}
+                features: ["cloud_access", "inventory_tracking"], monthlyQuotas: {invoices: 5000}, caps: {skus: 5000}
             },
             ($starter_yearly): {
                 name: "Starter", tier: "starter", licensesPerUnit: 1,
-                features: ["cloud_access"], monthlyQuotas: {invoices: 5000}, caps: {skus: 5000}
+                features: ["cloud_access", "inventory_tracking"], monthlyQuotas: {invoices: 5000}, caps: {skus: 5000}
             },
             ($growth_monthly): {
                 name: "Growth", tier: "growth", order: 1, licensesPerUnit: 1,
-                features: ["cloud_access", "advanced_reporting"], monthlyQuotas: {invoices: 10000}, caps: {skus: 10000}
+                features: ["cloud_access", "advanced_reporting", "inventory_tracking"], monthlyQuotas: {invoices: 10000}, caps: {skus: 10000}
             },
             ($growth_yearly): {
                 name: "Growth", tier: "growth", order: 1, licensesPerUnit: 1,
-                features: ["cloud_access", "advanced_reporting"], monthlyQuotas: {invoices: 10000}, caps: {skus: 10000}
+                features: ["cloud_access", "advanced_reporting", "inventory_tracking"], monthlyQuotas: {invoices: 10000}, caps: {skus: 10000}
             }
         }
     }' > "$OUTPUT"
